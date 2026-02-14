@@ -5,6 +5,9 @@
   "main": "src/index.ts",
   "react-native": "src/index.ts",
   "types": "src/index.ts",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {},
   "peerDependencies": {
     "react": "*",
