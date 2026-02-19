@@ -4,7 +4,7 @@ A tiny React Native client for the Fanfou API with native OAuth 1.0 signing.
 
 ## What It Does
 
-- Handles the OAuth flow in a single `getAccessToken` call.
+- Handles the OAuth flow with a `getAccessToken` helper.
 - Provides signed `get`, `post`, and `uploadPhoto` helpers.
 - Throws `FanfouApiError` for non-2xx API responses.
 
@@ -35,20 +35,65 @@ cd ios
 bundle exec pod install
 ```
 
+## Native Secret Configuration
+
+This package does not read consumer keys from JS. Configure them in native code
+and keep them out of the JS bundle.
+
+### Android
+
+Call the native configurator at app startup:
+
+```kt
+import com.rnfanfouclient.FanfouSecrets
+
+class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+    FanfouSecrets.configure(
+      /* consumerKey */ "...",
+      /* consumerSecret */ "...",
+    )
+  }
+}
+```
+
+### iOS
+
+Configure once at startup (e.g., a small loader file in your app target):
+
+```objc
+#import <rn-fanfou-client/FanfouSecrets.h>
+
+__attribute__((constructor)) static void FFConfigureFanfouSecrets(void) {
+  FanfouSecretsConfigure(@"...", @"...");
+}
+```
+
+If the secrets are missing, native calls will reject with
+`oauth_consumer_missing`.
+
+### Where to Store Secrets
+
+Keep the consumer key/secret in native-only storage and pass them into
+`FanfouSecrets.configure`/`FanfouSecretsConfigure`. Avoid exposing them to JS or
+bundled assets. This is still not fully safe—client apps can be reverse
+engineered—so use caution. Obfuscation should be treated as a last resort, not a
+security boundary.
+
 ## Usage
 
 ```ts
-import { FanfouClient } from 'rn-fanfou-client';
+import { FanfouClient, getAccessToken } from 'rn-fanfou-client';
 
 const CALLBACK_URL = 'gohan://authorize_callback';
 
-const client = new FanfouClient(
-  process.env.FANFOU_CONSUMER_KEY!,
-  process.env.FANFOU_CONSUMER_SECRET!,
-);
+// One call: opens authorize URL, waits for callback, exchanges access token.
+const accessToken = await getAccessToken({
+  callbackUrl: CALLBACK_URL,
+});
 
-// One call: opens authorize URL, waits for callback, exchanges tokens.
-const tokens = await client.getAccessToken(CALLBACK_URL);
+const client = new FanfouClient(accessToken);
 
 // Signed API calls.
 const me = await client.get('/account/verify_credentials');

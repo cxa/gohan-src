@@ -25,6 +25,21 @@ class FanfouOAuthModule(
   private val uploadPhotoUrl = "http://api.fanfou.com/photos/upload.json"
   private val multipartBoundary = "DAN1324567890FAN"
 
+  private fun resolveConsumer(
+    promise: Promise,
+  ): Pair<String, String>? {
+    val resolvedKey = FanfouSecrets.resolveConsumerKey()
+    val resolvedSecret = FanfouSecrets.resolveConsumerSecret()
+    if (resolvedKey.isBlank() || resolvedSecret.isBlank()) {
+      promise.reject(
+        "oauth_consumer_missing",
+        "Missing consumer key or secret. Configure native secrets in the app.",
+      )
+      return null
+    }
+    return resolvedKey to resolvedSecret
+  }
+
   private fun buildService(
     consumerKey: String,
     consumerSecret: String,
@@ -56,14 +71,13 @@ class FanfouOAuthModule(
 
   @ReactMethod
   fun getRequestToken(
-    consumerKey: String,
-    consumerSecret: String,
     callbackUrl: String,
     promise: Promise,
   ) {
     Thread {
       try {
-        val service = buildService(consumerKey, consumerSecret, null)
+        val resolved = resolveConsumer(promise) ?: return@Thread
+        val service = buildService(resolved.first, resolved.second, null)
         val requestToken = service.requestToken
         val result = Arguments.createMap().apply {
           putString("oauthToken", requestToken.token)
@@ -78,15 +92,14 @@ class FanfouOAuthModule(
 
   @ReactMethod
   fun getAccessToken(
-    consumerKey: String,
-    consumerSecret: String,
     requestToken: String,
     requestTokenSecret: String,
     promise: Promise,
   ) {
     Thread {
       try {
-        val service = buildService(consumerKey, consumerSecret, null)
+        val resolved = resolveConsumer(promise) ?: return@Thread
+        val service = buildService(resolved.first, resolved.second, null)
         val request = OAuthRequest(Verb.GET, service.api.accessTokenEndpoint)
         val requestTokenObj = OAuth1AccessToken(requestToken, requestTokenSecret)
         service.signRequest(requestTokenObj, request)
@@ -118,8 +131,6 @@ class FanfouOAuthModule(
 
   @ReactMethod
   fun request(
-    consumerKey: String,
-    consumerSecret: String,
     token: String,
     tokenSecret: String,
     method: String,
@@ -129,7 +140,8 @@ class FanfouOAuthModule(
   ) {
     Thread {
       try {
-        val service = buildService(consumerKey, consumerSecret, "oob")
+        val resolved = resolveConsumer(promise) ?: return@Thread
+        val service = buildService(resolved.first, resolved.second, "oob")
         val accessToken = OAuth1AccessToken(token, tokenSecret)
         val verb = if (method.equals("POST", ignoreCase = true)) Verb.POST else Verb.GET
         val request = OAuthRequest(verb, url)
@@ -157,8 +169,6 @@ class FanfouOAuthModule(
 
   @ReactMethod
   fun uploadPhoto(
-    consumerKey: String,
-    consumerSecret: String,
     token: String,
     tokenSecret: String,
     photoBase64: String,
@@ -168,6 +178,7 @@ class FanfouOAuthModule(
   ) {
     Thread {
       try {
+        val resolved = resolveConsumer(promise) ?: return@Thread
         val imageBytes = try {
           Base64.decode(photoBase64, Base64.DEFAULT)
         } catch (e: IllegalArgumentException) {
@@ -198,7 +209,7 @@ class FanfouOAuthModule(
         body.write(imageBytes)
         body.write(("\r\n--$multipartBoundary--\r\n").toByteArray(Charset.forName("UTF-8")))
 
-        val service = buildService(consumerKey, consumerSecret, null)
+        val service = buildService(resolved.first, resolved.second, null)
         val accessToken = OAuth1AccessToken(token, tokenSecret)
         val request = OAuthRequest(Verb.POST, uploadPhotoUrl)
         request.addHeader(

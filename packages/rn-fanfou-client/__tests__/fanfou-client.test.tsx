@@ -37,7 +37,7 @@ jest.mock('react-native', () => ({
   },
 }));
 
-import { FanfouClient } from 'rn-fanfou-client';
+import { FanfouClient, getAccessToken } from 'rn-fanfou-client';
 
 const OAUTH_CALLBACK_URL = 'gohan://authorize_callback';
 
@@ -47,7 +47,7 @@ describe('FanfouClient', () => {
     linkingListeners.splice(0, linkingListeners.length);
   });
 
-  test('getAccessToken opens authorize URL and resolves tokens', async () => {
+  test('getAccessToken opens authorize URL and resolves access token', async () => {
     mockGetRequestToken.mockResolvedValueOnce({
       oauthToken: 'rt',
       oauthTokenSecret: 'rs',
@@ -59,37 +59,29 @@ describe('FanfouClient', () => {
       screenName: 'gohan',
     });
 
-    const client = new FanfouClient('key', 'secret');
-    const resultPromise = client.getAccessToken(OAUTH_CALLBACK_URL);
+    const accessTokenPromise = getAccessToken({
+      callbackUrl: OAUTH_CALLBACK_URL,
+    });
     await new Promise(resolve => setImmediate(resolve));
 
     expect(mockOpenURL).toHaveBeenCalledWith(
       'https://m.fanfou.com/oauth/authorize?oauth_token=rt&oauth_callback=gohan%3A%2F%2Fauthorize_callback',
     );
-    expect(mockGetRequestToken).toHaveBeenCalledWith(
-      'key',
-      'secret',
-      OAUTH_CALLBACK_URL,
-    );
+    expect(mockGetRequestToken).toHaveBeenCalledWith(OAUTH_CALLBACK_URL);
     expect(mockAddEventListener).toHaveBeenCalled();
 
     linkingListeners.forEach(handler => {
       handler({ url: `${OAUTH_CALLBACK_URL}?oauth_token=rt` });
     });
-    const result = await resultPromise;
+    const accessToken = await accessTokenPromise;
 
-    expect(result).toEqual({
+    expect(accessToken).toEqual({
       oauthToken: 'at',
       oauthTokenSecret: 'as',
       userId: '1',
       screenName: 'gohan',
     });
-    expect(mockGetAccessToken).toHaveBeenCalledWith(
-      'key',
-      'secret',
-      'rt',
-      'rs',
-    );
+    expect(mockGetAccessToken).toHaveBeenCalledWith('rt', 'rs');
   });
 
   test('get parses JSON response body', async () => {
@@ -98,7 +90,7 @@ describe('FanfouClient', () => {
       body: JSON.stringify({ ok: true }),
     });
 
-    const client = new FanfouClient('key', 'secret', {
+    const client = new FanfouClient({
       oauthToken: 'at',
       oauthTokenSecret: 'as',
     });
@@ -107,8 +99,6 @@ describe('FanfouClient', () => {
 
     expect(response).toEqual({ ok: true });
     expect(mockRequest).toHaveBeenCalledWith(
-      'key',
-      'secret',
       'at',
       'as',
       'GET',
@@ -123,7 +113,7 @@ describe('FanfouClient', () => {
       body: JSON.stringify({ error: 'unauthorized' }),
     });
 
-    const client = new FanfouClient('key', 'secret', {
+    const client = new FanfouClient({
       oauthToken: 'at',
       oauthTokenSecret: 'as',
     });
@@ -136,8 +126,6 @@ describe('FanfouClient', () => {
     });
 
     expect(mockRequest).toHaveBeenCalledWith(
-      'key',
-      'secret',
       'at',
       'as',
       'POST',
@@ -146,9 +134,8 @@ describe('FanfouClient', () => {
     );
   });
 
-  test('get throws if tokens are missing', async () => {
-    const client = new FanfouClient('key', 'secret');
-    await expect(client.get('/statuses/home_timeline')).rejects.toThrow(
+  test('constructor throws if access token is missing', () => {
+    expect(() => new FanfouClient(undefined as never)).toThrow(
       'Missing OAuth access token. Authenticate first.',
     );
   });
@@ -159,7 +146,7 @@ describe('FanfouClient', () => {
       body: JSON.stringify({ id: '1' }),
     });
 
-    const client = new FanfouClient('key', 'secret', {
+    const client = new FanfouClient({
       oauthToken: 'at',
       oauthTokenSecret: 'as',
     });
@@ -172,8 +159,6 @@ describe('FanfouClient', () => {
 
     expect(response).toEqual({ id: '1' });
     expect(mockUploadPhoto).toHaveBeenCalledWith(
-      'key',
-      'secret',
       'at',
       'as',
       'base64',

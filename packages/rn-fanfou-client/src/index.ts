@@ -1,8 +1,10 @@
 import { Linking, NativeModules } from 'react-native';
 
-type OAuthAccessToken = {
+export type OAuthAccessToken = {
   oauthToken: string;
   oauthTokenSecret: string;
+  userId?: string;
+  screenName?: string;
 };
 
 const FANFOU_API_BASE_URL = 'http://api.fanfou.com';
@@ -19,20 +21,12 @@ type NativeRequestResponse = {
 };
 
 type NativeOAuthModule = {
-  getRequestToken: (
-    consumerKey: string,
-    consumerSecret: string,
-    callbackUrl: string,
-  ) => Promise<OAuthRequestToken>;
+  getRequestToken: (callbackUrl: string) => Promise<OAuthRequestToken>;
   getAccessToken: (
-    consumerKey: string,
-    consumerSecret: string,
     requestToken: string,
     requestTokenSecret: string,
   ) => Promise<OAuthAccessToken>;
   request: (
-    consumerKey: string,
-    consumerSecret: string,
     token: string,
     tokenSecret: string,
     method: 'GET' | 'POST',
@@ -40,8 +34,6 @@ type NativeOAuthModule = {
     params: Record<string, string>,
   ) => Promise<NativeRequestResponse>;
   uploadPhoto: (
-    consumerKey: string,
-    consumerSecret: string,
     token: string,
     tokenSecret: string,
     photoBase64: string,
@@ -176,11 +168,73 @@ const parseBody = (body: string) => {
   }
 };
 
-const requireToken = (tokens?: OAuthAccessToken) => {
-  if (!tokens?.oauthToken || !tokens?.oauthTokenSecret) {
+const requireAccessToken = (accessToken: OAuthAccessToken) => {
+  if (!accessToken?.oauthToken || !accessToken?.oauthTokenSecret) {
     throw new Error('Missing OAuth access token. Authenticate first.');
   }
-  return { key: tokens.oauthToken, secret: tokens.oauthTokenSecret };
+  return {
+    key: accessToken.oauthToken,
+    secret: accessToken.oauthTokenSecret,
+  };
+};
+
+const getRequestToken = async (
+  callbackUrl: string,
+): Promise<OAuthRequestToken> => {
+  const response = await getNativeModule().getRequestToken(callbackUrl);
+
+  if (!response?.oauthToken || !response?.oauthTokenSecret) {
+    throw new Error('Invalid request token response');
+  }
+
+  return response;
+};
+
+const getAuthorizeUrl = (
+  requestToken: OAuthRequestToken,
+  callbackUrl: string,
+) => {
+  const query = buildQuery({
+    oauth_token: requestToken.oauthToken,
+    oauth_callback: callbackUrl,
+  });
+  return `${FANFOU_OAUTH_AUTHORIZE_URL}?${query}`;
+};
+
+export const getAccessToken = async ({
+  callbackUrl,
+}: {
+  callbackUrl: string;
+}): Promise<OAuthAccessToken> => {
+  if (!callbackUrl) {
+    throw new Error(
+      'Missing OAuth callback URL. Provide callbackUrl before authentication.',
+    );
+  }
+  const requestToken = await getRequestToken(callbackUrl);
+  const authorizeUrl = getAuthorizeUrl(requestToken, callbackUrl);
+  await Linking.openURL(authorizeUrl);
+  const callbackResult = await waitForCallbackUrl(callbackUrl);
+  const { oauthToken, error } = parseCallbackUrl(callbackResult);
+  if (error) {
+    throw new Error(error);
+  }
+  if (!oauthToken) {
+    throw new Error('Missing oauth_token in callback URL.');
+  }
+  if (oauthToken !== requestToken.oauthToken) {
+    throw new Error('Callback oauth_token does not match request token.');
+  }
+  const response = await getNativeModule().getAccessToken(
+    requestToken.oauthToken,
+    requestToken.oauthTokenSecret,
+  );
+
+  if (!response?.oauthToken || !response?.oauthTokenSecret) {
+    throw new Error('Invalid access token response');
+  }
+
+  return response;
 };
 
 const nativeRequest = async (
@@ -188,12 +242,8 @@ const nativeRequest = async (
   url: string,
   params: Record<string, string>,
   token: { key: string; secret: string },
-  consumerKey: string,
-  consumerSecret: string,
 ): Promise<NativeRequestResponse> => {
   const response = await getNativeModule().request(
-    consumerKey,
-    consumerSecret,
     token.key,
     token.secret,
     method,
@@ -209,87 +259,14 @@ const nativeRequest = async (
 };
 
 export class FanfouClient {
-  private consumerKey: string;
-  private consumerSecret: string;
-  private tokens?: OAuthAccessToken;
+  private readonly accessToken: OAuthAccessToken;
 
-  public constructor(
-    consumerKey: string,
-    consumerSecret: string,
-    tokens?: OAuthAccessToken,
-  ) {
-    if (!consumerKey || !consumerSecret) {
-      throw new Error('Missing consumer key or secret.');
+  public constructor(accessToken: OAuthAccessToken) {
+    if (!accessToken?.oauthToken || !accessToken?.oauthTokenSecret) {
+      throw new Error('Missing OAuth access token. Authenticate first.');
     }
-    this.consumerKey = consumerKey;
-    this.consumerSecret = consumerSecret;
-    this.tokens = tokens;
+    this.accessToken = accessToken;
   }
-
-  public getAccessToken = async (
-    callbackUrl: string,
-  ): Promise<OAuthAccessToken> => {
-    if (!callbackUrl) {
-      throw new Error(
-        'Missing OAuth callback URL. Provide callbackUrl before authentication.',
-      );
-    }
-    const requestToken = await this.getRequestToken(callbackUrl);
-    this.tokens = undefined;
-    const authorizeUrl = this.getAuthorizeUrl(requestToken, callbackUrl);
-    await Linking.openURL(authorizeUrl);
-    const callbackResult = await waitForCallbackUrl(callbackUrl);
-    const { oauthToken, error } = parseCallbackUrl(callbackResult);
-    if (error) {
-      throw new Error(error);
-    }
-    if (!oauthToken) {
-      throw new Error('Missing oauth_token in callback URL.');
-    }
-    if (oauthToken !== requestToken.oauthToken) {
-      throw new Error('Callback oauth_token does not match request token.');
-    }
-    const response = await getNativeModule().getAccessToken(
-      this.consumerKey,
-      this.consumerSecret,
-      requestToken.oauthToken,
-      requestToken.oauthTokenSecret,
-    );
-
-    if (!response?.oauthToken || !response?.oauthTokenSecret) {
-      throw new Error('Invalid access token response');
-    }
-
-    this.tokens = response;
-    return response;
-  };
-
-  private getRequestToken = async (
-    callbackUrl: string,
-  ): Promise<OAuthRequestToken> => {
-    const response = await getNativeModule().getRequestToken(
-      this.consumerKey,
-      this.consumerSecret,
-      callbackUrl,
-    );
-
-    if (!response?.oauthToken || !response?.oauthTokenSecret) {
-      throw new Error('Invalid request token response');
-    }
-
-    return response;
-  };
-
-  private getAuthorizeUrl = (
-    requestToken: OAuthRequestToken,
-    callbackUrl: string,
-  ) => {
-    const query = buildQuery({
-      oauth_token: requestToken.oauthToken,
-      oauth_callback: callbackUrl,
-    });
-    return `${FANFOU_OAUTH_AUTHORIZE_URL}?${query}`;
-  };
 
   private buildEndpointUrl = (endpoint: string) => {
     const normalized = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -303,17 +280,10 @@ export class FanfouClient {
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
   ): Promise<T> => {
-    const token = requireToken(this.tokens);
+    const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
     const url = this.buildEndpointUrl(endpoint);
-    const response = await nativeRequest(
-      'GET',
-      url,
-      normalized,
-      token,
-      this.consumerKey,
-      this.consumerSecret,
-    );
+    const response = await nativeRequest('GET', url, normalized, token);
     const data = parseBody(response.body);
 
     if (response.status < 200 || response.status >= 300) {
@@ -332,17 +302,10 @@ export class FanfouClient {
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
   ): Promise<T> => {
-    const token = requireToken(this.tokens);
+    const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
     const url = this.buildEndpointUrl(endpoint);
-    const response = await nativeRequest(
-      'POST',
-      url,
-      normalized,
-      token,
-      this.consumerKey,
-      this.consumerSecret,
-    );
+    const response = await nativeRequest('POST', url, normalized, token);
     const data = parseBody(response.body);
 
     if (response.status < 200 || response.status >= 300) {
@@ -366,11 +329,9 @@ export class FanfouClient {
     status?: string;
     params?: Record<string, string | number | boolean | undefined>;
   }): Promise<T> => {
-    const token = requireToken(this.tokens);
+    const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
     const response = await getNativeModule().uploadPhoto(
-      this.consumerKey,
-      this.consumerSecret,
       token.key,
       token.secret,
       photoBase64,

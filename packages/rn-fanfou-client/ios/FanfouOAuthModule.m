@@ -1,3 +1,4 @@
+#import "FanfouSecrets.h"
 #import <CommonCrypto/CommonHMAC.h>
 #import <React/RCTBridgeModule.h>
 
@@ -18,6 +19,26 @@ static NSString *const kMultipartBoundary = @"DAN1324567890FAN";
 
 + (BOOL)requiresMainQueueSetup {
   return NO;
+}
+
+static BOOL FFResolveConsumer(RCTPromiseRejectBlock rejecter, NSString **outKey,
+                              NSString **outSecret) {
+  NSString *resolvedKey = FanfouSecretsConsumerKey();
+  NSString *resolvedSecret = FanfouSecretsConsumerSecret();
+  if (resolvedKey.length == 0 || resolvedSecret.length == 0) {
+    rejecter(
+        @"oauth_consumer_missing",
+        @"Missing consumer key or secret. Configure native secrets in the app.",
+        nil);
+    return NO;
+  }
+  if (outKey != NULL) {
+    *outKey = resolvedKey;
+  }
+  if (outSecret != NULL) {
+    *outSecret = resolvedSecret;
+  }
+  return YES;
 }
 
 static NSString *FFPercentEncode(NSString *value) {
@@ -298,12 +319,16 @@ static NSData *FFMultipartBodyData(NSDictionary<NSString *, NSString *> *params,
   [task resume];
 }
 
-RCT_EXPORT_METHOD(getRequestToken : (NSString *)consumerKey consumerSecret : (
-    NSString *)consumerSecret callbackUrl : (NSString *)
+RCT_EXPORT_METHOD(getRequestToken : (NSString *)
                       callbackUrl resolver : (RCTPromiseResolveBlock)
                           resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+  NSString *resolvedKey = nil;
+  NSString *resolvedSecret = nil;
+  if (!FFResolveConsumer(rejecter, &resolvedKey, &resolvedSecret)) {
+    return;
+  }
   NSMutableDictionary<NSString *, NSString *> *oauthParams = [@{
-    @"oauth_consumer_key" : consumerKey,
+    @"oauth_consumer_key" : resolvedKey,
     @"oauth_nonce" : FFNonce(),
     @"oauth_signature_method" : @"HMAC-SHA1",
     @"oauth_timestamp" : FFTimestamp(),
@@ -314,7 +339,7 @@ RCT_EXPORT_METHOD(getRequestToken : (NSString *)consumerKey consumerSecret : (
       url:kRequestTokenURL
       params:@{}
       oauthParams:oauthParams
-      consumerSecret:consumerSecret
+      consumerSecret:resolvedSecret
       tokenSecret:nil
       resolver:^(id result) {
         NSString *body = [result objectForKey:@"body"];
@@ -332,13 +357,16 @@ RCT_EXPORT_METHOD(getRequestToken : (NSString *)consumerKey consumerSecret : (
 }
 
 RCT_EXPORT_METHOD(
-    getAccessToken : (NSString *)consumerKey consumerSecret : (NSString *)
-        consumerSecret requestToken : (NSString *)
-            requestToken requestTokenSecret : (NSString *)
-                requestTokenSecret resolver : (RCTPromiseResolveBlock)
-                    resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+    getAccessToken : (NSString *)requestToken requestTokenSecret : (NSString *)
+        requestTokenSecret resolver : (RCTPromiseResolveBlock)
+            resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+  NSString *resolvedKey = nil;
+  NSString *resolvedSecret = nil;
+  if (!FFResolveConsumer(rejecter, &resolvedKey, &resolvedSecret)) {
+    return;
+  }
   NSMutableDictionary<NSString *, NSString *> *oauthParams = [@{
-    @"oauth_consumer_key" : consumerKey,
+    @"oauth_consumer_key" : resolvedKey,
     @"oauth_token" : requestToken,
     @"oauth_nonce" : FFNonce(),
     @"oauth_signature_method" : @"HMAC-SHA1",
@@ -350,7 +378,7 @@ RCT_EXPORT_METHOD(
       url:kAccessTokenURL
       params:@{}
       oauthParams:oauthParams
-      consumerSecret:consumerSecret
+      consumerSecret:resolvedSecret
       tokenSecret:requestTokenSecret
       resolver:^(id result) {
         NSString *body = [result objectForKey:@"body"];
@@ -368,14 +396,17 @@ RCT_EXPORT_METHOD(
 }
 
 RCT_EXPORT_METHOD(
-    request : (NSString *)consumerKey consumerSecret : (NSString *)
-        consumerSecret token : (NSString *)token tokenSecret : (NSString *)
-            tokenSecret method : (NSString *)method url : (NSString *)
-                url params : (NSDictionary *)
-                    params resolver : (RCTPromiseResolveBlock)
-                        resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+    request : (NSString *)token tokenSecret : (NSString *)tokenSecret method : (
+        NSString *)method url : (NSString *)url params : (NSDictionary *)
+        params resolver : (RCTPromiseResolveBlock)
+            resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+  NSString *resolvedKey = nil;
+  NSString *resolvedSecret = nil;
+  if (!FFResolveConsumer(rejecter, &resolvedKey, &resolvedSecret)) {
+    return;
+  }
   NSMutableDictionary<NSString *, NSString *> *oauthParams = [@{
-    @"oauth_consumer_key" : consumerKey,
+    @"oauth_consumer_key" : resolvedKey,
     @"oauth_token" : token,
     @"oauth_nonce" : FFNonce(),
     @"oauth_signature_method" : @"HMAC-SHA1",
@@ -395,28 +426,27 @@ RCT_EXPORT_METHOD(
     }];
   }
 
-  if ([method caseInsensitiveCompare:@"GET"] == NSOrderedSame &&
-      stringParams[@"format"] == nil) {
-    stringParams[@"format"] = @"html";
-  }
-
   [self performRequest:method
                    url:url
                 params:stringParams
            oauthParams:oauthParams
-        consumerSecret:consumerSecret
+        consumerSecret:resolvedSecret
            tokenSecret:tokenSecret
               resolver:resolver
               rejecter:rejecter];
 }
 
 RCT_EXPORT_METHOD(
-    uploadPhoto : (NSString *)consumerKey consumerSecret : (NSString *)
-        consumerSecret token : (NSString *)token tokenSecret : (NSString *)
-            tokenSecret photoBase64 : (NSString *)photoBase64 status : (
-                NSString *)status params : (NSDictionary *)
+    uploadPhoto : (NSString *)token tokenSecret : (NSString *)
+        tokenSecret photoBase64 : (NSString *)photoBase64 status : (NSString *)
+            status params : (NSDictionary *)
                 params resolver : (RCTPromiseResolveBlock)
                     resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+  NSString *resolvedKey = nil;
+  NSString *resolvedSecret = nil;
+  if (!FFResolveConsumer(rejecter, &resolvedKey, &resolvedSecret)) {
+    return;
+  }
   NSData *imageData = [[NSData alloc] initWithBase64EncodedString:photoBase64
                                                           options:0];
   if (imageData.length == 0) {
@@ -440,7 +470,7 @@ RCT_EXPORT_METHOD(
   }
 
   NSMutableDictionary<NSString *, NSString *> *oauthParams = [@{
-    @"oauth_consumer_key" : consumerKey,
+    @"oauth_consumer_key" : resolvedKey,
     @"oauth_token" : token,
     @"oauth_nonce" : FFNonce(),
     @"oauth_signature_method" : @"HMAC-SHA1",
@@ -449,7 +479,7 @@ RCT_EXPORT_METHOD(
   } mutableCopy];
 
   NSString *signature = FFSignature(@"POST", kUploadPhotoURL, @{}, oauthParams,
-                                    consumerSecret, tokenSecret);
+                                    resolvedSecret, tokenSecret);
   oauthParams[@"oauth_signature"] = signature;
 
   NSMutableURLRequest *request = [NSMutableURLRequest
