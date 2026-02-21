@@ -1,8 +1,21 @@
-export const SUPPORTED_LOCALES = ['en-US', 'zh-CN'] as const;
+export type LocaleKey = 'en-US' | 'zh-CN';
 
-export type LocaleKey = (typeof SUPPORTED_LOCALES)[number];
+export const SUPPORTED_LOCALES: ReadonlyArray<LocaleKey> = ['en-US', 'zh-CN'];
 
-const baseTranslations = {
+type BaseTranslations = {
+  brandName: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  cardTitle: string;
+  cardCopy: string;
+  chipTimeline: string;
+  chipMentions: string;
+  chipPhotoPosting: string;
+  ctaSignIn: string;
+  noticeSignIn: string;
+};
+
+const baseTranslations: BaseTranslations = {
   brandName: 'Fanfou',
   heroTitle: 'A calmer way to read the timeline.',
   heroSubtitle:
@@ -14,11 +27,11 @@ const baseTranslations = {
   chipPhotoPosting: 'Photo-first posting',
   ctaSignIn: 'Sign in with Fanfou',
   noticeSignIn: 'OAuth sign-in will land here next.',
-} as const;
+};
 
-export type TranslationKey = keyof typeof baseTranslations;
+export type TranslationKey = keyof BaseTranslations;
 
-export const RESOURCES = {
+export const RESOURCES: Record<LocaleKey, { translation: BaseTranslations }> = {
   'en-US': {
     translation: baseTranslations,
   },
@@ -36,7 +49,7 @@ export const RESOURCES = {
       noticeSignIn: 'OAuth 登录稍后会接入。',
     },
   },
-} as const;
+};
 
 export const DEFAULT_LOCALE: LocaleKey = 'en-US';
 

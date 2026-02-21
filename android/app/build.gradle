@@ -71,15 +71,17 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+def sharedFontsDir = file("$rootDir/assets/shared/fonts")
+def generatedAssetsDir = file("$buildDir/generated/assets")
 
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.gohan"
+    namespace "im.cxa.fanatter"
     defaultConfig {
-        applicationId "com.gohan"
+        applicationId "im.cxa.fanatter"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -105,7 +107,21 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', generatedAssetsDir]
+        }
+    }
 }
+
+tasks.register('prepareSharedFonts', Copy) {
+    from(sharedFontsDir) {
+        include 'Xiaolai.ttf'
+    }
+    into("$generatedAssetsDir/fonts")
+}
+
+preBuild.dependsOn(prepareSharedFonts)
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin

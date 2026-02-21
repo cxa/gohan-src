@@ -61,11 +61,19 @@ export class FanfouApiError extends Error {
   }
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isNativeOAuthModule = (value: unknown): value is NativeOAuthModule =>
+  isRecord(value) &&
+  typeof value.getRequestToken === 'function' &&
+  typeof value.getAccessToken === 'function' &&
+  typeof value.request === 'function' &&
+  typeof value.uploadPhoto === 'function';
+
 const getNativeModule = (): NativeOAuthModule => {
-  const module = NativeModules.FanfouOAuthModule as
-    | NativeOAuthModule
-    | undefined;
-  if (!module) {
+  const module = NativeModules.FanfouOAuthModule;
+  if (!isNativeOAuthModule(module)) {
     throw new Error('FanfouOAuthModule is not linked. Run native builds.');
   }
   return module;
@@ -157,7 +165,7 @@ const waitForCallbackUrl = (callbackUrl: string) =>
       });
   });
 
-const parseBody = (body: string) => {
+const parseBody = (body: string): unknown => {
   if (!body) {
     return null;
   }
@@ -276,10 +284,10 @@ export class FanfouClient {
     return `${FANFOU_API_BASE_URL}${withJson}`;
   };
 
-  public get = async <T = unknown>(
+  public get = async (
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
-  ): Promise<T> => {
+  ): Promise<unknown> => {
     const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
     const url = this.buildEndpointUrl(endpoint);
@@ -295,13 +303,13 @@ export class FanfouClient {
       });
     }
 
-    return data as T;
+    return data;
   };
 
-  public post = async <T = unknown>(
+  public post = async (
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
-  ): Promise<T> => {
+  ): Promise<unknown> => {
     const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
     const url = this.buildEndpointUrl(endpoint);
@@ -317,10 +325,10 @@ export class FanfouClient {
       });
     }
 
-    return data as T;
+    return data;
   };
 
-  public uploadPhoto = async <T = unknown>({
+  public uploadPhoto = async ({
     photoBase64,
     status,
     params,
@@ -328,7 +336,7 @@ export class FanfouClient {
     photoBase64: string;
     status?: string;
     params?: Record<string, string | number | boolean | undefined>;
-  }): Promise<T> => {
+  }): Promise<unknown> => {
     const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
     const response = await getNativeModule().uploadPhoto(
@@ -349,6 +357,6 @@ export class FanfouClient {
       });
     }
 
-    return data as T;
+    return data;
   };
 }

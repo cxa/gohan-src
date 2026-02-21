@@ -1,5 +1,7 @@
 const path = require('path');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { resolve } = require('metro-resolver');
+const { withFileRouterConfig } = require('rn-file-routing/metro');
 const { withUniwindConfig } = require('uniwind/metro');
 
 /**
@@ -15,12 +17,23 @@ const config = {
   resolver: {
     unstable_enableSymlinks: true,
     nodeModulesPaths: [path.resolve(projectRoot, 'node_modules')],
+    resolveRequest: (context, moduleName, platform) => {
+      if (moduleName.startsWith('@/')) {
+        const resolvedPath = path.join(projectRoot, 'src', moduleName.slice(2));
+        return resolve(context, resolvedPath, platform);
+      }
+      return resolve(context, moduleName, platform);
+    },
   },
 };
 
 const mergedConfig = mergeConfig(getDefaultConfig(projectRoot), config);
+const routingConfig = withFileRouterConfig(mergedConfig, {
+  routesDir: path.join(projectRoot, 'src', 'routes'),
+  output: path.join(projectRoot, 'src', 'route-tree.gen.ts'),
+});
 
-module.exports = withUniwindConfig(mergedConfig, {
+module.exports = withUniwindConfig(routingConfig, {
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
 });

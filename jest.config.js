@@ -2,6 +2,7 @@ module.exports = {
   preset: 'react-native',
   moduleNameMapper: {
     '\\.css$': '<rootDir>/__mocks__/style-mock.js',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   setupFiles: ['<rootDir>/jest.setup.js'],
   transformIgnorePatterns: [

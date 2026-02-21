@@ -1,3 +1,4 @@
+/* eslint-env jest */
 require('react-native-gesture-handler/jestSetup');
 
 jest.mock('react-native-reanimated', () => {
@@ -12,3 +13,5 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('react-native-worklets', () =>
   require('react-native-worklets/lib/module/mock'),
 );
+
+jest.mock('react-native-keychain');

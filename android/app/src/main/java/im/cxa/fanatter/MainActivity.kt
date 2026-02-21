@@ -1,4 +1,4 @@
-package com.gohan
+package im.cxa.fanatter
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

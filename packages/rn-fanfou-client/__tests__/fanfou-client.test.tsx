@@ -62,7 +62,9 @@ describe('FanfouClient', () => {
     const accessTokenPromise = getAccessToken({
       callbackUrl: OAUTH_CALLBACK_URL,
     });
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise<void>(resolve => {
+      setImmediate(() => resolve());
+    });
 
     expect(mockOpenURL).toHaveBeenCalledWith(
       'https://m.fanfou.com/oauth/authorize?oauth_token=rt&oauth_callback=gohan%3A%2F%2Fauthorize_callback',
@@ -135,9 +137,13 @@ describe('FanfouClient', () => {
   });
 
   test('constructor throws if access token is missing', () => {
-    expect(() => new FanfouClient(undefined as never)).toThrow(
-      'Missing OAuth access token. Authenticate first.',
-    );
+    expect(
+      () =>
+        new FanfouClient({
+          oauthToken: '',
+          oauthTokenSecret: '',
+        }),
+    ).toThrow('Missing OAuth access token. Authenticate first.');
   });
 
   test('uploadPhoto calls native module and parses response', async () => {

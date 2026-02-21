@@ -1,3 +1,6 @@
+.agent-shell
+tmp/
+
 # OSX
 #
 .DS_Store
@@ -40,6 +43,10 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
+.env
+android/app/src/main/java/com/gohan/EnvSecrets.kt
+ios/gohan/EnvSecrets.h
+ios/gohan/EnvSecrets.m
 
 # fastlane
 #
@@ -73,3 +80,5 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+# heroui-agents-md
+.heroui-docs/
