@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -20,12 +21,15 @@ import {
 } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Surface, useThemeColor } from 'heroui-native';
-import { useQuery } from '@tanstack/react-query';
-import { Inbox, Send } from 'lucide-react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Inbox, Reply, Send, Trash2 } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAuthSession } from '@/auth/auth-session';
-import { get } from '@/auth/fanfou-client';
+import ComposerModal, {
+  type ComposerModalSubmitPayload,
+} from '@/components/composer-modal';
+import { get, post } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
 import DropShadowBox from '@/components/drop-shadow-box';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
@@ -70,6 +74,8 @@ type MessageCardProps = {
   message: FanfouDirectMessage;
   mailbox: MailboxKind;
   onPressProfile: (userId: string) => void;
+  onDelete?: () => void;
+  onReply?: () => void;
   stampBorderColor: string;
 };
 
@@ -228,6 +234,8 @@ const MessageCard = ({
   message,
   mailbox,
   onPressProfile,
+  onDelete,
+  onReply,
   stampBorderColor,
 }: MessageCardProps) => {
   const counterpart = mailbox === 'inbox' ? message.sender : message.recipient;
@@ -242,6 +250,22 @@ const MessageCard = ({
   const messageText = parseHtmlToText(message.text).trim();
   const initial = displayName.slice(0, 1).toUpperCase();
   const isPressable = Boolean(counterpartId);
+  const [danger, muted] = useThemeColor(['danger', 'muted']);
+
+  const handleDelete = () => {
+    if (!onDelete) {
+      return;
+    }
+    Alert.alert(
+      'Delete message',
+      `Delete this message from ${displayName}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ],
+      { cancelable: true },
+    );
+  };
 
   return (
     <DropShadowBox containerClassName="w-full">
@@ -260,6 +284,17 @@ const MessageCard = ({
             : ''
         }`}
       >
+        {onReply ? (
+          <Pressable
+            onPress={onReply}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Reply to message"
+            className="absolute right-3 top-3 z-10 active:opacity-50"
+          >
+            <Reply size={14} color={muted} />
+          </Pressable>
+        ) : null}
         <View className="flex-row gap-3">
           <PostageStamp
             avatarUrl={avatarUrl}
@@ -295,7 +330,20 @@ const MessageCard = ({
                 <View className="absolute left-[-15px] top-[-4px] h-2 w-2 rounded-full border border-border bg-surface-secondary" />
               </View>
 
-              <Text className="mt-2 text-[11px] text-muted">{timestamp}</Text>
+              <View className="mt-2 flex-row items-center justify-between">
+                <Text className="text-[11px] text-muted">{timestamp}</Text>
+                {onDelete ? (
+                  <Pressable
+                    onPress={handleDelete}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete message"
+                    className="active:opacity-50"
+                  >
+                    <Trash2 size={14} color={danger} />
+                  </Pressable>
+                ) : null}
+              </View>
             </View>
           </View>
         </View>
@@ -316,7 +364,12 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     'accent-foreground',
     'border',
   ]);
+  const queryClient = useQueryClient();
   const [activeMailbox, setActiveMailbox] = useState<MailboxKind>('inbox');
+  const [replyTarget, setReplyTarget] = useState<{
+    userId: string;
+    displayName: string;
+  } | null>(null);
 
   useScrollToTop(inboxListRef);
   useScrollToTop(outboxListRef);
@@ -394,6 +447,59 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     [insets.bottom],
   );
 
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      try {
+        await post('/direct_messages/destroy', { id: messageId });
+        queryClient.setQueryData<MessageGroups>(
+          ['private-messages', userId],
+          prev => {
+            if (!prev) {
+              return prev;
+            }
+            return {
+              inbox: prev.inbox.filter(m => m.id !== messageId),
+              outbox: prev.outbox.filter(m => m.id !== messageId),
+            };
+          },
+        );
+      } catch (deleteError) {
+        Alert.alert(
+          'Delete failed',
+          getErrorMessage(deleteError, 'Failed to delete message.'),
+        );
+      }
+    },
+    [queryClient, userId],
+  );
+
+  const handleSubmitReply = useCallback(
+    async ({ text }: ComposerModalSubmitPayload) => {
+      if (!replyTarget) {
+        return;
+      }
+      const trimmedText = text.trim();
+      if (!trimmedText) {
+        Alert.alert('Cannot send', 'Please enter a message.');
+        return;
+      }
+      try {
+        await post('/direct_messages/new', {
+          user: replyTarget.userId,
+          text: trimmedText,
+        });
+        setReplyTarget(null);
+        await refetch();
+      } catch (replyError) {
+        Alert.alert(
+          'Reply failed',
+          getErrorMessage(replyError, 'Failed to send reply.'),
+        );
+      }
+    },
+    [replyTarget, refetch],
+  );
+
   const handleOpenProfile = useCallback(
     (targetUserId: string) => {
       navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
@@ -428,14 +534,29 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
         className="flex-1 bg-background"
         data={items}
         keyExtractor={item => `${mailbox}-${item.id}`}
-        renderItem={({ item }) => (
-          <MessageCard
-            message={item}
-            mailbox={mailbox}
-            onPressProfile={handleOpenProfile}
-            stampBorderColor={border}
-          />
-        )}
+        renderItem={({ item }) => {
+          const sender = item.sender;
+          const senderId = sender?.id || item.sender_id;
+          return (
+            <MessageCard
+              message={item}
+              mailbox={mailbox}
+              onPressProfile={handleOpenProfile}
+              onDelete={() => handleDeleteMessage(item.id)}
+              onReply={
+                mailbox === 'inbox' && senderId
+                  ? () =>
+                      setReplyTarget({
+                        userId: senderId,
+                        displayName:
+                          sender?.screen_name || sender?.name || senderId,
+                      })
+                  : undefined
+              }
+              stampBorderColor={border}
+            />
+          );
+        }}
         contentInsetAdjustmentBehavior="automatic"
         scrollIndicatorInsets={{ bottom: insets.bottom }}
         contentContainerStyle={contentContainerStyle}
@@ -476,6 +597,17 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
       <View className={activeMailbox === 'outbox' ? 'flex-1' : 'hidden'}>
         {renderMailboxList('outbox', outboxItems, outboxListRef)}
       </View>
+
+      <ComposerModal
+        visible={replyTarget !== null}
+        title={replyTarget ? `Reply to @${replyTarget.displayName}` : ''}
+        placeholder="Write your reply..."
+        submitLabel="Send"
+        topInset={insets.top}
+        resetKey={replyTarget ? `dm-reply:${replyTarget.userId}` : ''}
+        onCancel={() => setReplyTarget(null)}
+        onSubmit={handleSubmitReply}
+      />
     </View>
   );
 };
