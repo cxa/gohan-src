@@ -831,7 +831,7 @@ const PhotoViewerModal = ({
         </GestureDetector>
         {isImageLoading ? (
           <View style={styles.loading} pointerEvents="none">
-            <NeobrutalActivityIndicator color="#FFFFFF" />
+            <NeobrutalActivityIndicator size="small" color="#FFFFFF" />
           </View>
         ) : null}
         <Animated.View

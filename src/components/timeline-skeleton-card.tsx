@@ -21,7 +21,7 @@ type ShimmerBarProps = {
   isActive: boolean;
 };
 
-const ShimmerBar = ({ className, style, isActive }: ShimmerBarProps) => {
+export const ShimmerBar = ({ className, style, isActive }: ShimmerBarProps) => {
   const isDark = useColorScheme() === 'dark';
   const shimmer = useRef(new Animated.Value(0)).current;
   const [width, setWidth] = useState(0);

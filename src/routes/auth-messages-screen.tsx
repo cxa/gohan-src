@@ -581,7 +581,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           ListEmptyComponent={
             isLoading ? (
               <View className="items-center py-8">
-                <NeobrutalActivityIndicator />
+                <NeobrutalActivityIndicator size="small" />
               </View>
             ) : (
               <TimelineEmptyMessage

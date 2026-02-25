@@ -502,7 +502,7 @@ const MoreRouteContent = ({
                       className="items-center justify-center rounded-full border-2 border-foreground dark:border-border bg-surface-secondary"
                       style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
                     >
-                      <NeobrutalActivityIndicator />
+                      <NeobrutalActivityIndicator size="small" />
                     </View>
                     <View className="flex-1">
                       <Text className="text-[16px] font-semibold text-foreground">
@@ -533,7 +533,7 @@ const MoreRouteContent = ({
                   profileUrl={profileUrl}
                   description={description}
                   rightSlot={
-                    isFetching ? <NeobrutalActivityIndicator /> : null
+                    isFetching ? <NeobrutalActivityIndicator size="small" /> : null
                   }
                   footer={
                     errorMessage ? (

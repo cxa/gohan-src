@@ -298,7 +298,7 @@ const FavoritesRoute = () => {
           ListFooterComponent={
             isFetchingNextPage || (isRefetching && !isPending) ? (
               <View className="items-center py-6">
-                <NeobrutalActivityIndicator />
+                <NeobrutalActivityIndicator size="small" />
               </View>
             ) : null
           }

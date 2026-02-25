@@ -709,7 +709,7 @@ const StatusDetailRoute = () => {
 
           {isContextLoading && mainStatus ? (
             <View className="items-center py-3 flex-row justify-center gap-2">
-              <NeobrutalActivityIndicator />
+              <NeobrutalActivityIndicator size="small" />
               <Text className="text-[12px] text-muted">
                 Loading conversation...
               </Text>

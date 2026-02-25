@@ -8,6 +8,7 @@ import {
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
 import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import UserSkeletonCard from '@/components/user-skeleton-card';
 import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
@@ -224,8 +225,10 @@ const UserListRoute = () => {
           }}
           ListEmptyComponent={
             isPending ? (
-              <View className="items-center py-8">
-                <NeobrutalActivityIndicator />
+              <View className="gap-6">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <UserSkeletonCard key={i} />
+                ))}
               </View>
             ) : (
               <DropShadowBox>
@@ -240,7 +243,7 @@ const UserListRoute = () => {
           ListFooterComponent={
             isFetchingNextPage ? (
               <View className="items-center py-6">
-                <NeobrutalActivityIndicator />
+                <NeobrutalActivityIndicator size="small" />
               </View>
             ) : null
           }

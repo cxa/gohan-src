@@ -712,7 +712,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     return (
       <View className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center">
-          <NeobrutalActivityIndicator />
+          <NeobrutalActivityIndicator size="small" />
         </View>
       </View>
     );
@@ -1047,7 +1047,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
 
           {isLoading ? (
             <View className="items-center py-3">
-              <NeobrutalActivityIndicator />
+              <NeobrutalActivityIndicator size="small" />
             </View>
           ) : null}
         </Animated.ScrollView>

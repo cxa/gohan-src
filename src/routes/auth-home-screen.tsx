@@ -657,7 +657,7 @@ const AuthHomeRoute = () => {
           ListFooterComponent={
             isFetchingMore ? (
               <View className="items-center py-6">
-                <NeobrutalActivityIndicator />
+                <NeobrutalActivityIndicator size="small" />
               </View>
             ) : hasReachedTimelineEnd && timelineItems.length > 0 ? (
               <View className="items-center py-6">

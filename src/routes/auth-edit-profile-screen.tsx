@@ -158,7 +158,7 @@ const EditProfileRoute = () => {
           <DropShadowBox>
             <Surface className="bg-surface border-2 border-foreground dark:border-border px-5 py-6">
               <View className="flex-row items-center gap-3">
-                <NeobrutalActivityIndicator />
+                <NeobrutalActivityIndicator size="small" />
                 <Text className="text-[14px] text-foreground">
                   Loading profile...
                 </Text>
@@ -278,7 +278,7 @@ const EditProfileRoute = () => {
 
         {isFetching && user ? (
           <View className="items-center py-1">
-            <NeobrutalActivityIndicator />
+            <NeobrutalActivityIndicator size="small" />
           </View>
         ) : null}
       </ScrollView>
