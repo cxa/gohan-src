@@ -41,7 +41,6 @@ import {
 } from '@/navigation/route-names';
 import useUserTimelineHeader from '@/navigation/use-user-timeline-header';
 import {
-  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import type { AuthStackParamList } from '@/navigation/types';
@@ -82,7 +81,7 @@ const FavoritesRoute = () => {
   const listContentContainerStyle = useMemo(
     () => ({
       ...timelineListSettings.contentContainerStyle,
-      paddingTop: TIMELINE_TOP_CONTENT_GAP,
+      paddingTop: 0,
     }),
     [timelineListSettings.contentContainerStyle],
   );

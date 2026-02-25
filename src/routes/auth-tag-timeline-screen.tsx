@@ -39,7 +39,6 @@ import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
-  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import {
@@ -512,7 +511,7 @@ const TagTimelineRoute = () => {
   const listContentContainerStyle = useMemo(
     () => ({
       ...timelineListSettings.contentContainerStyle,
-      paddingTop: TIMELINE_TOP_CONTENT_GAP,
+      paddingTop: 0,
     }),
     [timelineListSettings.contentContainerStyle],
   );
