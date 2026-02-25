@@ -255,15 +255,13 @@ const MyTimelineRouteContent = ({
             fetchNextPage().catch(() => undefined);
           }}
           ListHeaderComponent={
-            <>
-              {errorMessage ? (
-                <Surface className="bg-danger-soft px-4 py-3">
-                  <Text className="text-[13px] text-danger-foreground">
-                    {errorMessage}
-                  </Text>
-                </Surface>
-              ) : null}
-            </>
+            errorMessage ? (
+              <Surface className="bg-danger-soft px-4 py-3">
+                <Text className="text-[13px] text-danger-foreground">
+                  {errorMessage}
+                </Text>
+              </Surface>
+            ) : null
           }
           ListEmptyComponent={
             isPending ? (
@@ -295,7 +293,7 @@ const MyTimelineRouteContent = ({
           )}
           ListFooterComponent={
             isFetchingNextPage || (isRefetching && !isPending) ? (
-              <View className="items-center py-4">
+              <View className="items-center py-6">
                 <NeobrutalActivityIndicator />
               </View>
             ) : null

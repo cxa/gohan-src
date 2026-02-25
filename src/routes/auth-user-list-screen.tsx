@@ -30,7 +30,6 @@ import type { FanfouUser } from '@/types/fanfou';
 import { parseHtmlToText } from '@/utils/parse-html';
 
 const PAGE_HORIZONTAL_PADDING = 20;
-const PAGE_TOP_PADDING = 16;
 const PAGE_BOTTOM_PADDING = 24;
 const AVATAR_SIZE = 44;
 const USERS_PAGE_SIZE = 60;
@@ -114,7 +113,7 @@ const UserListRoute = () => {
     () => ({
       flexGrow: 1,
       paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-      paddingTop: PAGE_TOP_PADDING,
+      paddingTop: 0,
       paddingBottom: insets.bottom + PAGE_BOTTOM_PADDING,
     }),
     [insets.bottom],
@@ -161,17 +160,15 @@ const UserListRoute = () => {
           refreshControl={refreshControl}
           ItemSeparatorComponent={UserItemSeparator}
           ListHeaderComponent={
-            <>
-              {errorMessage ? (
-                <View className="mb-4">
-                  <Surface className="bg-danger-soft px-4 py-3">
-                    <Text className="text-[13px] text-danger-foreground">
-                      {errorMessage}
-                    </Text>
-                  </Surface>
-                </View>
-              ) : null}
-            </>
+            errorMessage ? (
+              <View className="mb-4">
+                <Surface className="bg-danger-soft px-4 py-3">
+                  <Text className="text-[13px] text-danger-foreground">
+                    {errorMessage}
+                  </Text>
+                </Surface>
+              </View>
+            ) : null
           }
           renderItem={({ item }) => {
             const displayName = item.screen_name || item.name || item.id;
@@ -242,7 +239,7 @@ const UserListRoute = () => {
           }
           ListFooterComponent={
             isFetchingNextPage ? (
-              <View className="items-center py-4">
+              <View className="items-center py-6">
                 <NeobrutalActivityIndicator />
               </View>
             ) : null

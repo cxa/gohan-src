@@ -48,7 +48,6 @@ import type { FanfouStatus } from '@/types/fanfou';
 import { parseFanfouDate } from '@/utils/fanfou-date';
 
 const STATUS_DETAIL_SECTION_GAP = 16;
-const STATUS_DETAIL_TOP_PADDING = 14;
 
 type PhotoViewerOriginRect = {
   x: number;
@@ -288,7 +287,7 @@ const StatusDetailRoute = () => {
   const contentContainerStyle = useMemo(
     () => ({
       paddingHorizontal: 16,
-      paddingTop: STATUS_DETAIL_TOP_PADDING,
+      paddingTop: 0,
       paddingBottom: insets.bottom + TIMELINE_SPACING,
       gap: STATUS_DETAIL_SECTION_GAP,
     }),

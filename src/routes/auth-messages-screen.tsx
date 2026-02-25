@@ -43,7 +43,6 @@ import { formatTimestamp } from '@/utils/format-timestamp';
 import { parseHtmlToText } from '@/utils/parse-html';
 
 const PAGE_HORIZONTAL_PADDING = 20;
-const PAGE_TOP_PADDING = 24;
 const PAGE_BOTTOM_PADDING = 28;
 const CARD_GAP = 16;
 const POSTAGE_STAMP_PATH =
@@ -446,7 +445,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
   const contentContainerStyle = useMemo(
     () => ({
       paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-      paddingTop: PAGE_TOP_PADDING,
+      paddingTop: 0,
       paddingBottom: insets.bottom + PAGE_BOTTOM_PADDING,
       flexGrow: 1,
     }),
@@ -567,15 +566,13 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           contentContainerStyle={contentContainerStyle}
           refreshControl={createRefreshControl()}
           ListHeaderComponent={
-            <>
-              {errorMessage ? (
-                <Surface className="bg-danger-soft px-4 py-3">
-                  <Text className="text-[13px] text-danger-foreground">
-                    {errorMessage}
-                  </Text>
-                </Surface>
-              ) : null}
-            </>
+            errorMessage ? (
+              <Surface className="bg-danger-soft px-4 py-3">
+                <Text className="text-[13px] text-danger-foreground">
+                  {errorMessage}
+                </Text>
+              </Surface>
+            ) : null
           }
           ListHeaderComponentStyle={
             errorMessage ? { marginBottom: CARD_GAP } : undefined

@@ -701,7 +701,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const contentContainerStyle = useMemo(
     () => ({
       paddingHorizontal: 16,
-      paddingTop: 14,
+      paddingTop: 0,
       paddingBottom: insets.bottom + TIMELINE_SPACING,
       gap: PROFILE_CARD_GAP,
     }),

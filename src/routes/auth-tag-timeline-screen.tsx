@@ -588,15 +588,13 @@ const TagTimelineRoute = () => {
             ) : null
           }
           ListHeaderComponent={
-            <>
-              {errorMessage ? (
-                <Surface className="bg-danger-soft px-4 py-3">
-                  <Text className="text-[13px] text-danger-foreground">
-                    {errorMessage}
-                  </Text>
-                </Surface>
-              ) : null}
-            </>
+            errorMessage ? (
+              <Surface className="bg-danger-soft px-4 py-3">
+                <Text className="text-[13px] text-danger-foreground">
+                  {errorMessage}
+                </Text>
+              </Surface>
+            ) : null
           }
           ListEmptyComponent={
             isLoading || isHydratingTimelineItems ? (
