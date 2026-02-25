@@ -16,7 +16,7 @@ type TimelineSkeletonListProps = {
 const TimelineSkeletonList = ({
   keyPrefix,
   count = DEFAULT_TIMELINE_SKELETON_COUNT,
-  className = 'gap-8',
+  className = 'gap-6',
   style,
 }: TimelineSkeletonListProps) => (
   <View className={className} style={style}>
