@@ -1,18 +1,19 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import {
   Alert,
   FlatList,
-  ActivityIndicator,
   Image,
   RefreshControl,
   View,
 } from 'react-native';
+
+import NeobrutalActivityIndicator, { NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useScrollToTop,
@@ -44,7 +45,6 @@ import TimelineTitleHeader from '@/components/timeline-title-header';
 import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
   TIMELINE_AUTO_REFRESH_INTERVAL_MS,
-  TIMELINE_HORIZONTAL_PADDING,
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
   TIMELINE_SCROLL_TOP_THRESHOLD,
@@ -145,12 +145,14 @@ const AuthHomeRoute = () => {
   const [composeRepostTarget, setComposeRepostTarget] =
     useState<RepostTarget | null>(null);
   useScrollToTop(listRef);
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const updateIsAtTop = useCallback((value: boolean) => {
     setIsAtTopState(value);
   }, []);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       scrollY.value = event.contentOffset.y;
+      updatePullScrollY(event.contentOffset.y);
       const atTop = event.contentOffset.y <= TIMELINE_SCROLL_TOP_THRESHOLD;
       if (atTop !== isAtTop.value) {
         isAtTop.value = atTop;
@@ -443,6 +445,15 @@ const AuthHomeRoute = () => {
     }
   }, [fetchLatest, isRefreshing]);
 
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isRefreshing}
+      onRefresh={handleRefresh}
+      tintColor="transparent"
+      colors={['transparent']}
+    />
+  );
+
   const setBookmarkPending = useCallback(
     (statusId: string, pending: boolean) => {
       setPendingBookmarkIds(previous => {
@@ -595,19 +606,6 @@ const AuthHomeRoute = () => {
     [pendingBookmarkIds, setBookmarkPending],
   );
 
-  const refreshControl = useMemo(
-    () => (
-      <RefreshControl
-        refreshing={isRefreshing}
-        onRefresh={handleRefresh}
-        tintColor={accent}
-        colors={[accent]}
-        progressViewOffset={Math.max(insets.top, TIMELINE_HORIZONTAL_PADDING)}
-        progressBackgroundColor={background}
-      />
-    ),
-    [accent, background, handleRefresh, insets.top, isRefreshing],
-  );
   const timelineListSettings = useTimelineListSettings(insets);
   const isHydratingTimelineItems = isHydratingTimeline({
     isLoading,
@@ -620,10 +618,10 @@ const AuthHomeRoute = () => {
         ? `Reply @${composeReplyTarget.screenName}`
         : 'Reply'
       : composeMode === 'repost'
-      ? composeRepostTarget?.screenName
-        ? `Repost @${composeRepostTarget.screenName}`
-        : 'Repost'
-      : 'Compose';
+        ? composeRepostTarget?.screenName
+          ? `Repost @${composeRepostTarget.screenName}`
+          : 'Repost'
+        : 'Compose';
   const composerPlaceholder =
     composeMode === 'reply'
       ? 'Write your reply...'
@@ -637,8 +635,8 @@ const AuthHomeRoute = () => {
     composeMode === 'reply'
       ? `reply:${composeReplyTarget?.statusId ?? ''}`
       : composeMode === 'repost'
-      ? `repost:${composeRepostTarget?.statusId ?? ''}`
-      : 'closed';
+        ? `repost:${composeRepostTarget?.statusId ?? ''}`
+        : 'closed';
 
   return (
     <>
@@ -659,7 +657,7 @@ const AuthHomeRoute = () => {
           ListFooterComponent={
             isFetchingMore ? (
               <View className="items-center py-6">
-                <ActivityIndicator color={accent} />
+                <NeobrutalActivityIndicator />
               </View>
             ) : hasReachedTimelineEnd && timelineItems.length > 0 ? (
               <View className="items-center py-6">
@@ -707,6 +705,7 @@ const AuthHomeRoute = () => {
           )}
         />
       </ScrollShadow>
+      <NeobrutalRefreshIndicator refreshing={isRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} />
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}

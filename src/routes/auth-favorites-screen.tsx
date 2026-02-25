@@ -1,10 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
   RefreshControl,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
+
+import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useRoute,
@@ -83,6 +87,13 @@ const FavoritesRoute = () => {
     [timelineListSettings.contentContainerStyle],
   );
 
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      updatePullScrollY(event.contentOffset.y);
+    },
+  });
+
   useUserTimelineHeader({
     userId: resolvedUserId ?? '',
     screenTitle: SCREEN_TITLE,
@@ -96,13 +107,13 @@ const FavoritesRoute = () => {
         previous =>
           previous
             ? {
-                ...previous,
-                pages: previous.pages.map(pageItems =>
-                  pageItems.map(item =>
-                    item.id === statusId ? updater(item) : item,
-                  ),
+              ...previous,
+              pages: previous.pages.map(pageItems =>
+                pageItems.map(item =>
+                  item.id === statusId ? updater(item) : item,
                 ),
-              }
+              ),
+            }
             : previous,
       );
     },
@@ -176,20 +187,15 @@ const FavoritesRoute = () => {
     ? getErrorMessage(error, 'Failed to load favorites.')
     : null;
 
+  const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(refetch);
   const refreshControl = (
     <RefreshControl
-      refreshing={isRefetching}
-      onRefresh={async () => {
-        await refetch();
-      }}
-      tintColor={accent}
-      colors={[accent]}
-      progressViewOffset={Math.max(44, insets.top)}
-      progressBackgroundColor={background}
+      refreshing={isPullRefreshing}
+      onRefresh={handlePullRefresh}
+      tintColor="transparent"
+      colors={['transparent']}
     />
-  );
-
-  const handleOpenStatus = useCallback(
+  ); const handleOpenStatus = useCallback(
     (statusId: string) => {
       navigation.navigate(AUTH_STACK_ROUTE.STATUS, {
         screen: AUTH_STATUS_ROUTE.DETAIL,
@@ -238,11 +244,12 @@ const FavoritesRoute = () => {
   return (
     <>
       <NativeEdgeScrollShadow className="flex-1" color={background}>
-        <FlatList
+        <Animated.FlatList
           className="flex-1 bg-background"
           data={items}
           keyExtractor={item => item.id}
           refreshControl={refreshControl}
+          onScroll={scrollHandler}
           contentInsetAdjustmentBehavior="automatic"
           scrollEventThrottle={timelineListSettings.scrollEventThrottle}
           scrollIndicatorInsets={timelineListSettings.scrollIndicatorInsets}
@@ -255,13 +262,15 @@ const FavoritesRoute = () => {
             fetchNextPage().catch(() => undefined);
           }}
           ListHeaderComponent={
-            errorMessage ? (
-              <Surface className="bg-danger-soft px-4 py-3">
-                <Text className="text-[13px] text-danger-foreground">
-                  {errorMessage}
-                </Text>
-              </Surface>
-            ) : null
+            <>
+              {errorMessage ? (
+                <Surface className="bg-danger-soft px-4 py-3">
+                  <Text className="text-[13px] text-danger-foreground">
+                    {errorMessage}
+                  </Text>
+                </Surface>
+              ) : null}
+            </>
           }
           ListEmptyComponent={
             isPending ? (
@@ -292,12 +301,15 @@ const FavoritesRoute = () => {
           ListFooterComponent={
             isFetchingNextPage || (isRefetching && !isPending) ? (
               <View className="items-center py-4">
-                <ActivityIndicator color={accent} />
+                <NeobrutalActivityIndicator />
               </View>
             ) : null
           }
         />
       </NativeEdgeScrollShadow>
+
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
+
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}

@@ -6,13 +6,15 @@ import React, {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
   RefreshControl,
   View,
 } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useRoute,
@@ -35,7 +37,6 @@ import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
-  TIMELINE_HORIZONTAL_PADDING,
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
   TIMELINE_TOP_CONTENT_GAP,
@@ -153,6 +154,13 @@ const TagTimelineRoute = () => {
   const [composeRepostTarget, setComposeRepostTarget] =
     useState<RepostTarget | null>(null);
 
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      updatePullScrollY(event.contentOffset.y);
+    },
+  });
+
   const handleMentionPress = useCallback(
     (userId: string) => {
       navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
@@ -263,7 +271,6 @@ const TagTimelineRoute = () => {
   const {
     data: queryItems,
     isLoading,
-    isFetching,
     error,
     refetch,
   } = useQuery<FanfouStatus[]>({
@@ -490,20 +497,15 @@ const TagTimelineRoute = () => {
     }
   }, [hasReachedTimelineEnd, isFetchingMore, isLoading, routeTag]);
 
-  const refreshControl = useMemo(
-    () => (
-      <RefreshControl
-        refreshing={isFetching && !isLoading}
-        onRefresh={() => refetch()}
-        tintColor={accent}
-        colors={[accent]}
-        progressViewOffset={Math.max(insets.top, TIMELINE_HORIZONTAL_PADDING)}
-        progressBackgroundColor={background}
-      />
-    ),
-    [accent, background, insets.top, isFetching, isLoading, refetch],
+  const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(refetch);
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isPullRefreshing}
+      onRefresh={handlePullRefresh}
+      tintColor="transparent"
+      colors={['transparent']}
+    />
   );
-
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
@@ -520,10 +522,10 @@ const TagTimelineRoute = () => {
         ? `Reply @${composeReplyTarget.screenName}`
         : 'Reply'
       : composeMode === 'repost'
-      ? composeRepostTarget?.screenName
-        ? `Repost @${composeRepostTarget.screenName}`
-        : 'Repost'
-      : 'Compose';
+        ? composeRepostTarget?.screenName
+          ? `Repost @${composeRepostTarget.screenName}`
+          : 'Repost'
+        : 'Compose';
   const composerPlaceholder =
     composeMode === 'reply'
       ? 'Write your reply...'
@@ -537,8 +539,8 @@ const TagTimelineRoute = () => {
     composeMode === 'reply'
       ? `reply:${composeReplyTarget?.statusId ?? ''}`
       : composeMode === 'repost'
-      ? `repost:${composeRepostTarget?.statusId ?? ''}`
-      : 'closed';
+        ? `repost:${composeRepostTarget?.statusId ?? ''}`
+        : 'closed';
   const isHydratingTimelineItems = isHydratingTimeline({
     isLoading,
     renderedItems: timelineItems,
@@ -562,12 +564,13 @@ const TagTimelineRoute = () => {
   return (
     <>
       <NativeEdgeScrollShadow className="flex-1" color={background}>
-        <FlatList
+        <Animated.FlatList
           ref={listRef}
           className="flex-1 bg-background"
           data={timelineItems}
           keyExtractor={item => getStatusId(item)}
           refreshControl={refreshControl}
+          onScroll={scrollHandler}
           contentInsetAdjustmentBehavior="automatic"
           scrollEventThrottle={timelineListSettings.scrollEventThrottle}
           scrollIndicatorInsets={timelineListSettings.scrollIndicatorInsets}
@@ -575,7 +578,7 @@ const TagTimelineRoute = () => {
           ListFooterComponent={
             isFetchingMore ? (
               <View className="items-center py-6">
-                <ActivityIndicator color={accent} />
+                <NeobrutalActivityIndicator />
               </View>
             ) : hasReachedTimelineEnd && timelineItems.length > 0 ? (
               <View className="items-center py-6">
@@ -586,13 +589,15 @@ const TagTimelineRoute = () => {
             ) : null
           }
           ListHeaderComponent={
-            errorMessage ? (
-              <Surface className="bg-danger-soft px-4 py-3">
-                <Text className="text-[13px] text-danger-foreground">
-                  {errorMessage}
-                </Text>
-              </Surface>
-            ) : null
+            <>
+              {errorMessage ? (
+                <Surface className="bg-danger-soft px-4 py-3">
+                  <Text className="text-[13px] text-danger-foreground">
+                    {errorMessage}
+                  </Text>
+                </Surface>
+              ) : null}
+            </>
           }
           ListEmptyComponent={
             isLoading || isHydratingTimelineItems ? (
@@ -625,6 +630,8 @@ const TagTimelineRoute = () => {
           )}
         />
       </NativeEdgeScrollShadow>
+
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
 
       <PhotoViewerModal
         visible={photoViewerVisible}

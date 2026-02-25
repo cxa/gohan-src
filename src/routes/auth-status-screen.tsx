@@ -1,12 +1,16 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   RefreshControl,
-  ScrollView,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
+
+import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useRoute,
@@ -45,7 +49,6 @@ import { parseFanfouDate } from '@/utils/fanfou-date';
 
 const STATUS_DETAIL_SECTION_GAP = 16;
 const STATUS_DETAIL_TOP_PADDING = 14;
-const STATUS_DETAIL_PROGRESS_OFFSET = 44;
 
 type PhotoViewerOriginRect = {
   x: number;
@@ -158,6 +161,13 @@ const StatusDetailRoute = () => {
   ]);
   const routeStatusId = route.params.statusId.trim();
 
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      updatePullScrollY(event.contentOffset.y);
+    },
+  });
+
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const [photoViewerPreviewKey, setPhotoViewerPreviewKey] = useState<
@@ -194,7 +204,6 @@ const StatusDetailRoute = () => {
   const {
     data: status,
     isLoading: isStatusLoading,
-    isRefetching: isStatusRefetching,
     error: statusError,
     refetch: refetchStatus,
   } = useQuery<FanfouStatus | null>({
@@ -212,7 +221,6 @@ const StatusDetailRoute = () => {
   const {
     data: contextStatuses,
     isLoading: isContextLoading,
-    isRefetching: isContextRefetching,
     error: contextError,
     refetch: refetchContext,
   } = useQuery<FanfouStatus[]>({
@@ -275,7 +283,7 @@ const StatusDetailRoute = () => {
     : null;
   const isHydratingStatus =
     !mainStatus && (isStatusLoading || isContextLoading);
-  const isPullToRefreshing = isStatusRefetching || isContextRefetching;
+
 
   const contentContainerStyle = useMemo(
     () => ({
@@ -290,6 +298,8 @@ const StatusDetailRoute = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([refetchStatus(), refetchContext()]);
   }, [refetchContext, refetchStatus]);
+
+  const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(handleRefresh);
 
   const handleMentionPress = useCallback(
     (userId: string) => {
@@ -610,8 +620,8 @@ const StatusDetailRoute = () => {
         ? `Reply @${composeReplyTarget.screenName}`
         : 'Reply'
       : composeRepostTarget?.screenName
-      ? `Repost @${composeRepostTarget.screenName}`
-      : 'Repost';
+        ? `Repost @${composeRepostTarget.screenName}`
+        : 'Repost';
   const composerPlaceholder =
     composeMode === 'reply'
       ? 'Write your reply...'
@@ -625,8 +635,8 @@ const StatusDetailRoute = () => {
     composeMode === 'reply'
       ? `reply:${composeReplyTarget?.statusId ?? ''}`
       : composeMode === 'repost'
-      ? `repost:${composeRepostTarget?.statusId ?? ''}`
-      : 'closed';
+        ? `repost:${composeRepostTarget?.statusId ?? ''}`
+        : 'closed';
 
   if (!routeStatusId) {
     return (
@@ -646,21 +656,18 @@ const StatusDetailRoute = () => {
         className="flex-1 bg-background"
         color={background}
       >
-        <ScrollView
+        <Animated.ScrollView
           className="flex-1 bg-background"
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={contentContainerStyle}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
-              refreshing={isPullToRefreshing}
-              onRefresh={handleRefresh}
-              tintColor={accent}
-              colors={[accent]}
-              progressViewOffset={Math.max(
-                STATUS_DETAIL_PROGRESS_OFFSET,
-                insets.top,
-              )}
-              progressBackgroundColor={background}
+              refreshing={isPullRefreshing}
+              onRefresh={handlePullRefresh}
+              tintColor="transparent"
+              colors={['transparent']}
             />
           }
         >
@@ -703,14 +710,16 @@ const StatusDetailRoute = () => {
 
           {isContextLoading && mainStatus ? (
             <View className="items-center py-3 flex-row justify-center gap-2">
-              <ActivityIndicator color={accent} />
+              <NeobrutalActivityIndicator />
               <Text className="text-[12px] text-muted">
                 Loading conversation...
               </Text>
             </View>
           ) : null}
-        </ScrollView>
+        </Animated.ScrollView>
       </NativeEdgeScrollShadow>
+
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
 
       <PhotoViewerModal
         visible={photoViewerVisible}

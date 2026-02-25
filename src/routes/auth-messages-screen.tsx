@@ -6,7 +6,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -14,6 +13,10 @@ import {
   RefreshControl,
   View,
 } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+
+import NeobrutalActivityIndicator, { NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useScrollToTop,
@@ -202,11 +205,10 @@ const MailboxHeaderTabs = ({
             <DropShadowBox shadowOffsetClassName="-translate-x-0.5 translate-y-0.5">
               <Pressable
                 onPress={() => onPressTab(key)}
-                className={`w-full border border-foreground dark:border-border px-2 py-1 ${
-                  isActive
-                    ? 'bg-accent'
-                    : 'bg-surface active:translate-x-[-3px] active:translate-y-[3px]'
-                }`}
+                className={`w-full border border-foreground dark:border-border px-2 py-1 ${isActive
+                  ? 'bg-accent'
+                  : 'bg-surface active:translate-x-[-3px] active:translate-y-[3px]'
+                  }`}
                 accessibilityRole="button"
                 accessibilityState={isActive ? { selected: true } : undefined}
                 accessibilityLabel={`Open ${meta.label}`}
@@ -214,9 +216,8 @@ const MailboxHeaderTabs = ({
                 <View className="flex-row items-center justify-center gap-1.5">
                   <Icon color={isActive ? activeIconColor : muted} size={12} />
                   <Text
-                    className={`text-[11px] ${
-                      isActive ? 'text-accent-foreground' : 'text-foreground'
-                    }`}
+                    className={`text-[11px] ${isActive ? 'text-accent-foreground' : 'text-foreground'
+                      }`}
                   >
                     {meta.label}
                   </Text>
@@ -278,11 +279,10 @@ const MessageCard = ({
         }}
         disabled={!isPressable}
         accessibilityRole={isPressable ? 'button' : undefined}
-        className={`relative w-full overflow-hidden bg-white dark:bg-surface border-2 border-foreground dark:border-border px-4 pb-4 pt-5 ${
-          isPressable
-            ? 'active:translate-x-[-4px] active:translate-y-[4px]'
-            : ''
-        }`}
+        className={`relative w-full overflow-hidden bg-white dark:bg-surface border-2 border-foreground dark:border-border px-4 pb-4 pt-5 ${isPressable
+          ? 'active:translate-x-[-4px] active:translate-y-[4px]'
+          : ''
+          }`}
       >
         {onReply ? (
           <Pressable
@@ -357,8 +357,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
   const inboxListRef = useRef<FlatList<FanfouDirectMessage>>(null);
   const outboxListRef = useRef<FlatList<FanfouDirectMessage>>(null);
   const insets = useSafeAreaInsets();
-  const [accent, background, muted, accentForeground, border] = useThemeColor([
-    'accent',
+  const [background, muted, accentForeground, border] = useThemeColor([
     'background',
     'muted',
     'accent-foreground',
@@ -371,13 +370,20 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     displayName: string;
   } | null>(null);
 
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      updatePullScrollY(event.contentOffset.y);
+    },
+  });
+
   useScrollToTop(inboxListRef);
   useScrollToTop(outboxListRef);
 
   const parentNavigation =
     navigation.getParent<NavigationProp<AuthStackParamList>>();
 
-  const { data, isLoading, isRefetching, error, refetch } =
+  const { data, isLoading, error, refetch } =
     useQuery<MessageGroups>({
       queryKey: ['private-messages', userId],
       queryFn: async () => {
@@ -510,83 +516,86 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     [navigation],
   );
 
+  const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(refetch);
   const createRefreshControl = () => (
     <RefreshControl
-      refreshing={isRefetching}
-      onRefresh={async () => {
-        await refetch();
-      }}
-      tintColor={accent}
-      colors={[accent]}
-      progressViewOffset={Math.max(44, insets.top)}
-      progressBackgroundColor={background}
+      refreshing={isPullRefreshing}
+      onRefresh={handlePullRefresh}
+      tintColor="transparent"
+      colors={['transparent']}
     />
   );
 
   const renderMailboxList = (
     mailbox: MailboxKind,
-    items: FanfouDirectMessage[],
+    mailboxItems: FanfouDirectMessage[],
     listRef: React.RefObject<FlatList<FanfouDirectMessage> | null>,
   ) => (
-    <NativeEdgeScrollShadow className="flex-1" color={background}>
-      <FlatList
-        ref={listRef}
-        className="flex-1 bg-background"
-        data={items}
-        keyExtractor={item => `${mailbox}-${item.id}`}
-        renderItem={({ item }) => {
-          const sender = item.sender;
-          const senderId = sender?.id || item.sender_id;
-          return (
-            <MessageCard
-              message={item}
-              mailbox={mailbox}
-              onPressProfile={handleOpenProfile}
-              onDelete={() => handleDeleteMessage(item.id)}
-              onReply={
-                mailbox === 'inbox' && senderId
-                  ? () =>
+    <>
+      <NativeEdgeScrollShadow className="flex-1" color={background}>
+        <Animated.FlatList
+          ref={listRef}
+          className="flex-1 bg-background"
+          data={mailboxItems}
+          keyExtractor={item => `${mailbox}-${item.id}`}
+          renderItem={({ item }) => {
+            const sender = item.sender;
+            const senderId = sender?.id || item.sender_id;
+            return (
+              <MessageCard
+                message={item}
+                mailbox={mailbox}
+                onPressProfile={handleOpenProfile}
+                onDelete={() => handleDeleteMessage(item.id)}
+                onReply={
+                  mailbox === 'inbox' && senderId
+                    ? () =>
                       setReplyTarget({
                         userId: senderId,
                         displayName:
                           sender?.screen_name || sender?.name || senderId,
                       })
-                  : undefined
-              }
-              stampBorderColor={border}
-            />
-          );
-        }}
-        contentInsetAdjustmentBehavior="automatic"
-        scrollIndicatorInsets={{ bottom: insets.bottom }}
-        contentContainerStyle={contentContainerStyle}
-        refreshControl={createRefreshControl()}
-        ListHeaderComponent={
-          errorMessage ? (
-            <Surface className="bg-danger-soft px-4 py-3">
-              <Text className="text-[13px] text-danger-foreground">
-                {errorMessage}
-              </Text>
-            </Surface>
-          ) : null
-        }
-        ListHeaderComponentStyle={
-          errorMessage ? { marginBottom: CARD_GAP } : undefined
-        }
-        ItemSeparatorComponent={MessageItemSeparator}
-        ListEmptyComponent={
-          isLoading ? (
-            <View className="items-center py-8">
-              <ActivityIndicator color={accent} />
-            </View>
-          ) : (
-            <TimelineEmptyMessage
-              message={MAILBOX_META[mailbox].emptyMessage}
-            />
-          )
-        }
-      />
-    </NativeEdgeScrollShadow>
+                    : undefined
+                }
+                stampBorderColor={border}
+              />
+            );
+          }}
+          onScroll={scrollHandler}
+          contentInsetAdjustmentBehavior="automatic"
+          scrollIndicatorInsets={{ bottom: insets.bottom }}
+          contentContainerStyle={contentContainerStyle}
+          refreshControl={createRefreshControl()}
+          ListHeaderComponent={
+            <>
+              {errorMessage ? (
+                <Surface className="bg-danger-soft px-4 py-3">
+                  <Text className="text-[13px] text-danger-foreground">
+                    {errorMessage}
+                  </Text>
+                </Surface>
+              ) : null}
+            </>
+          }
+          ListHeaderComponentStyle={
+            errorMessage ? { marginBottom: CARD_GAP } : undefined
+          }
+          ItemSeparatorComponent={MessageItemSeparator}
+          ListEmptyComponent={
+            isLoading ? (
+              <View className="items-center py-8">
+                <NeobrutalActivityIndicator />
+              </View>
+            ) : (
+              <TimelineEmptyMessage
+                message={MAILBOX_META[mailbox].emptyMessage}
+              />
+            )
+          }
+        />
+      </NativeEdgeScrollShadow>
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} />
+    </>
   );
 
   return (

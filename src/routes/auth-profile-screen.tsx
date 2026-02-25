@@ -6,14 +6,18 @@ import React, {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Pressable,
   RefreshControl,
-  ScrollView,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedScrollHandler,
+} from 'react-native-reanimated';
+
+import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useRoute,
@@ -121,6 +125,13 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     'muted',
   ]);
 
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      updatePullScrollY(event.contentOffset.y);
+    },
+  });
+
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const [photoViewerPreviewKey, setPhotoViewerPreviewKey] = useState<
@@ -155,7 +166,6 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const {
     data: user,
     isLoading,
-    isRefetching,
     error,
     refetch: refetchUser,
   } = useQuery<FanfouUser | null>({
@@ -396,6 +406,8 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     await Promise.all([refetchUser(), refetchRecentStatuses(), refetchBlock()]);
   }, [refetchBlock, refetchRecentStatuses, refetchUser]);
 
+  const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(handleRefresh);
+
   const handleFollowToggle = useCallback(async () => {
     if (!user || isFollowSubmitting || isBlocked) {
       return;
@@ -598,18 +610,18 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
           composeMode === 'mention'
             ? 'Mention posted.'
             : composeMode === 'dm'
-            ? 'Direct message sent.'
-            : composeMode === 'reply'
-            ? 'Reply posted.'
-            : 'Reposted.',
+              ? 'Direct message sent.'
+              : composeMode === 'reply'
+                ? 'Reply posted.'
+                : 'Reposted.',
         );
       } catch (requestError) {
         Alert.alert(
           composeMode === 'repost'
             ? 'Repost failed'
             : composeMode === 'reply'
-            ? 'Reply failed'
-            : 'Send failed',
+              ? 'Reply failed'
+              : 'Send failed',
           getErrorMessage(requestError, 'Unable to send message.'),
         );
       }
@@ -643,10 +655,10 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
           previous =>
             previous
               ? previous.map(item =>
-                  getStatusId(item) === statusId
-                    ? { ...item, favorited: nextFavorited }
-                    : item,
-                )
+                getStatusId(item) === statusId
+                  ? { ...item, favorited: nextFavorited }
+                  : item,
+              )
               : previous,
         );
       } catch (requestError) {
@@ -700,7 +712,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     return (
       <View className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={accent} />
+          <NeobrutalActivityIndicator />
         </View>
       </View>
     );
@@ -794,46 +806,46 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     composeMode === 'dm'
       ? `Message ${handleName}`
       : composeMode === 'reply'
-      ? composeReplyTarget
-        ? `Reply @${composeReplyTarget.screenName}`
-        : 'Reply'
-      : composeMode === 'repost'
-      ? composeRepostTarget?.screenName
-        ? `Repost @${composeRepostTarget.screenName}`
-        : 'Repost'
-      : `Mention ${handleName}`;
+        ? composeReplyTarget
+          ? `Reply @${composeReplyTarget.screenName}`
+          : 'Reply'
+        : composeMode === 'repost'
+          ? composeRepostTarget?.screenName
+            ? `Repost @${composeRepostTarget.screenName}`
+            : 'Repost'
+          : `Mention ${handleName}`;
   const composerPlaceholder =
     composeMode === 'dm'
       ? 'Write a private message...'
       : composeMode === 'reply'
-      ? 'Write your reply...'
-      : composeMode === 'repost'
-      ? 'Add a comment (optional)...'
-      : 'Write your mention...';
+        ? 'Write your reply...'
+        : composeMode === 'repost'
+          ? 'Add a comment (optional)...'
+          : 'Write your mention...';
   const composerSubmitLabel =
     composeMode === 'dm'
       ? 'Send'
       : composeMode === 'reply'
-      ? 'Reply'
-      : composeMode === 'repost'
-      ? 'Repost'
-      : 'Post';
+        ? 'Reply'
+        : composeMode === 'repost'
+          ? 'Repost'
+          : 'Post';
   const composerInitialText =
     composeMode === 'mention'
       ? `@${user.screen_name} `
       : composeMode === 'reply' && composeReplyTarget
-      ? `@${composeReplyTarget.screenName} `
-      : '';
+        ? `@${composeReplyTarget.screenName} `
+        : '';
   const composerResetKey =
     composeMode === 'mention'
       ? `mention:${user.id}`
       : composeMode === 'dm'
-      ? `dm:${user.id}`
-      : composeMode === 'reply'
-      ? `reply:${composeReplyTarget?.statusId ?? ''}`
-      : composeMode === 'repost'
-      ? `repost:${composeRepostTarget?.statusId ?? ''}`
-      : 'closed';
+        ? `dm:${user.id}`
+        : composeMode === 'reply'
+          ? `reply:${composeReplyTarget?.statusId ?? ''}`
+          : composeMode === 'repost'
+            ? `repost:${composeRepostTarget?.statusId ?? ''}`
+            : 'closed';
   const isHydratingRecentStatuses = isHydratingTimeline({
     isLoading: isRecentStatusesLoading,
     renderedItems: recentStatusItems,
@@ -846,18 +858,18 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
         className="flex-1 bg-background"
         color={background}
       >
-        <ScrollView
+        <Animated.ScrollView
           className="flex-1 bg-background"
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={contentContainerStyle}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={handleRefresh}
-              tintColor={accent}
-              colors={[accent]}
-              progressViewOffset={Math.max(44, insets.top)}
-              progressBackgroundColor={background}
+              refreshing={isPullRefreshing}
+              onRefresh={handlePullRefresh}
+              tintColor="transparent"
+              colors={['transparent']}
             />
           }
         >
@@ -883,26 +895,24 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   <Pressable
                     onPress={handleFollowToggle}
                     disabled={isFollowSubmitting || isBlocked}
-                    className={`flex-1 border border-border px-3 py-2 ${
-                      isBlocked ? 'bg-surface' : 'bg-accent'
-                    }`}
+                    className={`flex-1 border border-border px-3 py-2 ${isBlocked ? 'bg-surface' : 'bg-accent'
+                      }`}
                     accessibilityRole="button"
                     accessibilityLabel={
                       isFollowing ? 'Unfollow user' : 'Follow user'
                     }
                   >
                     <Text
-                      className={`text-[13px] text-center ${
-                        isBlocked ? 'text-muted' : 'text-accent-foreground'
-                      }`}
+                      className={`text-[13px] text-center ${isBlocked ? 'text-muted' : 'text-accent-foreground'
+                        }`}
                     >
                       {isFollowSubmitting
                         ? 'Updating...'
                         : isBlocked
-                        ? 'Blocked'
-                        : isFollowing
-                        ? 'Unfollow'
-                        : 'Follow'}
+                          ? 'Blocked'
+                          : isFollowing
+                            ? 'Unfollow'
+                            : 'Follow'}
                     </Text>
                   </Pressable>
 
@@ -919,10 +929,10 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                       {isBlockChecking
                         ? 'Checking...'
                         : isBlockSubmitting
-                        ? 'Updating...'
-                        : isBlocked
-                        ? 'Unblock'
-                        : 'Block'}
+                          ? 'Updating...'
+                          : isBlocked
+                            ? 'Unblock'
+                            : 'Block'}
                     </Text>
                   </Pressable>
                 </View>
@@ -1001,9 +1011,9 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                 ) : null}
 
                 {!isRecentStatusesLoading &&
-                !isHydratingRecentStatuses &&
-                recentStatusItems.length === 0 &&
-                !recentStatusesErrorMessage ? (
+                  !isHydratingRecentStatuses &&
+                  recentStatusItems.length === 0 &&
+                  !recentStatusesErrorMessage ? (
                   <TimelineSkeletonCard message="No recent posts yet." />
                 ) : null}
 
@@ -1037,11 +1047,12 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
 
           {isLoading ? (
             <View className="items-center py-3">
-              <ActivityIndicator color={accent} />
+              <NeobrutalActivityIndicator />
             </View>
           ) : null}
-        </ScrollView>
+        </Animated.ScrollView>
       </NativeEdgeScrollShadow>
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
 
       <PhotoViewerModal
         visible={photoViewerVisible}

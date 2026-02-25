@@ -1,18 +1,19 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Image,
   RefreshControl,
   View,
 } from 'react-native';
+
+import NeobrutalActivityIndicator, { NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useScrollToTop,
@@ -42,7 +43,6 @@ import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineTitleHeader from '@/components/timeline-title-header';
 import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
-  TIMELINE_HORIZONTAL_PADDING,
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
   useTimelineListSettings,
@@ -137,9 +137,11 @@ const MentionsRoute = () => {
     useState<RepostTarget | null>(null);
   useScrollToTop(listRef);
   const scrollY = useSharedValue(0);
+  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       scrollY.value = event.contentOffset.y;
+      updatePullScrollY(event.contentOffset.y);
     },
   });
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -301,7 +303,6 @@ const MentionsRoute = () => {
   const {
     data: queryItems,
     isLoading,
-    isFetching,
     error,
     refetch,
   } = useQuery<FanfouStatus[]>({
@@ -523,18 +524,14 @@ const MentionsRoute = () => {
     }
   }, [hasReachedTimelineEnd, isFetchingMore, isLoading]);
 
-  const refreshControl = useMemo(
-    () => (
-      <RefreshControl
-        refreshing={isFetching && !isLoading}
-        onRefresh={() => refetch()}
-        tintColor={accent}
-        colors={[accent]}
-        progressViewOffset={Math.max(insets.top, TIMELINE_HORIZONTAL_PADDING)}
-        progressBackgroundColor={background}
-      />
-    ),
-    [accent, background, insets.top, isFetching, isLoading, refetch],
+  const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(refetch);
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isPullRefreshing}
+      onRefresh={handlePullRefresh}
+      tintColor="transparent"
+      colors={['transparent']}
+    />
   );
   const timelineListSettings = useTimelineListSettings(insets);
   const composerTitle =
@@ -543,10 +540,10 @@ const MentionsRoute = () => {
         ? `Reply @${composeReplyTarget.screenName}`
         : 'Reply'
       : composeMode === 'repost'
-      ? composeRepostTarget?.screenName
-        ? `Repost @${composeRepostTarget.screenName}`
-        : 'Repost'
-      : 'Compose';
+        ? composeRepostTarget?.screenName
+          ? `Repost @${composeRepostTarget.screenName}`
+          : 'Repost'
+        : 'Compose';
   const composerPlaceholder =
     composeMode === 'reply'
       ? 'Write your reply...'
@@ -560,8 +557,8 @@ const MentionsRoute = () => {
     composeMode === 'reply'
       ? `reply:${composeReplyTarget?.statusId ?? ''}`
       : composeMode === 'repost'
-      ? `repost:${composeRepostTarget?.statusId ?? ''}`
-      : 'closed';
+        ? `repost:${composeRepostTarget?.statusId ?? ''}`
+        : 'closed';
   const isHydratingTimelineItems = isHydratingTimeline({
     isLoading,
     renderedItems: timelineItems,
@@ -588,7 +585,7 @@ const MentionsRoute = () => {
           ListFooterComponent={
             isFetchingMore ? (
               <View className="items-center py-6">
-                <ActivityIndicator color={accent} />
+                <NeobrutalActivityIndicator />
               </View>
             ) : hasReachedTimelineEnd && timelineItems.length > 0 ? (
               <View className="items-center py-6">
@@ -635,7 +632,8 @@ const MentionsRoute = () => {
             />
           )}
         />
-      </ScrollShadow>
+      </ScrollShadow >
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} />
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
