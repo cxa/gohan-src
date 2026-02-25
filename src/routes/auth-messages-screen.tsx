@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
-import NeobrutalActivityIndicator, { NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
@@ -591,7 +591,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           }
         />
       </NativeEdgeScrollShadow>
-      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} />
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
     </>
   );
 

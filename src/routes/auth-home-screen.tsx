@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import NeobrutalActivityIndicator, { NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
+import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import { usePullScrollY } from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
@@ -705,7 +705,7 @@ const AuthHomeRoute = () => {
           )}
         />
       </ScrollShadow>
-      <NeobrutalRefreshIndicator refreshing={isRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} />
+      <NeobrutalRefreshIndicator refreshing={isRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}

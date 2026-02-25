@@ -18,7 +18,7 @@ const TimelineTitleHeader = ({
   titleContainerStyle,
   titleTextStyle,
   errorMessage,
-  containerClassName = 'px-1 relative',
+  containerClassName = 'px-1 relative -bottom-3',
 }: TimelineTitleHeaderProps) => (
   <View className={containerClassName}>
     <Animated.View
