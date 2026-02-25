@@ -8,6 +8,8 @@ export const usePullScrollY = () => {
   const insets = useSafeAreaInsets();
   const pullScrollY = useSharedValue(0);
   const _restingY = useSharedValue<number | null>(null);
+  // safeAreaTop is the status-bar-only inset (fixed for the session).
+  const safeAreaTop = useSharedValue(insets.top);
   // scrollInsetTop is the full content inset from the scroll view at rest:
   // equals headerHeight on screens with a transparent nav bar, or insets.top otherwise.
   const scrollInsetTop = useSharedValue(insets.top);
@@ -27,7 +29,7 @@ export const usePullScrollY = () => {
     pullScrollY.value = contentOffsetY - _restingY.value;
   };
 
-  return { pullScrollY, scrollInsetTop, updatePullScrollY };
+  return { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY };
 };
 
 export const usePullRefreshState = (
@@ -57,7 +59,7 @@ export const usePullToRefresh = ({
   refreshing: boolean;
   onRefresh: () => void;
 }) => {
-  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
 
   const refreshControl: React.ReactElement<RefreshControlProps> = useMemo(
     () => (
@@ -75,6 +77,7 @@ export const usePullToRefresh = ({
     <NeobrutalRefreshIndicator
       refreshing={refreshing}
       scrollY={pullScrollY}
+      safeAreaTop={safeAreaTop}
       scrollInsetTop={scrollInsetTop}
     />
   );

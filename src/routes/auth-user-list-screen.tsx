@@ -72,7 +72,7 @@ const UserListRoute = () => {
     backCount,
   });
 
-  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       updatePullScrollY(event.contentOffset.y);
@@ -250,7 +250,7 @@ const UserListRoute = () => {
         />
       </NativeEdgeScrollShadow>
 
-      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
     </>
   );
 };

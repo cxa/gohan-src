@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
 });
 
 const REFRESH_TOP_MARGIN = 16;
+const REFRESH_TOP_MARGIN_BELOW_NAV = 8;
 const DEFAULT_PULL_THRESHOLD = 80;
 export const COMPACT_PULL_THRESHOLD = 50;
 const BLOCK_BORDER = 2;
@@ -244,11 +245,13 @@ const RefreshDot = ({
 export const NeobrutalRefreshIndicator = ({
   refreshing,
   scrollY,
+  safeAreaTop,
   scrollInsetTop,
   pullThreshold = DEFAULT_PULL_THRESHOLD,
 }: {
   refreshing: boolean;
   scrollY: SharedValue<number>;
+  safeAreaTop: SharedValue<number>;
   scrollInsetTop: SharedValue<number>;
   pullThreshold?: number;
 }) => {
@@ -282,11 +285,18 @@ export const NeobrutalRefreshIndicator = ({
     );
     const visible = Math.max(pullProgress, refreshLock.value);
 
-    // scrollInsetTop = full header height (status bar + nav bar) when a transparent
-    // nav header is present, or ≈ safeAreaTop when there is no nav header.
-    // Place dots just below the nav bar (or status bar when no nav bar).
+    // scrollInsetTop = status bar + nav bar height when a transparent nav header
+    // is present, or ≈ safeAreaTop when there is no nav header.
+    // On screens with a nav bar, place dots just below it (native nav bar always
+    // renders above the RN layer so we cannot position inside it).
+    // On tab screens (no nav bar), place dots just below the status bar.
+    const sat = safeAreaTop.value;
     const sit = scrollInsetTop.value;
-    const top = sit + REFRESH_TOP_MARGIN;
+    const navBarHeight = sit - sat;
+    const top =
+      navBarHeight > 10
+        ? sit + REFRESH_TOP_MARGIN_BELOW_NAV
+        : sat + REFRESH_TOP_MARGIN;
 
     return {
       opacity: visible,

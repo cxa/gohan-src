@@ -370,7 +370,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     displayName: string;
   } | null>(null);
 
-  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       updatePullScrollY(event.contentOffset.y);
@@ -594,7 +594,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           }
         />
       </NativeEdgeScrollShadow>
-      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} />
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} />
     </>
   );
 

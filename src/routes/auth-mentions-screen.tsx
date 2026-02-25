@@ -137,7 +137,7 @@ const MentionsRoute = () => {
     useState<RepostTarget | null>(null);
   useScrollToTop(listRef);
   const scrollY = useSharedValue(0);
-  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       scrollY.value = event.contentOffset.y;
@@ -633,7 +633,7 @@ const MentionsRoute = () => {
           )}
         />
       </ScrollShadow >
-      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} />
+      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} />
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}

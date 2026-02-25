@@ -94,7 +94,7 @@ const MyTimelineRouteContent = ({
     [timelineListSettings.contentContainerStyle],
   );
 
-  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       updatePullScrollY(event.contentOffset.y);
@@ -306,8 +306,8 @@ const MyTimelineRouteContent = ({
       <NeobrutalRefreshIndicator
         refreshing={isPullRefreshing}
         scrollY={pullScrollY}
+        safeAreaTop={safeAreaTop}
         scrollInsetTop={scrollInsetTop}
-       
         pullThreshold={COMPACT_PULL_THRESHOLD}
       />
       <PhotoViewerModal

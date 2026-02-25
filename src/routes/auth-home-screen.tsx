@@ -145,7 +145,7 @@ const AuthHomeRoute = () => {
   const [composeRepostTarget, setComposeRepostTarget] =
     useState<RepostTarget | null>(null);
   useScrollToTop(listRef);
-  const { pullScrollY, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
   const updateIsAtTop = useCallback((value: boolean) => {
     setIsAtTopState(value);
   }, []);
@@ -705,7 +705,7 @@ const AuthHomeRoute = () => {
           )}
         />
       </ScrollShadow>
-      <NeobrutalRefreshIndicator refreshing={isRefreshing} scrollY={pullScrollY} scrollInsetTop={scrollInsetTop} />
+      <NeobrutalRefreshIndicator refreshing={isRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} />
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
