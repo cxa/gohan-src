@@ -9,6 +9,7 @@ import {
   FlatList,
   Image,
   RefreshControl,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -49,6 +50,7 @@ import {
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
   TIMELINE_SCROLL_TOP_THRESHOLD,
+  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import {
@@ -60,6 +62,7 @@ import {
 import type { FanfouStatus } from '@/types/fanfou';
 import { Text } from '@/components/app-text';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 
 type PhotoViewerOriginRect = {
   x: number;
@@ -117,6 +120,9 @@ const AuthHomeRoute = () => {
     'muted',
   ]);
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - TIMELINE_TOP_CONTENT_GAP - getTabBarOccludedHeight(insets.bottom);
   const scrollY = useSharedValue(0);
   const isAtTop = useSharedValue(true);
   const [isAtTopState, setIsAtTopState] = useState(true);
@@ -679,7 +685,7 @@ const AuthHomeRoute = () => {
           }
           ListEmptyComponent={
             isLoading || isHydratingTimelineItems ? (
-              <TimelineSkeletonList keyPrefix="timeline-skeleton" />
+              <TimelineSkeletonList keyPrefix="timeline-skeleton" availableHeight={skeletonAvailableHeight} />
             ) : (
               <TimelineSkeletonCard message={t('homeEmpty')} />
             )
@@ -712,6 +718,7 @@ const AuthHomeRoute = () => {
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
         topInset={insets.top}
+        bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
         originRect={photoViewerOriginRect}
         onClose={handleClosePhotoViewer}
       />

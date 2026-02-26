@@ -10,6 +10,7 @@ import {
   FlatList,
   Image,
   RefreshControl,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -33,6 +34,7 @@ import ComposerModal, {
 } from '@/components/composer-modal';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
@@ -40,6 +42,7 @@ import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
+  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import {
@@ -125,6 +128,9 @@ const TagTimelineRoute = () => {
     'muted',
   ]);
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - TIMELINE_TOP_CONTENT_GAP - getTabBarOccludedHeight(insets.bottom);
   const routeTag = normalizeTag(route.params.tag);
   const screenTitle = t('tagTimelineTitle', { tag: routeTag });
   useNativeHeaderTitle({
@@ -600,7 +606,7 @@ const TagTimelineRoute = () => {
           }
           ListEmptyComponent={
             isLoading || isHydratingTimelineItems ? (
-              <TimelineSkeletonList keyPrefix="tag-timeline-skeleton" />
+              <TimelineSkeletonList keyPrefix="tag-timeline-skeleton" availableHeight={skeletonAvailableHeight} />
             ) : (
               <TimelineSkeletonCard message={t('tagTimelineEmpty')} />
             )
@@ -636,6 +642,7 @@ const TagTimelineRoute = () => {
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
         topInset={insets.top}
+        bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
         originRect={photoViewerOriginRect}
         onClose={handleClosePhotoViewer}
       />

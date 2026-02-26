@@ -3,6 +3,7 @@ import {
   Image,
   Pressable,
   RefreshControl,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -24,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { get } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
 import DropShadowBox from '@/components/drop-shadow-box';
+import { countSkeletonItemsForHeight } from '@/components/timeline-skeleton-list';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import { AUTH_PROFILE_ROUTE, AUTH_STACK_ROUTE } from '@/navigation/route-names';
 import useUserTimelineHeader from '@/navigation/use-user-timeline-header';
@@ -35,6 +37,9 @@ const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
 const AVATAR_SIZE = 44;
 const USERS_PAGE_SIZE = 60;
+const USER_SKELETON_ITEM_HEIGHT = 86; // avatar(44) + py-4×2(32) + border(4) + shadow(6)
+const USER_SKELETON_GAP = 24; // gap-6
+const USER_SKELETON_FALLBACK_COUNT = 8;
 
 const UserItemSeparator = () => <View className="h-6" />;
 
@@ -60,6 +65,9 @@ const UserListRoute = () => {
     >();
   const { userId, mode, backCount } = route.params;
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - PAGE_BOTTOM_PADDING - insets.bottom;
   const [background] = useThemeColor(['background']);
   const { t } = useTranslation();
   const screenTitle = mode === 'following' ? t('followingTitle') : t('followersTitle');
@@ -224,7 +232,14 @@ const UserListRoute = () => {
           ListEmptyComponent={
             isPending ? (
               <View className="gap-6">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({
+                  length: countSkeletonItemsForHeight(
+                    skeletonAvailableHeight,
+                    USER_SKELETON_ITEM_HEIGHT,
+                    USER_SKELETON_GAP,
+                    USER_SKELETON_FALLBACK_COUNT,
+                  ),
+                }).map((_, i) => (
                   <UserSkeletonCard key={i} />
                 ))}
               </View>

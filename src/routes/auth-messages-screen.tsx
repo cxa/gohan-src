@@ -11,6 +11,7 @@ import {
   Image,
   Pressable,
   RefreshControl,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -37,6 +38,7 @@ import { get, post } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
 import DropShadowBox from '@/components/drop-shadow-box';
 import { ShimmerBar } from '@/components/timeline-skeleton-card';
+import { countSkeletonItemsForHeight } from '@/components/timeline-skeleton-list';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import { AUTH_PROFILE_ROUTE, AUTH_STACK_ROUTE } from '@/navigation/route-names';
 import type { AuthStackParamList } from '@/navigation/types';
@@ -47,6 +49,10 @@ import { parseHtmlToText } from '@/utils/parse-html';
 const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 28;
 const CARD_GAP = 16;
+const MESSAGE_SKELETON_ITEM_HEIGHT = 125; // pt-5(20)+pb-4(16)+content(79)+border(4)+shadow(6)
+const MESSAGE_SKELETON_GAP = 28; // gap-7
+const MESSAGE_SKELETON_FALLBACK_COUNT = 5;
+const NAV_HEADER_HEIGHT = 44;
 const POSTAGE_STAMP_PATH =
   'M14 1v1.5c-.75 0-.75 1.5 0 1.5v1.25c-.75 0-.75 1.5 0 1.5v1.5c-.75 0-.75 1.5 0 1.5V11c-.75 0-.75 1.5 0 1.5V14h-1.5c0-.75-1.5-.75-1.5 0H9.75c0-.75-1.5-.75-1.5 0h-1.5c0-.75-1.5-.75-1.5 0H4c0-.75-1.5-.75-1.5 0H1v-1.5c.75 0 .75-1.5 0-1.5V9.75c.75 0 .75-1.5 0-1.5v-1.5c.75 0 .75-1.5 0-1.5V4c.75 0 .75-1.5 0-1.5V1h1.5c0 .75 1.5.75 1.5 0h1.25c0 .75 1.5.75 1.5 0h1.5c0 .75 1.5.75 1.5 0H11c0 .75 1.5.75 1.5 0z';
 const STAMP_SIZE = 44;
@@ -418,6 +424,9 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
   const inboxListRef = useRef<FlatList<FanfouDirectMessage>>(null);
   const outboxListRef = useRef<FlatList<FanfouDirectMessage>>(null);
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - NAV_HEADER_HEIGHT - insets.bottom - PAGE_BOTTOM_PADDING;
   const [background, muted, accentForeground, border] = useThemeColor([
     'background',
     'muted',
@@ -643,7 +652,14 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           ListEmptyComponent={
             isLoading ? (
               <View className="gap-7">
-                {Array.from({ length: 5 }).map((_, i) => (
+                {Array.from({
+                  length: countSkeletonItemsForHeight(
+                    skeletonAvailableHeight,
+                    MESSAGE_SKELETON_ITEM_HEIGHT,
+                    MESSAGE_SKELETON_GAP,
+                    MESSAGE_SKELETON_FALLBACK_COUNT,
+                  ),
+                }).map((_, i) => (
                   <MessageSkeletonCard key={i} shimmerIndex={i % 3} />
                 ))}
               </View>

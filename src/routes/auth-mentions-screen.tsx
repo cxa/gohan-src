@@ -9,6 +9,7 @@ import {
   FlatList,
   Image,
   RefreshControl,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -45,6 +46,7 @@ import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
   TIMELINE_INITIAL_PAGE_SIZE,
   TIMELINE_PAGE_SIZE,
+  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import {
@@ -54,6 +56,7 @@ import {
   AUTH_TAG_TIMELINE_ROUTE,
 } from '@/navigation/route-names';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import type { FanfouStatus } from '@/types/fanfou';
 import { Text } from '@/components/app-text';
 import { useTranslation } from 'react-i18next';
@@ -114,6 +117,9 @@ const MentionsRoute = () => {
     'muted',
   ]);
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - TIMELINE_TOP_CONTENT_GAP - getTabBarOccludedHeight(insets.bottom);
   const [timelineItems, setTimelineItems] = useState<FanfouStatus[]>([]);
   const [pendingBookmarkIds, setPendingBookmarkIds] = useState<Set<string>>(
     () => new Set(),
@@ -607,7 +613,7 @@ const MentionsRoute = () => {
           }
           ListEmptyComponent={
             isLoading || isHydratingTimelineItems ? (
-              <TimelineSkeletonList keyPrefix="mentions-skeleton" />
+              <TimelineSkeletonList keyPrefix="mentions-skeleton" availableHeight={skeletonAvailableHeight} />
             ) : (
               <TimelineSkeletonCard message={t('mentionsEmpty')} />
             )
@@ -640,6 +646,7 @@ const MentionsRoute = () => {
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
         topInset={insets.top}
+        bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
         originRect={photoViewerOriginRect}
         onClose={handleClosePhotoViewer}
       />

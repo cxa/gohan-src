@@ -44,6 +44,7 @@ type PhotoViewerModalProps = {
   visible: boolean;
   photoUrl: string | null;
   topInset: number;
+  bottomOccludedHeight?: number;
   originRect?: PhotoViewerOriginRect | null;
   onClose: () => void;
 };
@@ -77,11 +78,6 @@ const OPEN_TIMING = {
 const CLOSE_MOVE_TIMING = {
   duration: 240,
   easing: Easing.bezier(0.22, 0.61, 0.36, 1),
-} as const;
-
-const CLOSE_CONTENT_FADE_OUT_TIMING = {
-  duration: 160,
-  easing: Easing.out(Easing.quad),
 } as const;
 
 const CLOSE_ORIGIN_FADE_IN_TIMING = {
@@ -142,6 +138,7 @@ const PhotoViewerModal = ({
   visible,
   photoUrl,
   topInset,
+  bottomOccludedHeight = 0,
   originRect,
   onClose,
 }: PhotoViewerModalProps) => {
@@ -194,11 +191,16 @@ const PhotoViewerModal = ({
   const originY = useSharedValue(0);
   const originWidth = useSharedValue(0);
   const originHeight = useSharedValue(0);
+  const bottomOccludedHeightSV = useSharedValue(bottomOccludedHeight);
 
   useEffect(() => {
     baseWidth.value = baseImageSize.width;
     baseHeight.value = baseImageSize.height;
   }, [baseHeight, baseImageSize.height, baseImageSize.width, baseWidth]);
+
+  useEffect(() => {
+    bottomOccludedHeightSV.value = bottomOccludedHeight;
+  }, [bottomOccludedHeight, bottomOccludedHeightSV]);
 
   useEffect(() => {
     if (originRect) {
@@ -417,14 +419,18 @@ const PhotoViewerModal = ({
     presentationTranslateX.value = withTiming(endTranslateX, CLOSE_MOVE_TIMING);
     presentationTranslateY.value = withTiming(endTranslateY, CLOSE_MOVE_TIMING);
     presentationScale.value = withTiming(endScale, CLOSE_MOVE_TIMING);
-    contentOpacity.value = withDelay(
-      50,
-      withTiming(0, CLOSE_CONTENT_FADE_OUT_TIMING),
-    );
-    originPreviewOpacity.value = withTiming(
-      originExists ? 1 : 0,
-      CLOSE_ORIGIN_FADE_IN_TIMING,
-    );
+    // Only show the originPreview when the origin thumbnail is fully visible
+    // (not occluded by the tab bar). If the origin sits behind the tab bar,
+    // fade the image out instead — showing the preview above the tab bar and
+    // then having it vanish when the modal closes would look wrong.
+    const originBottom = originY.value + originHeight.value;
+    const occludedThreshold = viewportHeight - bottomOccludedHeightSV.value;
+    const originBehindTabBar = originExists && originBottom > occludedThreshold;
+
+    contentOpacity.value = withTiming(0, CLOSE_MOVE_TIMING);
+    originPreviewOpacity.value = originExists && !originBehindTabBar
+      ? withTiming(1, CLOSE_ORIGIN_FADE_IN_TIMING)
+      : withTiming(0, CLOSE_ORIGIN_FADE_IN_TIMING);
     backdropOpacity.value = withDelay(
       140,
       withTiming(0, CLOSE_BACKDROP_FADE_OUT_TIMING, finished => {
@@ -437,6 +443,7 @@ const PhotoViewerModal = ({
     baseHeight,
     baseWidth,
     backdropOpacity,
+    bottomOccludedHeightSV,
     clamp,
     closeOnRN,
     hasOriginRect,

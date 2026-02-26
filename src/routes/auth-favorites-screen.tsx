@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import {
   RefreshControl,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, {
@@ -30,6 +31,7 @@ import { Text } from '@/components/app-text';
 import ComposerModal from '@/components/composer-modal';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
@@ -42,6 +44,7 @@ import {
 } from '@/navigation/route-names';
 import useUserTimelineHeader from '@/navigation/use-user-timeline-header';
 import {
+  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import type { AuthStackParamList } from '@/navigation/types';
@@ -67,6 +70,9 @@ const FavoritesRoute = () => {
   const resolvedUserId = route.params?.userId ?? auth.accessToken?.userId;
   const backCount = route.params?.backCount;
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - TIMELINE_TOP_CONTENT_GAP - getTabBarOccludedHeight(insets.bottom);
   const [accent, background, muted] = useThemeColor([
     'accent',
     'background',
@@ -272,7 +278,7 @@ const FavoritesRoute = () => {
           }
           ListEmptyComponent={
             isPending ? (
-              <TimelineSkeletonList keyPrefix="favorite-skeleton" />
+              <TimelineSkeletonList keyPrefix="favorite-skeleton" availableHeight={skeletonAvailableHeight} />
             ) : (
               <TimelineSkeletonCard message={t('favoritesEmpty')} />
             )
@@ -312,6 +318,7 @@ const FavoritesRoute = () => {
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
         topInset={insets.top}
+        bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
         originRect={photoViewerOriginRect}
         onClose={handleClosePhotoViewer}
       />

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { RefreshControl, useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
@@ -33,6 +33,7 @@ import { Text } from '@/components/app-text';
 import ComposerModal from '@/components/composer-modal';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
@@ -45,6 +46,7 @@ import {
 } from '@/navigation/route-names';
 import useUserTimelineHeader from '@/navigation/use-user-timeline-header';
 import {
+  TIMELINE_TOP_CONTENT_GAP,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import type { AuthStackParamList } from '@/navigation/types';
@@ -73,6 +75,9 @@ const MyTimelineRouteContent = ({
   const queryClient = useQueryClient();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const skeletonAvailableHeight =
+    windowHeight - insets.top - TIMELINE_TOP_CONTENT_GAP - getTabBarOccludedHeight(insets.bottom);
   const [accent, background, muted] = useThemeColor([
     'accent',
     'background',
@@ -265,7 +270,7 @@ const MyTimelineRouteContent = ({
           }
           ListEmptyComponent={
             isPending ? (
-              <TimelineSkeletonList keyPrefix="my-timeline-skeleton" />
+              <TimelineSkeletonList keyPrefix="my-timeline-skeleton" availableHeight={skeletonAvailableHeight} />
             ) : (
               <TimelineSkeletonCard message={t('myTimelineEmpty')} />
             )
@@ -311,6 +316,7 @@ const MyTimelineRouteContent = ({
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
         topInset={insets.top}
+        bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
         originRect={photoViewerOriginRect}
         onClose={handleClosePhotoViewer}
       />

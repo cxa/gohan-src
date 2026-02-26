@@ -39,6 +39,7 @@ import DropShadowBox, {
 } from '@/components/drop-shadow-box';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import ProfileStatRow, {
   type ProfileStatItem,
 } from '@/components/profile-stat-row';
@@ -1063,6 +1064,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
         topInset={insets.top}
+        bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
         originRect={photoViewerOriginRect}
         onClose={handleClosePhotoViewer}
       />
