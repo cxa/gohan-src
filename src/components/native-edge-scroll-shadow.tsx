@@ -29,7 +29,7 @@ const NativeEdgeScrollShadow = ({
     <ScrollShadow
       {...props}
       size={resolvedSize}
-      visibility={visibility ?? 'top'}
+      visibility={visibility ?? 'both'}
       isEnabled={!isNativeScrollEdgeEffectAvailable}
       LinearGradientComponent={LinearGradient}
     />

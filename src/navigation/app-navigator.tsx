@@ -1,5 +1,4 @@
 import React from 'react';
-import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useThemeColor } from 'heroui-native';
 import {
@@ -75,7 +74,7 @@ const buildNativeHeaderOptions = (
   return {
     headerShown: true,
     headerLargeTitle: false,
-    headerTransparent: Platform.OS === 'ios',
+    headerTransparent: true,
     headerTintColor: foreground,
     headerBackButtonDisplayMode: 'minimal',
     headerShadowVisible: false,

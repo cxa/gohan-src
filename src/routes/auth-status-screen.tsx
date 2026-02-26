@@ -2,12 +2,14 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Image,
+  Platform,
   RefreshControl,
   View,
 } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
@@ -154,6 +156,7 @@ const StatusDetailRoute = () => {
       RouteProp<AuthStatusStackParamList, typeof AUTH_STATUS_ROUTE.DETAIL>
     >();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const [accent, background, muted] = useThemeColor([
     'accent',
     'background',
@@ -289,11 +292,11 @@ const StatusDetailRoute = () => {
   const contentContainerStyle = useMemo(
     () => ({
       paddingHorizontal: 16,
-      paddingTop: 0,
+      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
       paddingBottom: insets.bottom + TIMELINE_SPACING,
       gap: STATUS_DETAIL_SECTION_GAP,
     }),
-    [insets.bottom],
+    [headerHeight, insets.bottom],
   );
 
   const handleRefresh = useCallback(async () => {

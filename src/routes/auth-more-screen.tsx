@@ -79,16 +79,21 @@ const STAMP_WAVE_LINES: { d: string; opacity: number }[] = [
   { d: 'M6   12.7 C7.5 11.9 9 13.7  10.5 12.9 C11.8 12.3 13 12.8 16 12.5',  opacity: 0.3  },
 ];
 
-// Hill sits low in the stamp interior; peak at y=8, base at y=12.5
-const STAMP_HILL_PATH = 'M2.5 12.5 Q7.5 8 12.5 12.5';
+// Sun mode: left hill taller (peak y=6.5), right hill shorter (peak y=9.5)
+const STAMP_HILL_SUN_PATH  = 'M3 12.5 Q6 6.5 9.5 12.5';
+const STAMP_HILL2_SUN_PATH = 'M9.5 12.5 Q12 9.5 14 12.5';
 
-// Moon crescent aligned right, centered around (10.5, 5.3)
-const STAMP_MOON_PATH = 'M11 4.3 A2.2 2.2 0 1 1 8.2 7.3 A1.5 1.5 0 0 0 11 4.3';
+// Moon mode: left hill taller (peak y=6.5), right hill shorter (peak y=9.5)
+const STAMP_HILL_MOON_PATH  = 'M3 12.5 Q6 6.5 9.5 12.5';
+const STAMP_HILL2_MOON_PATH = 'M9.5 12.5 Q12 9.5 14 12.5';
+
+// Moon crescent aligned left, centered higher around (4.5, 3.8)
+const STAMP_MOON_PATH = 'M6 2.8 A2.2 2.2 0 1 1 3.2 5.8 A1.5 1.5 0 0 0 6 2.8';
 
 const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
   const isDark = useColorScheme() === 'dark';
   return (
-  <Svg width={size} height={size * (19 / 15)} viewBox="0 0 18 19">
+  <Svg width={size} height={size} viewBox="-1.5 -1 21 19">
     <Path
       d={POSTAGE_STAMP_PATH}
       fill="none"
@@ -98,7 +103,15 @@ const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
       strokeLinejoin="round"
     />
     <Path
-      d={STAMP_HILL_PATH}
+      d={isDark ? STAMP_HILL_MOON_PATH : STAMP_HILL_SUN_PATH}
+      fill="none"
+      stroke={color}
+      strokeWidth="0.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d={isDark ? STAMP_HILL2_MOON_PATH : STAMP_HILL2_SUN_PATH}
       fill="none"
       stroke={color}
       strokeWidth="0.8"
@@ -113,9 +126,9 @@ const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
       />
     ) : (
       <>
-        <Circle cx="4.5" cy="5.3" r="1.3" fill={color} />
+        <Circle cx="10.5" cy="5.3" r="1.3" fill={color} />
         <Path
-          d="M4.5 2.9 L4.5 2.3 M6.4 3.8 L6.8 3.3 M7.3 5.3 L7.9 5.3 M6.4 6.8 L6.8 7.3 M4.5 7.7 L4.5 8.3 M2.6 6.8 L2.2 7.3 M1.7 5.3 L1.1 5.3 M2.6 3.8 L2.2 3.3"
+          d="M10.5 2.9 L10.5 2.3 M12.4 3.8 L12.8 3.3 M13.3 5.3 L13.9 5.3 M12.4 6.8 L12.8 7.3 M10.5 7.7 L10.5 8.3 M8.6 6.8 L8.2 7.3 M7.7 5.3 L7.1 5.3 M8.6 3.8 L8.2 3.3"
           fill="none"
           stroke={color}
           strokeWidth="0.5"
@@ -693,6 +706,11 @@ const MoreRouteContent = ({
               <>
                 <ProfileStatRow stats={profileStatsPrimary} />
                 <ProfileStatRow stats={profileStatsSecondary} />
+              </>
+            ) : showLoadingState ? (
+              <>
+                <ProfileStatRow stats={[]} skeleton itemCount={3} />
+                <ProfileStatRow stats={[]} skeleton itemCount={2} />
               </>
             ) : null}
 

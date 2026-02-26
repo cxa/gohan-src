@@ -1,12 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import {
   Image,
+  Platform,
   Pressable,
   RefreshControl,
   useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import UserSkeletonCard from '@/components/user-skeleton-card';
@@ -65,6 +67,7 @@ const UserListRoute = () => {
     >();
   const { userId, mode, backCount } = route.params;
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { height: windowHeight } = useWindowDimensions();
   const skeletonAvailableHeight =
     windowHeight - insets.top - PAGE_BOTTOM_PADDING - insets.bottom;
@@ -120,10 +123,10 @@ const UserListRoute = () => {
     () => ({
       flexGrow: 1,
       paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-      paddingTop: 0,
+      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
       paddingBottom: insets.bottom + PAGE_BOTTOM_PADDING,
     }),
-    [insets.bottom],
+    [headerHeight, insets.bottom],
   );
 
   const handleOpenProfile = useCallback(

@@ -9,12 +9,14 @@ import {
   Alert,
   FlatList,
   Image,
+  Platform,
   Pressable,
   RefreshControl,
   useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useTranslation } from 'react-i18next';
 
 import { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
@@ -424,6 +426,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
   const inboxListRef = useRef<FlatList<FanfouDirectMessage>>(null);
   const outboxListRef = useRef<FlatList<FanfouDirectMessage>>(null);
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { height: windowHeight } = useWindowDimensions();
   const skeletonAvailableHeight =
     windowHeight - insets.top - NAV_HEADER_HEIGHT - insets.bottom - PAGE_BOTTOM_PADDING;
@@ -516,11 +519,11 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
   const contentContainerStyle = useMemo(
     () => ({
       paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-      paddingTop: 0,
+      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
       paddingBottom: insets.bottom + PAGE_BOTTOM_PADDING,
       flexGrow: 1,
     }),
-    [insets.bottom],
+    [headerHeight, insets.bottom],
   );
 
   const handleDeleteMessage = useCallback(

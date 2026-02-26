@@ -9,11 +9,13 @@ import {
   Alert,
   FlatList,
   Image,
+  Platform,
   RefreshControl,
   useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useHeaderHeight } from '@react-navigation/elements';
 import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
 import {
@@ -513,15 +515,16 @@ const TagTimelineRoute = () => {
       colors={['transparent']}
     />
   );
+  const headerHeight = useHeaderHeight();
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
   const listContentContainerStyle = useMemo(
     () => ({
       ...timelineListSettings.contentContainerStyle,
-      paddingTop: 0,
+      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
     }),
-    [timelineListSettings.contentContainerStyle],
+    [headerHeight, timelineListSettings.contentContainerStyle],
   );
   const composerTitle =
     composeMode === 'reply'

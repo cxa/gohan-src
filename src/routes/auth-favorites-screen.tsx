@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import {
+  Platform,
   RefreshControl,
   useWindowDimensions,
   View,
@@ -7,6 +8,7 @@ import {
 import Animated, {
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
@@ -82,15 +84,16 @@ const FavoritesRoute = () => {
     () => ['favorites', resolvedUserId ?? ''],
     [resolvedUserId],
   );
+  const headerHeight = useHeaderHeight();
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
   const listContentContainerStyle = useMemo(
     () => ({
       ...timelineListSettings.contentContainerStyle,
-      paddingTop: 0,
+      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
     }),
-    [timelineListSettings.contentContainerStyle],
+    [headerHeight, timelineListSettings.contentContainerStyle],
   );
 
   const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();

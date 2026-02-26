@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Surface } from 'heroui-native';
 
 import { Text } from '@/components/app-text';
+import { ShimmerBar } from '@/components/timeline-skeleton-card';
 
 type ProfileSummaryCardProps = {
   avatar: React.ReactNode;
@@ -14,6 +15,7 @@ type ProfileSummaryCardProps = {
   description?: string | null;
   rightSlot?: React.ReactNode;
   footer?: React.ReactNode;
+  skeleton?: boolean;
 };
 
 const normalizeText = (value?: string | null) => value?.trim() ?? '';
@@ -28,6 +30,7 @@ const ProfileSummaryCard = ({
   description,
   rightSlot,
   footer,
+  skeleton,
 }: ProfileSummaryCardProps) => {
   const normalizedLocation = normalizeText(location);
   const normalizedJoinedAt = normalizeText(joinedAt);
@@ -39,31 +42,41 @@ const ProfileSummaryCard = ({
       <View className="flex-row items-start gap-5">
         {avatar}
         <View className="flex-1 gap-2">
-          <Text className="text-[22px] leading-[28px] text-foreground">
-            {displayName}
-          </Text>
-          {handleName ? (
-            <Text className="text-[14px] text-muted">{handleName}</Text>
-          ) : null}
-          {normalizedLocation ? (
-            <Text className="text-[13px] text-muted">{normalizedLocation}</Text>
-          ) : null}
-          {normalizedJoinedAt ? (
-            <Text className="text-[12px] text-muted">
-              Joined {normalizedJoinedAt}
-            </Text>
-          ) : null}
+          {skeleton ? (
+            <>
+              <ShimmerBar className="h-6 w-32 bg-surface-secondary" isActive />
+              <ShimmerBar className="h-3.5 w-24 bg-surface-secondary" isActive={false} />
+              <ShimmerBar className="h-3 w-16 bg-surface-secondary" isActive={false} />
+            </>
+          ) : (
+            <>
+              <Text className="text-[22px] leading-[28px] text-foreground">
+                {displayName}
+              </Text>
+              {handleName ? (
+                <Text className="text-[14px] text-muted">{handleName}</Text>
+              ) : null}
+              {normalizedLocation ? (
+                <Text className="text-[13px] text-muted">{normalizedLocation}</Text>
+              ) : null}
+              {normalizedJoinedAt ? (
+                <Text className="text-[12px] text-muted">
+                  Joined {normalizedJoinedAt}
+                </Text>
+              ) : null}
+            </>
+          )}
         </View>
         {rightSlot}
       </View>
 
-      {normalizedProfileUrl ? (
+      {!skeleton && normalizedProfileUrl ? (
         <Text className="mt-4 text-[13px] text-accent">
           {normalizedProfileUrl}
         </Text>
       ) : null}
 
-      {normalizedDescription ? (
+      {!skeleton && normalizedDescription ? (
         <Text className="mt-4 text-[14px] leading-6 text-foreground">
           {normalizedDescription}
         </Text>

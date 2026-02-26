@@ -8,6 +8,7 @@ import React, {
 import {
   Alert,
   Image,
+  Platform,
   Pressable,
   RefreshControl,
   View,
@@ -15,6 +16,7 @@ import {
 import Animated, {
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
 import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
@@ -120,6 +122,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const queryClient = useQueryClient();
   const auth = useAuthSession();
   const [accent, background, muted] = useThemeColor([
@@ -707,19 +710,34 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const contentContainerStyle = useMemo(
     () => ({
       paddingHorizontal: 16,
-      paddingTop: 0,
+      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
       paddingBottom: insets.bottom + TIMELINE_SPACING,
       gap: PROFILE_CARD_GAP,
     }),
-    [insets.bottom],
+    [headerHeight, insets.bottom],
   );
 
   if (isLoading && !user) {
     return (
       <View className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
-          <NeobrutalActivityIndicator size="small" />
-        </View>
+        <Animated.ScrollView
+          className="flex-1 bg-background"
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={contentContainerStyle}
+          scrollEnabled={false}
+        >
+          <DropShadowBox containerClassName="mb-4">
+            <ProfileSummaryCard
+              avatar={
+                <View className="h-20 w-20 rounded-full bg-surface-secondary" />
+              }
+              displayName=""
+              skeleton
+            />
+          </DropShadowBox>
+          <ProfileStatRow stats={[]} skeleton itemCount={3} />
+          <ProfileStatRow stats={[]} skeleton itemCount={2} />
+        </Animated.ScrollView>
       </View>
     );
   }
