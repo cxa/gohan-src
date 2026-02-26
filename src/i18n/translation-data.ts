@@ -182,6 +182,7 @@ type BaseTranslations = {
   moreFontStyleHelper: string;
   moreLanguage: string;
   moreLanguageHelper: string;
+  moreLanguageSystemDefault: string;
   moreFontUpdateFailed: string;
   moreFontUpdateFailedMessage: string;
   moreAccountLoading: string;
@@ -397,6 +398,7 @@ const enUS: BaseTranslations = {
   moreFontStyleHelper: 'Choose your preferred font.',
   moreLanguage: 'Language',
   moreLanguageHelper: 'Choose your preferred language.',
+  moreLanguageSystemDefault: 'System Default',
   moreFontUpdateFailed: 'Update Failed',
   moreFontUpdateFailedMessage: 'Cannot update font setting.',
   moreAccountLoading: 'Loading account…',
@@ -612,6 +614,7 @@ const zhCN: BaseTranslations = {
   moreFontStyleHelper: '选择你偏好的应用字体。',
   moreLanguage: '语言',
   moreLanguageHelper: '选择你偏好的应用语言。',
+  moreLanguageSystemDefault: '跟随系统',
   moreFontUpdateFailed: '更新失败',
   moreFontUpdateFailedMessage: '无法更新字体设置。',
   moreAccountLoading: '正在加载账号…',

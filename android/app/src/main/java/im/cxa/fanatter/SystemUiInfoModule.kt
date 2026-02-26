@@ -17,7 +17,7 @@ class SystemUiInfoModule(
       )
 
   private fun isNavigationBarVisible(): Boolean {
-    val activity = currentActivity ?: return true
+    val activity = reactApplicationContext.currentActivity ?: return true
     val decorView = activity.window?.decorView ?: return true
     val insets = ViewCompat.getRootWindowInsets(decorView) ?: return true
     return insets.isVisible(WindowInsetsCompat.Type.navigationBars())

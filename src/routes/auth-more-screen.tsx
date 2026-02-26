@@ -311,7 +311,10 @@ const LanguageSettingRow = ({
   isBusy,
   onPress,
 }: LanguageSettingRowProps) => {
+  const { t } = useTranslation();
   const isDisabled = isSelected || isBusy;
+  const label =
+    option.value === 'system' ? t('moreLanguageSystemDefault') : option.nativeLabel;
 
   return (
     <Pressable
@@ -330,7 +333,7 @@ const LanguageSettingRow = ({
         {isSelected ? <View className="h-2 w-2 bg-accent-foreground" /> : null}
       </View>
       <Text className="flex-1 text-[15px] text-foreground">
-        {option.nativeLabel}
+        {label}
       </Text>
     </Pressable>
   );
