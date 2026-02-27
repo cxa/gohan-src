@@ -53,6 +53,7 @@
 - Keep ESLint clean (`@react-native/eslint-config`).
 - Deprecated TypeScript APIs are blocked by lint (`@typescript-eslint/no-deprecated`); for worklets threading use `scheduleOnRN` instead of `runOnJS`.
 - We are using the React Compiler. It will add memoization to components and values within codebase. This eliminates the need for you to add any useMemo, useCallback, and React.memo hooks, so NEVER add any of these
+- For TanStack Query, define shared query factories with `queryOptions` and centralized query-key helpers (for example under `src/query/`); avoid inline/magic query-key arrays in screens.
 - For required data (for example profile `user`), avoid `user?.` access in the main render path; add early returns for missing/loading/error states, then render with non-null data.
 - Avoid magic numbers in UI/layout/logic; use shared tokens/helpers or named constants with clear intent.
 - Follow DRY principle: when behavior/UI/logic repeats, extract and reuse shared components/hooks/utils instead of copy-pasting implementations.

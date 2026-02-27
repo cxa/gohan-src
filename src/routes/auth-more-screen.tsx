@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import NeobrutalActivityIndicator from '@/components/neobrutal-activity-indicator';
 import {
-  useFocusEffect,
+  useIsFocused,
   useNavigation,
   useScrollToTop,
   type NavigationProp,
@@ -19,11 +19,10 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollShadow, Surface, useThemeColor } from 'heroui-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, SquarePen } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { setAuthAccessToken, useAuthSession } from '@/auth/auth-session';
-import { get } from '@/auth/fanfou-client';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
 import AuthActionButton from '@/components/auth-action-button';
 import { Text } from '@/components/app-text';
@@ -39,6 +38,10 @@ import {
   getScrollIndicatorBottomInset,
 } from '@/navigation/tab-bar-layout';
 import type { AuthStackParamList, AuthTabParamList } from '@/navigation/types';
+import {
+  accountUserQueryOptions,
+  userQueryKeys,
+} from '@/query/user-query-options';
 import { useTranslation } from 'react-i18next';
 import {
   APP_FONT_OPTION,
@@ -53,7 +56,6 @@ import {
   type AppLanguageOption,
   useAppLanguagePreference,
 } from '@/settings/app-language-preference';
-import type { FanfouUser } from '@/types/fanfou';
 import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
 const PAGE_HORIZONTAL_PADDING = 20;
@@ -169,11 +171,6 @@ const getFontPreviewFamily = (option: AppFontOption) => {
     return 'Huiwen-MinchoGBK-Regular';
   }
   return SYSTEM_FONT_FAMILY;
-};
-const getUserById = async (userId: string): Promise<FanfouUser> => {
-  return get('/users/show', {
-    id: userId,
-  }) as Promise<FanfouUser>;
 };
 const formatCount = (value?: number) => {
   if (typeof value !== 'number') {
@@ -368,6 +365,8 @@ const MoreRouteContent = ({
   const [background, muted] = useThemeColor(['background', 'muted']);
   const appFontPreference = useAppFontPreference();
   const appLanguagePreference = useAppLanguagePreference();
+  const isFocused = useIsFocused();
+  const accountUserQueryKey = userQueryKeys.account(userId);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [updatingFontOption, setUpdatingFontOption] =
     useState<AppFontOption | null>(null);
@@ -386,25 +385,31 @@ const MoreRouteContent = ({
     isLoading,
     isFetching,
     error,
-    refetch,
-  } = useQuery<FanfouUser>({
-    queryKey: ['account', userId],
-    queryFn: () => getUserById(userId),
+  } = useQuery({
+    ...accountUserQueryOptions(userId),
     retry: 1,
     refetchOnMount: 'always',
   });
-  useFocusEffect(() => {
-    refetch().catch(() => undefined);
-    return undefined;
-  });
+
+  useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+    queryClient
+      .invalidateQueries({
+        queryKey: accountUserQueryKey,
+      })
+      .catch(() => undefined);
+  }, [accountUserQueryKey, isFocused, queryClient]);
+
   const errorMessage = error
     ? getErrorMessage(error, t('moreAccountLoadFailed'))
     : null;
   const displayName = user
-    ? user.screen_name || user.name || displayNameFallback
+    ? user.name || user.screen_name || displayNameFallback
     : displayNameFallback;
-  const handleName = user ? `@${user.id}` : `@${userId}`;
-  const location = user ? user.location : '';
+  const handleName = user ? `@${user.screen_name || user.id}` : `@${userId}`;
+  const location = user?.location || '';
   const joinedAt = user ? formatJoinedAt(user.created_at) : '';
   const profileUrl = user ? parseHtmlToText(user.url).trim() : '';
   const description = user ? parseHtmlToText(user.description).trim() : '';
@@ -489,6 +494,14 @@ const MoreRouteContent = ({
     parentNavigation.navigate(AUTH_STACK_ROUTE.MESSAGES, {
       screen: AUTH_MESSAGES_ROUTE.LIST,
     });
+  };
+  const handleOpenEditProfile = () => {
+    const parentNavigation =
+      navigation.getParent<NavigationProp<AuthStackParamList>>();
+    if (!parentNavigation) {
+      return;
+    }
+    parentNavigation.navigate(AUTH_STACK_ROUTE.EDIT_PROFILE);
   };
   const handleOpenFavorites = () => {
     const parentNavigation =
@@ -685,9 +698,19 @@ const MoreRouteContent = ({
                   profileUrl={profileUrl}
                   description={description}
                   rightSlot={
-                    isFetching ? (
-                      <NeobrutalActivityIndicator size="small" />
-                    ) : null
+                    <Pressable
+                      onPress={handleOpenEditProfile}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('moreEditProfile')}
+                      className="active:translate-x-[-2px] active:translate-y-[2px]"
+                    >
+                      <View className="flex-row items-center gap-1.5 border-2 border-foreground dark:border-border bg-surface-secondary px-2.5 py-1.5">
+                        <SquarePen size={13} color={muted} />
+                        <Text className="text-[12px] font-semibold text-foreground">
+                          {t('moreEditProfile')}
+                        </Text>
+                      </View>
+                    </Pressable>
                   }
                   footer={
                     errorMessage ? (
