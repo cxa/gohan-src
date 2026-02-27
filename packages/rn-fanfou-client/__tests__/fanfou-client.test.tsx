@@ -89,6 +89,36 @@ describe('FanfouClient', () => {
     expect(mockGetAccessToken).toHaveBeenCalledWith('rt', 'rs');
   });
 
+  test('getAccessToken rejects when callback times out', async () => {
+    jest.useFakeTimers();
+    try {
+      mockGetRequestToken.mockResolvedValueOnce({
+        oauthToken: 'rt',
+        oauthTokenSecret: 'rs',
+      });
+
+      const accessTokenPromise = getAccessToken({
+        callbackUrl: OAUTH_CALLBACK_URL,
+        timeoutMs: 5,
+      });
+      const handledTimeout = accessTokenPromise.then(
+        () => new Error('Expected OAuth timeout error.'),
+        error => error as Error,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+
+      await jest.advanceTimersByTimeAsync(5);
+
+      const timeoutError = await handledTimeout;
+      expect(timeoutError).toBeInstanceOf(Error);
+      expect(timeoutError.message).toBe('OAuth callback timed out after 5ms.');
+      expect(mockGetAccessToken).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('get parses JSON response body', async () => {
     mockRequest.mockResolvedValueOnce({
       status: 200,

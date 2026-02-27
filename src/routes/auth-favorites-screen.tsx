@@ -1,17 +1,20 @@
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 import {
   Platform,
   RefreshControl,
   useWindowDimensions,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedScrollHandler,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useHeaderHeight } from '@react-navigation/elements';
-
-import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
-import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
+import NeobrutalActivityIndicator, {
+  COMPACT_PULL_THRESHOLD,
+  NeobrutalRefreshIndicator,
+} from '@/components/neobrutal-activity-indicator';
+import {
+  usePullScrollY,
+  usePullRefreshState,
+} from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useRoute,
@@ -26,7 +29,6 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-
 import { useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
@@ -51,15 +53,11 @@ import {
 } from '@/components/timeline-list-settings';
 import type { AuthStackParamList } from '@/navigation/types';
 import type { FanfouStatus } from '@/types/fanfou';
-
 const normalizeTimelineItems = (value: unknown): FanfouStatus[] =>
   Array.isArray(value) ? (value as FanfouStatus[]) : [];
-
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
-
 const FAVORITES_PAGE_SIZE = 60;
-
 const FavoritesRoute = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -74,61 +72,53 @@ const FavoritesRoute = () => {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const skeletonAvailableHeight =
-    windowHeight - insets.top - TIMELINE_TOP_CONTENT_GAP - getTabBarOccludedHeight(insets.bottom);
+    windowHeight -
+    insets.top -
+    TIMELINE_TOP_CONTENT_GAP -
+    getTabBarOccludedHeight(insets.bottom);
   const [accent, background, muted] = useThemeColor([
     'accent',
     'background',
     'muted',
   ]);
-  const queryKey = useMemo<[string, string]>(
-    () => ['favorites', resolvedUserId ?? ''],
-    [resolvedUserId],
-  );
+  const queryKey: [string, string] = ['favorites', resolvedUserId ?? ''];
   const headerHeight = useHeaderHeight();
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
-  const listContentContainerStyle = useMemo(
-    () => ({
-      ...timelineListSettings.contentContainerStyle,
-      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
-    }),
-    [headerHeight, timelineListSettings.contentContainerStyle],
-  );
-
-  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const listContentContainerStyle = {
+    ...timelineListSettings.contentContainerStyle,
+    paddingTop: Platform.OS === 'android' ? headerHeight : 0,
+  };
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } =
+    usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       updatePullScrollY(event.contentOffset.y);
     },
   });
-
   useUserTimelineHeader({
     userId: resolvedUserId ?? '',
     screenTitle: t('favoritesTitle'),
     backCount,
   });
-
-  const updateStatusById = useCallback(
-    (statusId: string, updater: (status: FanfouStatus) => FanfouStatus) => {
-      queryClient.setQueryData<InfiniteData<FanfouStatus[]>>(
-        queryKey,
-        previous =>
-          previous
-            ? {
-              ...previous,
-              pages: previous.pages.map(pageItems =>
-                pageItems.map(item =>
-                  item.id === statusId ? updater(item) : item,
-                ),
+  const updateStatusById = (
+    statusId: string,
+    updater: (status: FanfouStatus) => FanfouStatus,
+  ) => {
+    queryClient.setQueryData<InfiniteData<FanfouStatus[]>>(queryKey, previous =>
+      previous
+        ? {
+            ...previous,
+            pages: previous.pages.map(pageItems =>
+              pageItems.map(item =>
+                item.id === statusId ? updater(item) : item,
               ),
-            }
-            : previous,
-      );
-    },
-    [queryClient, queryKey],
-  );
-
+            ),
+          }
+        : previous,
+    );
+  };
   const {
     composeMode,
     composerTitle,
@@ -152,7 +142,6 @@ const FavoritesRoute = () => {
   } = useTimelineStatusInteractions({
     updateStatusById,
   });
-
   const {
     data: queryData,
     isPending,
@@ -187,15 +176,10 @@ const FavoritesRoute = () => {
       lastPage.length === FAVORITES_PAGE_SIZE ? lastPageParam + 1 : undefined,
     retry: 1,
   });
-  const items = useMemo(
-    () => (queryData?.pages ?? []).flatMap(pageItems => pageItems),
-    [queryData],
-  );
-
+  const items = (queryData?.pages ?? []).flatMap(pageItems => pageItems);
   const errorMessage = error
     ? getErrorMessage(error, t('favoritesLoadFailed'))
     : null;
-
   const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(refetch);
   const refreshControl = (
     <RefreshControl
@@ -204,40 +188,35 @@ const FavoritesRoute = () => {
       tintColor="transparent"
       colors={['transparent']}
     />
-  ); const handleOpenStatus = useCallback(
-    (statusId: string) => {
-      navigation.navigate(AUTH_STACK_ROUTE.STATUS, {
-        screen: AUTH_STATUS_ROUTE.DETAIL,
-        params: { statusId },
-      });
-    },
-    [navigation],
   );
-
-  const handleTagPress = useCallback(
-    (tag: string) => {
-      const normalizedTag = tag.trim().replace(/^#+/, '').replace(/#+$/, '');
-      if (!normalizedTag) {
-        return;
-      }
-      navigation.navigate(AUTH_STACK_ROUTE.TAG_TIMELINE, {
-        screen: AUTH_TAG_TIMELINE_ROUTE.DETAIL,
-        params: { tag: normalizedTag },
-      });
-    },
-    [navigation],
-  );
-
-  const handleOpenProfile = useCallback(
-    (userId: string) => {
-      navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
-        screen: AUTH_PROFILE_ROUTE.DETAIL,
-        params: { userId },
-      });
-    },
-    [navigation],
-  );
-
+  const handleOpenStatus = (statusId: string) => {
+    navigation.navigate(AUTH_STACK_ROUTE.STATUS, {
+      screen: AUTH_STATUS_ROUTE.DETAIL,
+      params: {
+        statusId,
+      },
+    });
+  };
+  const handleTagPress = (tag: string) => {
+    const normalizedTag = tag.trim().replace(/^#+/, '').replace(/#+$/, '');
+    if (!normalizedTag) {
+      return;
+    }
+    navigation.navigate(AUTH_STACK_ROUTE.TAG_TIMELINE, {
+      screen: AUTH_TAG_TIMELINE_ROUTE.DETAIL,
+      params: {
+        tag: normalizedTag,
+      },
+    });
+  };
+  const handleOpenProfile = (userId: string) => {
+    navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
+      screen: AUTH_PROFILE_ROUTE.DETAIL,
+      params: {
+        userId,
+      },
+    });
+  };
   if (!resolvedUserId) {
     return (
       <View className="flex-1 bg-background px-6 pt-8">
@@ -249,7 +228,6 @@ const FavoritesRoute = () => {
       </View>
     );
   }
-
   return (
     <>
       <NativeEdgeScrollShadow className="flex-1" color={background}>
@@ -281,7 +259,10 @@ const FavoritesRoute = () => {
           }
           ListEmptyComponent={
             isPending ? (
-              <TimelineSkeletonList keyPrefix="favorite-skeleton" availableHeight={skeletonAvailableHeight} />
+              <TimelineSkeletonList
+                keyPrefix="favorite-skeleton"
+                availableHeight={skeletonAvailableHeight}
+              />
             ) : (
               <TimelineSkeletonCard message={t('favoritesEmpty')} />
             )
@@ -315,7 +296,13 @@ const FavoritesRoute = () => {
         />
       </NativeEdgeScrollShadow>
 
-      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
+      <NeobrutalRefreshIndicator
+        refreshing={isPullRefreshing}
+        scrollY={pullScrollY}
+        safeAreaTop={safeAreaTop}
+        scrollInsetTop={scrollInsetTop}
+        pullThreshold={COMPACT_PULL_THRESHOLD}
+      />
 
       <PhotoViewerModal
         visible={photoViewerVisible}
@@ -340,5 +327,4 @@ const FavoritesRoute = () => {
     </>
   );
 };
-
 export default FavoritesRoute;

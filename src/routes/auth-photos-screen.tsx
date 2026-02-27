@@ -1,14 +1,15 @@
-import React, { useCallback, useMemo } from 'react';
-import {
-  Platform,
-  RefreshControl,
-  View,
-} from 'react-native';
+import React from 'react';
+import { Platform, RefreshControl, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useHeaderHeight } from '@react-navigation/elements';
-
-import NeobrutalActivityIndicator, { COMPACT_PULL_THRESHOLD, NeobrutalRefreshIndicator } from '@/components/neobrutal-activity-indicator';
-import { usePullScrollY, usePullRefreshState } from '@/components/use-pull-to-refresh';
+import NeobrutalActivityIndicator, {
+  COMPACT_PULL_THRESHOLD,
+  NeobrutalRefreshIndicator,
+} from '@/components/neobrutal-activity-indicator';
+import {
+  usePullScrollY,
+  usePullRefreshState,
+} from '@/components/use-pull-to-refresh';
 import {
   useNavigation,
   useRoute,
@@ -23,7 +24,6 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-
 import { useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
@@ -41,37 +41,28 @@ import {
   AUTH_TAG_TIMELINE_ROUTE,
 } from '@/navigation/route-names';
 import useUserTimelineHeader from '@/navigation/use-user-timeline-header';
-import {
-  useTimelineListSettings,
-} from '@/components/timeline-list-settings';
+import { useTimelineListSettings } from '@/components/timeline-list-settings';
 import type { AuthStackParamList } from '@/navigation/types';
 import type { FanfouStatus } from '@/types/fanfou';
-
 const normalizeTimelineItems = (value: unknown): FanfouStatus[] =>
   Array.isArray(value) ? (value as FanfouStatus[]) : [];
-
 const hasPhoto = (status: FanfouStatus) =>
   Boolean(
     status.photo?.largeurl || status.photo?.imageurl || status.photo?.thumburl,
   );
-
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
-
 type PhotosRouteContentProps = {
   userId: string;
   backCount?: number;
 };
-
 const PHOTO_PAGE_SIZE = 60;
 const PHOTO_FALLBACK_PAGE_SIZE = 80;
-
 type PhotoTimelinePage = {
   items: FanfouStatus[];
   sourceCount: number;
   sourcePageSize: number;
 };
-
 const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -82,42 +73,36 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
     'background',
     'muted',
   ]);
-  const queryKey = useMemo<[string, string]>(
-    () => ['photos', userId],
-    [userId],
-  );
+  const queryKey: [string, string] = ['photos', userId];
   const headerHeight = useHeaderHeight();
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
-  const listContentContainerStyle = useMemo(
-    () => ({
-      ...timelineListSettings.contentContainerStyle,
-      paddingTop: Platform.OS === 'android' ? headerHeight : 0,
-    }),
-    [headerHeight, timelineListSettings.contentContainerStyle],
-  );
-
-  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } = usePullScrollY();
+  const listContentContainerStyle = {
+    ...timelineListSettings.contentContainerStyle,
+    paddingTop: Platform.OS === 'android' ? headerHeight : 0,
+  };
+  const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } =
+    usePullScrollY();
   const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
+    onScroll: event => {
       updatePullScrollY(event.contentOffset.y);
     },
   });
-
   useUserTimelineHeader({
     userId,
     screenTitle: t('photosTitle'),
     backCount,
   });
-
-  const updateStatusById = useCallback(
-    (statusId: string, updater: (status: FanfouStatus) => FanfouStatus) => {
-      queryClient.setQueryData<InfiniteData<PhotoTimelinePage>>(
-        queryKey,
-        previous =>
-          previous
-            ? {
+  const updateStatusById = (
+    statusId: string,
+    updater: (status: FanfouStatus) => FanfouStatus,
+  ) => {
+    queryClient.setQueryData<InfiniteData<PhotoTimelinePage>>(
+      queryKey,
+      previous =>
+        previous
+          ? {
               ...previous,
               pages: previous.pages.map(pageItems => ({
                 ...pageItems,
@@ -126,12 +111,9 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
                 ),
               })),
             }
-            : previous,
-      );
-    },
-    [queryClient, queryKey],
-  );
-
+          : previous,
+    );
+  };
   const {
     composeMode,
     composerTitle,
@@ -155,7 +137,6 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
   } = useTimelineStatusInteractions({
     updateStatusById,
   });
-
   const {
     data,
     isPending,
@@ -190,7 +171,6 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
       } catch {
         // Fall back to user timeline and filter photo statuses.
       }
-
       const userTimelineData = await get('/statuses/user_timeline', {
         id: userId,
         count: PHOTO_FALLBACK_PAGE_SIZE,
@@ -211,15 +191,10 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
         : undefined,
     retry: 1,
   });
-  const items = useMemo(
-    () => (data?.pages ?? []).flatMap(pageItems => pageItems.items),
-    [data],
-  );
-
+  const items = (data?.pages ?? []).flatMap(pageItems => pageItems.items);
   const errorMessage = error
     ? getErrorMessage(error, t('photosLoadFailed'))
     : null;
-
   const { isPullRefreshing, handlePullRefresh } = usePullRefreshState(refetch);
   const refreshControl = (
     <RefreshControl
@@ -229,41 +204,34 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
       colors={['transparent']}
     />
   );
-
-  const handleOpenStatus = useCallback(
-    (statusId: string) => {
-      navigation.navigate(AUTH_STACK_ROUTE.STATUS, {
-        screen: AUTH_STATUS_ROUTE.DETAIL,
-        params: { statusId },
-      });
-    },
-    [navigation],
-  );
-
-  const handleOpenProfile = useCallback(
-    (targetUserId: string) => {
-      navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
-        screen: AUTH_PROFILE_ROUTE.DETAIL,
-        params: { userId: targetUserId },
-      });
-    },
-    [navigation],
-  );
-
-  const handleTagPress = useCallback(
-    (tag: string) => {
-      const normalizedTag = tag.trim().replace(/^#+/, '').replace(/#+$/, '');
-      if (!normalizedTag) {
-        return;
-      }
-      navigation.navigate(AUTH_STACK_ROUTE.TAG_TIMELINE, {
-        screen: AUTH_TAG_TIMELINE_ROUTE.DETAIL,
-        params: { tag: normalizedTag },
-      });
-    },
-    [navigation],
-  );
-
+  const handleOpenStatus = (statusId: string) => {
+    navigation.navigate(AUTH_STACK_ROUTE.STATUS, {
+      screen: AUTH_STATUS_ROUTE.DETAIL,
+      params: {
+        statusId,
+      },
+    });
+  };
+  const handleOpenProfile = (targetUserId: string) => {
+    navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
+      screen: AUTH_PROFILE_ROUTE.DETAIL,
+      params: {
+        userId: targetUserId,
+      },
+    });
+  };
+  const handleTagPress = (tag: string) => {
+    const normalizedTag = tag.trim().replace(/^#+/, '').replace(/#+$/, '');
+    if (!normalizedTag) {
+      return;
+    }
+    navigation.navigate(AUTH_STACK_ROUTE.TAG_TIMELINE, {
+      screen: AUTH_TAG_TIMELINE_ROUTE.DETAIL,
+      params: {
+        tag: normalizedTag,
+      },
+    });
+  };
   return (
     <>
       <NativeEdgeScrollShadow className="flex-1" color={background}>
@@ -331,7 +299,13 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
         />
       </NativeEdgeScrollShadow>
 
-      <NeobrutalRefreshIndicator refreshing={isPullRefreshing} scrollY={pullScrollY} safeAreaTop={safeAreaTop} scrollInsetTop={scrollInsetTop} pullThreshold={COMPACT_PULL_THRESHOLD} />
+      <NeobrutalRefreshIndicator
+        refreshing={isPullRefreshing}
+        scrollY={pullScrollY}
+        safeAreaTop={safeAreaTop}
+        scrollInsetTop={scrollInsetTop}
+        pullThreshold={COMPACT_PULL_THRESHOLD}
+      />
       <PhotoViewerModal
         visible={photoViewerVisible}
         photoUrl={photoViewerUrl}
@@ -354,7 +328,6 @@ const PhotosRouteContent = ({ userId, backCount }: PhotosRouteContentProps) => {
     </>
   );
 };
-
 const PhotosRoute = () => {
   const { t } = useTranslation();
   const auth = useAuthSession();
@@ -363,7 +336,6 @@ const PhotosRoute = () => {
     useRoute<RouteProp<AuthStackParamList, typeof AUTH_STACK_ROUTE.PHOTOS>>();
   const resolvedUserId = route.params?.userId ?? accessToken?.userId;
   const backCount = route.params?.backCount;
-
   if (!resolvedUserId) {
     return (
       <View className="flex-1 bg-background px-6 pt-8">
@@ -375,8 +347,6 @@ const PhotosRoute = () => {
       </View>
     );
   }
-
   return <PhotosRouteContent userId={resolvedUserId} backCount={backCount} />;
 };
-
 export default PhotosRoute;

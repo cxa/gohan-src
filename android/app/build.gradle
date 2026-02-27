@@ -133,6 +133,7 @@ preBuild.dependsOn(prepareSharedFonts)
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation project(':react-native-localize')
 
     if (hermesEnabled.toBoolean()) {

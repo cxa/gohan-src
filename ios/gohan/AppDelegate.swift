@@ -6,9 +6,15 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
+  private var launchScreenView: UIView?
+  private var didHideLaunchScreen = false
 
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
+
+  private static let reactContentDidAppearNotification =
+    Notification.Name("RCTContentDidAppearNotification")
+  private static let launchScreenTimeout: TimeInterval = 5
 
   func application(
     _ application: UIApplication,
@@ -22,12 +28,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     reactNativeFactory = factory
 
     window = UIWindow(frame: UIScreen.main.bounds)
+    observeReactContentDidAppear()
+    showLaunchScreenOverlayIfNeeded()
 
     factory.startReactNative(
       withModuleName: "gohan",
       in: window,
       launchOptions: launchOptions
     )
+    scheduleLaunchScreenFallbackHide()
 
     return true
   }
@@ -50,6 +59,80 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       continue: userActivity,
       restorationHandler: restorationHandler
     )
+  }
+
+  deinit {
+    NotificationCenter.default.removeObserver(self)
+  }
+
+  private func observeReactContentDidAppear() {
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handleReactContentDidAppear),
+      name: Self.reactContentDidAppearNotification,
+      object: nil
+    )
+  }
+
+  private func showLaunchScreenOverlayIfNeeded() {
+    guard let window, launchScreenView == nil else {
+      return
+    }
+
+    let storyboard = UIStoryboard(name: "LaunchScreen", bundle: nil)
+    guard let launchViewController = storyboard.instantiateInitialViewController() else {
+      return
+    }
+
+    let overlay = launchViewController.view
+    overlay?.frame = window.bounds
+    overlay?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+    guard let overlay else {
+      return
+    }
+
+    window.addSubview(overlay)
+    window.bringSubviewToFront(overlay)
+    launchScreenView = overlay
+  }
+
+  private func scheduleLaunchScreenFallbackHide() {
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.launchScreenTimeout) { [weak self] in
+      self?.hideLaunchScreenOverlay()
+    }
+  }
+
+  @objc private func handleReactContentDidAppear() {
+    hideLaunchScreenOverlay()
+  }
+
+  private func hideLaunchScreenOverlay() {
+    guard !didHideLaunchScreen else {
+      return
+    }
+
+    didHideLaunchScreen = true
+    NotificationCenter.default.removeObserver(
+      self,
+      name: Self.reactContentDidAppearNotification,
+      object: nil
+    )
+
+    guard let overlay = launchScreenView else {
+      return
+    }
+
+    UIView.animate(
+      withDuration: 0.2,
+      delay: 0,
+      options: [.beginFromCurrentState, .curveEaseOut]
+    ) {
+      overlay.alpha = 0
+    } completion: { [weak self] _ in
+      overlay.removeFromSuperview()
+      self?.launchScreenView = nil
+    }
   }
 }
 

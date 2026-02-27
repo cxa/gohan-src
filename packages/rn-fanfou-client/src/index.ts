@@ -10,6 +10,7 @@ export type OAuthAccessToken = {
 const FANFOU_API_BASE_URL = 'http://api.fanfou.com';
 const FANFOU_OAUTH_AUTHORIZE_URL = 'https://m.fanfou.com/oauth/authorize';
 const FANFOU_UPDATE_PROFILE_IMAGE_ENDPOINT = '/account/update_profile_image';
+const OAUTH_CALLBACK_TIMEOUT_MS = 120000;
 
 type OAuthRequestToken = {
   oauthToken: string;
@@ -141,16 +142,32 @@ const parseCallbackUrl = (url: string) => {
   };
 };
 
-const waitForCallbackUrl = (callbackUrl: string) =>
+const waitForCallbackUrl = (callbackUrl: string, timeoutMs: number) =>
   new Promise<string>((resolve, reject) => {
     let settled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const cleanup = (subscription: { remove: () => void }) => {
+      subscription.remove();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
     const complete = (url: string) => {
       if (settled) {
         return;
       }
       settled = true;
-      subscription.remove();
+      cleanup(subscription);
       resolve(url);
+    };
+    const fail = (error: unknown) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup(subscription);
+      reject(error);
     };
 
     const subscription = Linking.addEventListener('url', event => {
@@ -158,6 +175,9 @@ const waitForCallbackUrl = (callbackUrl: string) =>
         complete(event.url);
       }
     });
+    timeoutId = setTimeout(() => {
+      fail(new Error(`OAuth callback timed out after ${timeoutMs}ms.`));
+    }, timeoutMs);
 
     Linking.getInitialURL()
       .then(url => {
@@ -165,12 +185,7 @@ const waitForCallbackUrl = (callbackUrl: string) =>
           complete(url);
         }
       })
-      .catch(error => {
-        if (!settled) {
-          subscription.remove();
-          reject(error);
-        }
-      });
+      .catch(fail);
   });
 
 const parseBody = (body: string): unknown => {
@@ -231,18 +246,23 @@ const getAuthorizeUrl = (
 
 export const getAccessToken = async ({
   callbackUrl,
+  timeoutMs = OAUTH_CALLBACK_TIMEOUT_MS,
 }: {
   callbackUrl: string;
+  timeoutMs?: number;
 }): Promise<OAuthAccessToken> => {
   if (!callbackUrl) {
     throw new Error(
       'Missing OAuth callback URL. Provide callbackUrl before authentication.',
     );
   }
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error('OAuth callback timeout must be a positive number.');
+  }
   const requestToken = await getRequestToken(callbackUrl);
   const authorizeUrl = getAuthorizeUrl(requestToken, callbackUrl);
   await Linking.openURL(authorizeUrl);
-  const callbackResult = await waitForCallbackUrl(callbackUrl);
+  const callbackResult = await waitForCallbackUrl(callbackUrl, timeoutMs);
   const { oauthToken, error } = parseCallbackUrl(callbackResult);
   if (error) {
     throw new Error(error);

@@ -3,6 +3,11 @@ package im.cxa.fanatter
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.facebook.react.ReactActivity
@@ -11,6 +16,11 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
+  private var isAppReady = false
+
+  companion object {
+    private const val SPLASH_TIMEOUT_MS = 5000L
+  }
 
   override fun getMainComponentName(): String = "gohan"
 
@@ -18,6 +28,12 @@ class MainActivity : ReactActivity() {
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    val splashScreen = installSplashScreen()
+    splashScreen.setKeepOnScreenCondition { !isAppReady }
+    Handler(Looper.getMainLooper()).postDelayed({
+      isAppReady = true
+    }, SPLASH_TIMEOUT_MS)
+
     // Draw behind both system bars (edge-to-edge).
     WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -35,6 +51,7 @@ class MainActivity : ReactActivity() {
     }
 
     super.onCreate(savedInstanceState)
+    keepSplashUntilFirstReactDraw()
 
     // API 35+ (Android 15): window.navigationBarColor is fully ignored.
     // WindowInsetsControllerCompat is the only way to influence bar appearance.
@@ -45,5 +62,22 @@ class MainActivity : ReactActivity() {
       // status bar icons independently at the screen level.
       controller.isAppearanceLightNavigationBars = false
     }
+  }
+
+  private fun keepSplashUntilFirstReactDraw() {
+    val contentView = findViewById<ViewGroup>(android.R.id.content)
+    val preDrawListener = object : ViewTreeObserver.OnPreDrawListener {
+      override fun onPreDraw(): Boolean {
+        val rootView = contentView.getChildAt(0) as? ViewGroup
+        val shouldReleaseSplash = isAppReady || (rootView != null && rootView.childCount > 0)
+        if (shouldReleaseSplash) {
+          isAppReady = true
+          contentView.viewTreeObserver.removeOnPreDrawListener(this)
+          return true
+        }
+        return false
+      }
+    }
+    contentView.viewTreeObserver.addOnPreDrawListener(preDrawListener)
   }
 }

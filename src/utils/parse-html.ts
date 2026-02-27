@@ -7,14 +7,28 @@ const NAMED_ENTITIES: Record<string, string> = {
   nbsp: ' ',
 };
 
+const isValidCodePoint = (value: number) =>
+  Number.isInteger(value) && value >= 0 && value <= 0x10ffff;
+
+const toCodePointChar = (value: number) => {
+  if (!isValidCodePoint(value)) {
+    return null;
+  }
+  try {
+    return String.fromCodePoint(value);
+  } catch {
+    return null;
+  }
+};
+
 const decodeHtmlEntity = (entity: string) => {
   if (entity.startsWith('#x') || entity.startsWith('#X')) {
     const codePoint = Number.parseInt(entity.slice(2), 16);
-    return Number.isNaN(codePoint) ? null : String.fromCodePoint(codePoint);
+    return Number.isNaN(codePoint) ? null : toCodePointChar(codePoint);
   }
   if (entity.startsWith('#')) {
     const codePoint = Number.parseInt(entity.slice(1), 10);
-    return Number.isNaN(codePoint) ? null : String.fromCodePoint(codePoint);
+    return Number.isNaN(codePoint) ? null : toCodePointChar(codePoint);
   }
   return NAMED_ENTITIES[entity] ?? null;
 };

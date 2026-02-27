@@ -10,6 +10,7 @@ module.exports = {
         },
       },
     ],
+    'babel-plugin-react-compiler',
     'react-native-reanimated/plugin',
   ],
 };

@@ -1,18 +1,13 @@
 import React from 'react';
 import { Image, Pressable, View } from 'react-native';
 import { MessageCircle, Repeat2 } from 'lucide-react-native';
-
 import type { FanfouStatus } from '@/types/fanfou';
 import { Text } from '@/components/app-text';
-import DropShadowBox, {
-  getDropShadowBorderClass,
-  type DropShadowBoxType,
-} from '@/components/drop-shadow-box';
+import DropShadowBox, { getDropShadowBorderClass, type DropShadowBoxType } from '@/components/drop-shadow-box';
 import FavoriteHeartIcon from '@/components/favorite-heart-icon';
 import { formatTimestamp } from '@/utils/format-timestamp';
 import { parseHtmlToSegments, parseHtmlToText } from '@/utils/parse-html';
 import { openLink } from '@/utils/open-link';
-
 type TimelineStatusCardProps = {
   status: FanfouStatus;
   accent: string;
@@ -24,10 +19,7 @@ type TimelineStatusCardProps = {
   photoViewerVisible: boolean;
   photoViewerPreviewKey: string | null;
   activeTag?: string;
-  registerPhotoPreviewRef: (
-    key: string,
-    node: React.ComponentRef<typeof View> | null,
-  ) => void;
+  registerPhotoPreviewRef: (key: string, node: React.ComponentRef<typeof View> | null) => void;
   onOpenPhoto: (photoUrl: string, previewKey: string) => void;
   onPressStatus: (statusId: string) => void;
   onPressProfile: (userId: string) => void;
@@ -37,16 +29,12 @@ type TimelineStatusCardProps = {
   onRepost: (status: FanfouStatus) => void;
   onToggleBookmark: (status: FanfouStatus) => void;
 };
-
 const TAG_PILL_CLASS = 'bg-accent/15 text-accent px-2 py-0.5 rounded-full';
-const ACTIVE_TAG_PILL_CLASS =
-  'bg-accent text-accent-foreground px-2 py-0.5 rounded-full';
+const ACTIVE_TAG_PILL_CLASS = 'bg-accent text-accent-foreground px-2 py-0.5 rounded-full';
 const FOOTER_META_GAP = 12;
 const FOOTER_META_ITEM_GAP = 4;
 const FOOTER_META_VIA_VISIBILITY_BUFFER = 6;
-
 const getStatusId = (status: FanfouStatus): string => status.id;
-
 const getStatusPhotoUrl = (status: FanfouStatus): string | null => {
   const getUrl = (...candidates: Array<string | undefined>) => {
     for (const candidate of candidates) {
@@ -56,13 +44,8 @@ const getStatusPhotoUrl = (status: FanfouStatus): string | null => {
     }
     return null;
   };
-  return getUrl(
-    status.photo?.largeurl,
-    status.photo?.imageurl,
-    status.photo?.thumburl,
-  );
+  return getUrl(status.photo?.largeurl, status.photo?.imageurl, status.photo?.thumburl);
 };
-
 const TimelineStatusCard = ({
   status,
   accent,
@@ -82,20 +65,16 @@ const TimelineStatusCard = ({
   onPressTag,
   onReply,
   onRepost,
-  onToggleBookmark,
+  onToggleBookmark
 }: TimelineStatusCardProps) => {
   const [footerWidth, setFooterWidth] = React.useState(0);
   const [actionsWidth, setActionsWidth] = React.useState(0);
   const [timestampWidth, setTimestampWidth] = React.useState(0);
   const [viaWidth, setViaWidth] = React.useState(0);
-  const updateMeasuredWidth = React.useCallback(
-    (setWidth: React.Dispatch<React.SetStateAction<number>>, value: number) => {
-      const next = Math.round(value);
-      setWidth(previous => (previous === next ? previous : next));
-    },
-    [],
-  );
-
+  const updateMeasuredWidth = (setWidth: React.Dispatch<React.SetStateAction<number>>, value: number) => {
+    const next = Math.round(value);
+    setWidth(previous => previous === next ? previous : next);
+  };
   const statusId = getStatusId(status);
   const user = status.user;
   const displayName = user.screen_name || user.name;
@@ -110,7 +89,7 @@ const TimelineStatusCard = ({
   const sourceClient = parseHtmlToText(status.source).trim();
   const viaLabel = sourceClient ? `via ${sourceClient}` : '';
   const normalizedActiveTag = activeTag?.toLowerCase();
-  const canShowVia = React.useMemo(() => {
+  const canShowVia = (() => {
     if (!viaLabel) {
       return false;
     }
@@ -119,240 +98,111 @@ const TimelineStatusCard = ({
     }
     const availableMetaWidth = footerWidth - actionsWidth - FOOTER_META_GAP;
     const requiredMetaWidth = timestampWidth + FOOTER_META_ITEM_GAP + viaWidth;
-    return (
-      availableMetaWidth >=
-      requiredMetaWidth + FOOTER_META_VIA_VISIBILITY_BUFFER
-    );
-  }, [actionsWidth, footerWidth, timestampWidth, viaLabel, viaWidth]);
-
-  return (
-    <DropShadowBox type={shadowType}>
-      <Pressable
-        onPress={() => onPressStatus(statusId)}
-        unstable_pressDelay={100}
-        className={`bg-surface border-2 ${getDropShadowBorderClass(
-          shadowType,
-        )} px-5 py-4 active:translate-x-[-4px] active:translate-y-[4px]`}
-      >
+    return availableMetaWidth >= requiredMetaWidth + FOOTER_META_VIA_VISIBILITY_BUFFER;
+  })();
+  return <DropShadowBox type={shadowType}>
+      <Pressable onPress={() => onPressStatus(statusId)} unstable_pressDelay={100} className={`bg-surface border-2 ${getDropShadowBorderClass(shadowType)} px-5 py-4 active:translate-x-[-4px] active:translate-y-[4px]`}>
         <View className={showAvatar ? 'flex-row gap-3' : undefined}>
-          {showAvatar ? (
-            <Pressable
-              onPress={event => {
-                event.stopPropagation();
-                onPressProfile(userId);
-              }}
-              className="h-10 w-10"
-              accessibilityRole="button"
-              accessibilityLabel={`Open profile ${screenName || userId}`}
-            >
-              <Image
-                source={{ uri: avatarUrl }}
-                className="h-10 w-10 rounded-full bg-surface-secondary"
-              />
-            </Pressable>
-          ) : null}
+          {showAvatar ? <Pressable onPress={event => {
+          event.stopPropagation();
+          onPressProfile(userId);
+        }} className="h-10 w-10" accessibilityRole="button" accessibilityLabel={`Open profile ${screenName || userId}`}>
+              <Image source={{
+            uri: avatarUrl
+          }} className="h-10 w-10 rounded-full bg-surface-secondary" />
+            </Pressable> : null}
 
           <View className={showAvatar ? 'flex-1' : undefined}>
-            {showAuthor ? (
-              <View className="mt-0.5 flex-row items-center gap-2">
-                <Pressable
-                  onPress={event => {
-                    event.stopPropagation();
-                    onPressProfile(userId);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Open profile ${screenName || userId}`}
-                  className="min-w-0 shrink"
-                >
-                  <Text
-                    className="text-[17px] font-bold text-foreground"
-                    numberOfLines={1}
-                  >
+            {showAuthor ? <View className="mt-0.5 flex-row items-center gap-2">
+                <Pressable onPress={event => {
+              event.stopPropagation();
+              onPressProfile(userId);
+            }} accessibilityRole="button" accessibilityLabel={`Open profile ${screenName || userId}`} className="min-w-0 shrink">
+                  <Text className="text-[17px] font-bold text-foreground" numberOfLines={1}>
                     {displayName}
                   </Text>
                 </Pressable>
-                <Text
-                  className="min-w-0 shrink text-[14px] text-muted"
-                  numberOfLines={1}
-                >
+                <Text className="min-w-0 shrink text-[14px] text-muted" numberOfLines={1}>
                   {handle}
                 </Text>
-              </View>
-            ) : null}
+              </View> : null}
             <Text className="mt-1 text-[15px] leading-6 text-foreground">
-              {segments.length > 0
-                ? segments.map((segment, segmentIndex) => {
-                    if (segment.type === 'mention') {
-                      return (
-                        <Text
-                          key={`${statusId}-${segmentIndex}`}
-                          className="text-accent"
-                          onPress={event => {
-                            event.stopPropagation();
-                            onPressMention(segment.screenName);
-                          }}
-                        >
+              {segments.length > 0 ? segments.map((segment, segmentIndex) => {
+              if (segment.type === 'mention') {
+                return <Text key={`${statusId}-${segmentIndex}`} className="text-accent" onPress={event => {
+                  event.stopPropagation();
+                  onPressMention(segment.screenName);
+                }}>
                           {segment.text}
-                        </Text>
-                      );
-                    }
-                    if (segment.type === 'tag') {
-                      const isActiveTag =
-                        Boolean(normalizedActiveTag) &&
-                        normalizedActiveTag === segment.tag.toLowerCase();
-                      return (
-                        <Text
-                          key={`${statusId}-${segmentIndex}`}
-                          className={
-                            isActiveTag ? ACTIVE_TAG_PILL_CLASS : TAG_PILL_CLASS
-                          }
-                          onPress={event => {
-                            event.stopPropagation();
-                            onPressTag(segment.tag);
-                          }}
-                        >
+                        </Text>;
+              }
+              if (segment.type === 'tag') {
+                const isActiveTag = Boolean(normalizedActiveTag) && normalizedActiveTag === segment.tag.toLowerCase();
+                return <Text key={`${statusId}-${segmentIndex}`} className={isActiveTag ? ACTIVE_TAG_PILL_CLASS : TAG_PILL_CLASS} onPress={event => {
+                  event.stopPropagation();
+                  onPressTag(segment.tag);
+                }}>
                           {segment.text}
-                        </Text>
-                      );
-                    }
-                    if (segment.type === 'link') {
-                      return (
-                        <Text
-                          key={`${statusId}-${segmentIndex}`}
-                          className="text-accent underline"
-                          onPress={event => {
-                            event.stopPropagation();
-                            openLink(segment.href);
-                          }}
-                        >
+                        </Text>;
+              }
+              if (segment.type === 'link') {
+                return <Text key={`${statusId}-${segmentIndex}`} className="text-accent underline" onPress={event => {
+                  event.stopPropagation();
+                  openLink(segment.href);
+                }}>
                           {segment.text}
-                        </Text>
-                      );
-                    }
-                    return segment.text;
-                  })
-                : ''}
+                        </Text>;
+              }
+              return segment.text;
+            }) : ''}
             </Text>
-            {photoUrl ? (
-              <View
-                className={
-                  photoViewerVisible &&
-                  photoViewerPreviewKey === photoPreviewKey
-                    ? 'opacity-0'
-                    : undefined
-                }
-              >
-                <Pressable
-                  onPress={() => onOpenPhoto(photoUrl, photoPreviewKey)}
-                  className="mt-3 overflow-hidden border border-border bg-surface-secondary"
-                  accessibilityRole="button"
-                  accessibilityLabel="Open photo"
-                >
-                  <View
-                    ref={node => registerPhotoPreviewRef(photoPreviewKey, node)}
-                    collapsable={false}
-                    className="h-[220px] w-full"
-                  >
-                    <Image
-                      source={{ uri: photoUrl }}
-                      className="h-full w-full bg-surface-secondary"
-                      resizeMode="cover"
-                    />
+            {photoUrl ? <View className={photoViewerVisible && photoViewerPreviewKey === photoPreviewKey ? 'opacity-0' : undefined}>
+                <Pressable onPress={() => onOpenPhoto(photoUrl, photoPreviewKey)} className="mt-3 overflow-hidden border border-border bg-surface-secondary" accessibilityRole="button" accessibilityLabel="Open photo">
+                  <View ref={node => registerPhotoPreviewRef(photoPreviewKey, node)} collapsable={false} className="h-[220px] w-full">
+                    <Image source={{
+                  uri: photoUrl
+                }} className="h-full w-full bg-surface-secondary" resizeMode="cover" />
                   </View>
                 </Pressable>
-              </View>
-            ) : null}
+              </View> : null}
             <View className="absolute opacity-0" pointerEvents="none">
-              <View
-                className="flex-row items-center"
-                onLayout={event => {
-                  updateMeasuredWidth(
-                    setTimestampWidth,
-                    event.nativeEvent.layout.width,
-                  );
-                }}
-              >
+              <View className="flex-row items-center" onLayout={event => {
+              updateMeasuredWidth(setTimestampWidth, event.nativeEvent.layout.width);
+            }}>
                 <Text className="text-[12px] text-muted">{timestamp}</Text>
               </View>
-              {viaLabel ? (
-                <View
-                  className="flex-row items-center"
-                  onLayout={event => {
-                    updateMeasuredWidth(
-                      setViaWidth,
-                      event.nativeEvent.layout.width,
-                    );
-                  }}
-                >
+              {viaLabel ? <View className="flex-row items-center" onLayout={event => {
+              updateMeasuredWidth(setViaWidth, event.nativeEvent.layout.width);
+            }}>
                   <Text className="text-[12px] text-muted">{viaLabel}</Text>
-                </View>
-              ) : null}
+                </View> : null}
             </View>
-            <View
-              className="mt-3 flex-row items-center justify-between"
-              onLayout={event => {
-                updateMeasuredWidth(
-                  setFooterWidth,
-                  event.nativeEvent.layout.width,
-                );
-              }}
-            >
-              <View
-                className="flex-row items-center gap-4"
-                onLayout={event => {
-                  updateMeasuredWidth(
-                    setActionsWidth,
-                    event.nativeEvent.layout.width,
-                  );
-                }}
-              >
-                <Pressable
-                  onPress={() => onReply(status)}
-                  className="p-1"
-                  accessibilityRole="button"
-                  accessibilityLabel="Reply"
-                >
+            <View className="mt-3 flex-row items-center justify-between" onLayout={event => {
+            updateMeasuredWidth(setFooterWidth, event.nativeEvent.layout.width);
+          }}>
+              <View className="flex-row items-center gap-4" onLayout={event => {
+              updateMeasuredWidth(setActionsWidth, event.nativeEvent.layout.width);
+            }}>
+                <Pressable onPress={() => onReply(status)} className="p-1" accessibilityRole="button" accessibilityLabel="Reply">
                   <MessageCircle size={16} color={muted} />
                 </Pressable>
-                <Pressable
-                  onPress={() => onRepost(status)}
-                  className="p-1"
-                  accessibilityRole="button"
-                  accessibilityLabel="Repost"
-                >
+                <Pressable onPress={() => onRepost(status)} className="p-1" accessibilityRole="button" accessibilityLabel="Repost">
                   <Repeat2 size={16} color={muted} />
                 </Pressable>
-                <Pressable
-                  onPress={() => onToggleBookmark(status)}
-                  disabled={isBookmarkPending}
-                  className={`p-1 ${isBookmarkPending ? 'opacity-50' : ''}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    status.favorited ? 'Remove bookmark' : 'Bookmark'
-                  }
-                >
-                  <FavoriteHeartIcon
-                    size={16}
-                    isFavorited={status.favorited}
-                    activeColor={accent}
-                    inactiveColor={muted}
-                  />
+                <Pressable onPress={() => onToggleBookmark(status)} disabled={isBookmarkPending} className={`p-1 ${isBookmarkPending ? 'opacity-50' : ''}`} accessibilityRole="button" accessibilityLabel={status.favorited ? 'Remove bookmark' : 'Bookmark'}>
+                  <FavoriteHeartIcon size={16} isFavorited={status.favorited} activeColor={accent} inactiveColor={muted} />
                 </Pressable>
               </View>
               <View className="ml-3 flex-1 min-w-0 items-end">
                 <View className="flex-row items-center gap-1">
                   <Text className="text-[12px] text-muted">{timestamp}</Text>
-                  {canShowVia ? (
-                    <Text className="text-[12px] text-muted">{viaLabel}</Text>
-                  ) : null}
+                  {canShowVia ? <Text className="text-[12px] text-muted">{viaLabel}</Text> : null}
                 </View>
               </View>
             </View>
           </View>
         </View>
       </Pressable>
-    </DropShadowBox>
-  );
+    </DropShadowBox>;
 };
-
 export default TimelineStatusCard;

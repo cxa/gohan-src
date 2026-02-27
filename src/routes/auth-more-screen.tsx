@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -8,7 +8,6 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-
 import NeobrutalActivityIndicator from '@/components/neobrutal-activity-indicator';
 import {
   useFocusEffect,
@@ -19,20 +18,17 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollShadow, Surface, useThemeColor } from 'heroui-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
-
 import { setAuthAccessToken, useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
 import AuthActionButton from '@/components/auth-action-button';
 import { Text } from '@/components/app-text';
 import DropShadowBox from '@/components/drop-shadow-box';
-import ProfileStatRow, {
-  type ProfileStatItem,
-} from '@/components/profile-stat-row';
+import ProfileStatRow from '@/components/profile-stat-row';
 import ProfileSummaryCard from '@/components/profile-summary-card';
 import {
   AUTH_MESSAGES_ROUTE,
@@ -44,7 +40,6 @@ import {
 } from '@/navigation/tab-bar-layout';
 import type { AuthStackParamList, AuthTabParamList } from '@/navigation/types';
 import { useTranslation } from 'react-i18next';
-
 import {
   APP_FONT_OPTION,
   APP_FONT_OPTIONS,
@@ -61,7 +56,6 @@ import {
 import type { FanfouUser } from '@/types/fanfou';
 import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
-
 const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
 const SECTION_TOP_MARGIN = 16;
@@ -73,81 +67,88 @@ const POSTAGE_STAMP_PATH =
   'M14 1v1.5c-.75 0-.75 1.5 0 1.5v1.25c-.75 0-.75 1.5 0 1.5v1.5c-.75 0-.75 1.5 0 1.5V11c-.75 0-.75 1.5 0 1.5V14h-1.5c0-.75-1.5-.75-1.5 0H9.75c0-.75-1.5-.75-1.5 0h-1.5c0-.75-1.5-.75-1.5 0H4c0-.75-1.5-.75-1.5 0H1v-1.5c.75 0 .75-1.5 0-1.5V9.75c.75 0 .75-1.5 0-1.5v-1.5c.75 0 .75-1.5 0-1.5V4c.75 0 .75-1.5 0-1.5V1h1.5c0 .75 1.5.75 1.5 0h1.25c0 .75 1.5.75 1.5 0h1.5c0 .75 1.5.75 1.5 0H11c0 .75 1.5.75 1.5 0z';
 
 // Wavy cancellation lines clustered in bottom-right; last wave bleeds past bottom border
-const STAMP_WAVE_LINES: { d: string; opacity: number }[] = [
-  { d: 'M7.5 9.5  C9 8.7   10.5 10.5 12 9.7  C13 9.2  14.2 9.6  16 9.3',    opacity: 0.25 },
-  { d: 'M6.5 11.1 C8 10.3  9.5 12.1  11 11.3 C12.2 10.7 13.5 11.2 16 10.9', opacity: 0.5  },
-  { d: 'M6   12.7 C7.5 11.9 9 13.7  10.5 12.9 C11.8 12.3 13 12.8 16 12.5',  opacity: 0.3  },
+const STAMP_WAVE_LINES: {
+  d: string;
+  opacity: number;
+}[] = [
+  {
+    d: 'M7.5 9.5  C9 8.7   10.5 10.5 12 9.7  C13 9.2  14.2 9.6  16 9.3',
+    opacity: 0.25,
+  },
+  {
+    d: 'M6.5 11.1 C8 10.3  9.5 12.1  11 11.3 C12.2 10.7 13.5 11.2 16 10.9',
+    opacity: 0.5,
+  },
+  {
+    d: 'M6   12.7 C7.5 11.9 9 13.7  10.5 12.9 C11.8 12.3 13 12.8 16 12.5',
+    opacity: 0.3,
+  },
 ];
 
 // Sun mode: left hill taller (peak y=6.5), right hill shorter (peak y=9.5)
-const STAMP_HILL_SUN_PATH  = 'M3 12.5 Q6 6.5 9.5 12.5';
+const STAMP_HILL_SUN_PATH = 'M3 12.5 Q6 6.5 9.5 12.5';
 const STAMP_HILL2_SUN_PATH = 'M9.5 12.5 Q12 9.5 14 12.5';
 
 // Moon mode: left hill taller (peak y=6.5), right hill shorter (peak y=9.5)
-const STAMP_HILL_MOON_PATH  = 'M3 12.5 Q6 6.5 9.5 12.5';
+const STAMP_HILL_MOON_PATH = 'M3 12.5 Q6 6.5 9.5 12.5';
 const STAMP_HILL2_MOON_PATH = 'M9.5 12.5 Q12 9.5 14 12.5';
 
 // Moon crescent aligned left, centered higher around (4.5, 3.8)
 const STAMP_MOON_PATH = 'M6 2.8 A2.2 2.2 0 1 1 3.2 5.8 A1.5 1.5 0 0 0 6 2.8';
-
 const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
   const isDark = useColorScheme() === 'dark';
   return (
-  <Svg width={size} height={size} viewBox="-1.5 -1 21 19">
-    <Path
-      d={POSTAGE_STAMP_PATH}
-      fill="none"
-      stroke={color}
-      strokeWidth="1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d={isDark ? STAMP_HILL_MOON_PATH : STAMP_HILL_SUN_PATH}
-      fill="none"
-      stroke={color}
-      strokeWidth="0.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d={isDark ? STAMP_HILL2_MOON_PATH : STAMP_HILL2_SUN_PATH}
-      fill="none"
-      stroke={color}
-      strokeWidth="0.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    {isDark ? (
+    <Svg width={size} height={size} viewBox="-1.5 -1 21 19">
       <Path
-        d={STAMP_MOON_PATH}
-        fill={color}
-        stroke="none"
-      />
-    ) : (
-      <>
-        <Circle cx="10.5" cy="5.3" r="1.3" fill={color} />
-        <Path
-          d="M10.5 2.9 L10.5 2.3 M12.4 3.8 L12.8 3.3 M13.3 5.3 L13.9 5.3 M12.4 6.8 L12.8 7.3 M10.5 7.7 L10.5 8.3 M8.6 6.8 L8.2 7.3 M7.7 5.3 L7.1 5.3 M8.6 3.8 L8.2 3.3"
-          fill="none"
-          stroke={color}
-          strokeWidth="0.5"
-          strokeLinecap="round"
-        />
-      </>
-    )}
-    {STAMP_WAVE_LINES.map(({ d, opacity }, i) => (
-      <Path
-        key={i}
-        d={d}
+        d={POSTAGE_STAMP_PATH}
         fill="none"
-        stroke="#E63946"
-        strokeWidth="0.6"
+        stroke={color}
+        strokeWidth="1"
         strokeLinecap="round"
-        opacity={opacity}
+        strokeLinejoin="round"
       />
-    ))}
-  </Svg>
+      <Path
+        d={isDark ? STAMP_HILL_MOON_PATH : STAMP_HILL_SUN_PATH}
+        fill="none"
+        stroke={color}
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d={isDark ? STAMP_HILL2_MOON_PATH : STAMP_HILL2_SUN_PATH}
+        fill="none"
+        stroke={color}
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {isDark ? (
+        <Path d={STAMP_MOON_PATH} fill={color} stroke="none" />
+      ) : (
+        <>
+          <Circle cx="10.5" cy="5.3" r="1.3" fill={color} />
+          <Path
+            d="M10.5 2.9 L10.5 2.3 M12.4 3.8 L12.8 3.3 M13.3 5.3 L13.9 5.3 M12.4 6.8 L12.8 7.3 M10.5 7.7 L10.5 8.3 M8.6 6.8 L8.2 7.3 M7.7 5.3 L7.1 5.3 M8.6 3.8 L8.2 3.3"
+            fill="none"
+            stroke={color}
+            strokeWidth="0.5"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+      {STAMP_WAVE_LINES.map(({ d, opacity }, i) => (
+        <Path
+          key={i}
+          d={d}
+          fill="none"
+          stroke="#E63946"
+          strokeWidth="0.6"
+          strokeLinecap="round"
+          opacity={opacity}
+        />
+      ))}
+    </Svg>
   );
 };
 const SCROLL_SHADOW_SIZE = 100;
@@ -157,7 +158,6 @@ const SYSTEM_FONT_FAMILY = Platform.select({
   android: 'sans-serif',
   default: undefined,
 });
-
 const getFontPreviewFamily = (option: AppFontOption) => {
   if (option === APP_FONT_OPTION.XIAOLAI) {
     return 'Xiaolai';
@@ -170,11 +170,11 @@ const getFontPreviewFamily = (option: AppFontOption) => {
   }
   return SYSTEM_FONT_FAMILY;
 };
-
 const getUserById = async (userId: string): Promise<FanfouUser> => {
-  return get('/users/show', { id: userId }) as Promise<FanfouUser>;
+  return get('/users/show', {
+    id: userId,
+  }) as Promise<FanfouUser>;
 };
-
 const formatCount = (value?: number) => {
   if (typeof value !== 'number') {
     return '--';
@@ -185,44 +185,49 @@ const formatCount = (value?: number) => {
     return String(value);
   }
 };
-
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
-
 type MoreEntry = {
   key: string;
   label: string;
   value: string;
   helper?: string;
   showChevron?: boolean;
-  icon: React.ComponentType<{ color: string; size: number }>;
+  icon: React.ComponentType<{
+    color: string;
+    size: number;
+  }>;
   noIconBox?: boolean;
   onPress?: () => void;
 };
-
-type EntryRowProps = MoreEntry & { iconColor: string };
-
+type EntryRowProps = MoreEntry & {
+  iconColor: string;
+};
 type FontSettingRowProps = {
-  option: { value: AppFontOption; label: string };
+  option: {
+    value: AppFontOption;
+    label: string;
+  };
   isLast: boolean;
   isSelected: boolean;
   isBusy: boolean;
   onPress: (next: AppFontOption) => void;
 };
-
 type LanguageSettingRowProps = {
-  option: { value: AppLanguageOption; label: string; nativeLabel: string };
+  option: {
+    value: AppLanguageOption;
+    label: string;
+    nativeLabel: string;
+  };
   isLast: boolean;
   isSelected: boolean;
   isBusy: boolean;
   onPress: (next: AppLanguageOption) => void;
 };
-
 type MoreRouteContentProps = {
   userId: string;
   displayNameFallback: string;
 };
-
 const EntryRow = ({
   label,
   value,
@@ -280,7 +285,6 @@ const EntryRow = ({
     </DropShadowBox>
   );
 };
-
 const FontSettingRow = ({
   option,
   isLast,
@@ -290,7 +294,6 @@ const FontSettingRow = ({
 }: FontSettingRowProps) => {
   const isDisabled = isSelected || isBusy;
   const previewFamily = getFontPreviewFamily(option.value);
-
   return (
     <Pressable
       disabled={isDisabled}
@@ -309,14 +312,19 @@ const FontSettingRow = ({
       </View>
       <Text
         className="flex-1 text-[15px] text-foreground"
-        style={previewFamily ? { fontFamily: previewFamily } : undefined}
+        style={
+          previewFamily
+            ? {
+                fontFamily: previewFamily,
+              }
+            : undefined
+        }
       >
         {option.label}
       </Text>
     </Pressable>
   );
 };
-
 const LanguageSettingRow = ({
   option,
   isLast,
@@ -327,8 +335,9 @@ const LanguageSettingRow = ({
   const { t } = useTranslation();
   const isDisabled = isSelected || isBusy;
   const label =
-    option.value === 'system' ? t('moreLanguageSystemDefault') : option.nativeLabel;
-
+    option.value === 'system'
+      ? t('moreLanguageSystemDefault')
+      : option.nativeLabel;
   return (
     <Pressable
       disabled={isDisabled}
@@ -345,19 +354,17 @@ const LanguageSettingRow = ({
       >
         {isSelected ? <View className="h-2 w-2 bg-accent-foreground" /> : null}
       </View>
-      <Text className="flex-1 text-[15px] text-foreground">
-        {label}
-      </Text>
+      <Text className="flex-1 text-[15px] text-foreground">{label}</Text>
     </Pressable>
   );
 };
-
 const MoreRouteContent = ({
   userId,
   displayNameFallback,
 }: MoreRouteContentProps) => {
   const { t } = useTranslation();
   const navigation = useNavigation<BottomTabNavigationProp<AuthTabParamList>>();
+  const queryClient = useQueryClient();
   const [background, muted] = useThemeColor(['background', 'muted']);
   const appFontPreference = useAppFontPreference();
   const appLanguagePreference = useAppLanguagePreference();
@@ -369,9 +376,11 @@ const MoreRouteContent = ({
   const scrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const contentBottomPadding = getContentBottomPadding(insets.bottom, true);
-  const scrollIndicatorBottom = getScrollIndicatorBottomInset(insets.bottom, true);
+  const scrollIndicatorBottom = getScrollIndicatorBottomInset(
+    insets.bottom,
+    true,
+  );
   useScrollToTop(scrollRef);
-
   const {
     data: user,
     isLoading,
@@ -384,14 +393,10 @@ const MoreRouteContent = ({
     retry: 1,
     refetchOnMount: 'always',
   });
-
-  useFocusEffect(
-    useCallback(() => {
-      refetch().catch(() => undefined);
-      return undefined;
-    }, [refetch]),
-  );
-
+  useFocusEffect(() => {
+    refetch().catch(() => undefined);
+    return undefined;
+  });
   const errorMessage = error
     ? getErrorMessage(error, t('moreAccountLoadFailed'))
     : null;
@@ -413,31 +418,34 @@ const MoreRouteContent = ({
   const accountAvatar =
     hasAvatar && avatarUrl ? (
       <Image
-        source={{ uri: avatarUrl }}
+        source={{
+          uri: avatarUrl,
+        }}
         className="rounded-full bg-surface-secondary"
-        style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+        style={{
+          width: AVATAR_SIZE,
+          height: AVATAR_SIZE,
+        }}
       />
     ) : (
       <View
         className="items-center justify-center rounded-full bg-surface-secondary"
-        style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+        style={{
+          width: AVATAR_SIZE,
+          height: AVATAR_SIZE,
+        }}
       >
         <Text className="text-[24px] text-muted">{avatarInitial}</Text>
       </View>
     );
   const showLoadingState = !user && (isLoading || isFetching);
-
-  const contentContainerStyle = useMemo(
-    () => ({
-      flexGrow: 1,
-      paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-      paddingTop: insets.top,
-      paddingBottom: contentBottomPadding + PAGE_BOTTOM_PADDING,
-    }),
-    [insets.top, contentBottomPadding],
-  );
-
-  const handleOpenMyTimeline = useCallback(() => {
+  const contentContainerStyle = {
+    flexGrow: 1,
+    paddingHorizontal: PAGE_HORIZONTAL_PADDING,
+    paddingTop: insets.top,
+    paddingBottom: contentBottomPadding + PAGE_BOTTOM_PADDING,
+  };
+  const handleOpenMyTimeline = () => {
     const parentNavigation =
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) {
@@ -447,9 +455,8 @@ const MoreRouteContent = ({
       userId,
       backCount: user?.statuses_count,
     });
-  }, [navigation, user?.statuses_count, userId]);
-
-  const handleOpenFollowing = useCallback(() => {
+  };
+  const handleOpenFollowing = () => {
     const parentNavigation =
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) {
@@ -460,9 +467,8 @@ const MoreRouteContent = ({
       mode: 'following',
       backCount: user?.friends_count,
     });
-  }, [navigation, user?.friends_count, userId]);
-
-  const handleOpenFollowers = useCallback(() => {
+  };
+  const handleOpenFollowers = () => {
     const parentNavigation =
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) {
@@ -473,9 +479,8 @@ const MoreRouteContent = ({
       mode: 'followers',
       backCount: user?.followers_count,
     });
-  }, [navigation, user?.followers_count, userId]);
-
-  const handleOpenPrivateMessages = useCallback(() => {
+  };
+  const handleOpenPrivateMessages = () => {
     const parentNavigation =
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) {
@@ -484,9 +489,8 @@ const MoreRouteContent = ({
     parentNavigation.navigate(AUTH_STACK_ROUTE.MESSAGES, {
       screen: AUTH_MESSAGES_ROUTE.LIST,
     });
-  }, [navigation]);
-
-  const handleOpenFavorites = useCallback(() => {
+  };
+  const handleOpenFavorites = () => {
     const parentNavigation =
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) {
@@ -496,9 +500,8 @@ const MoreRouteContent = ({
       userId,
       backCount: user?.favourites_count,
     });
-  }, [navigation, user?.favourites_count, userId]);
-
-  const handleOpenPhotos = useCallback(() => {
+  };
+  const handleOpenPhotos = () => {
     const parentNavigation =
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) {
@@ -508,62 +511,49 @@ const MoreRouteContent = ({
       userId,
       backCount: user?.photo_count,
     });
-  }, [navigation, user?.photo_count, userId]);
-
-  const profileStatsPrimary = useMemo<ProfileStatItem[]>(
-    () => [
-      {
-        label: t('profileStatPosts'),
-        value: user ? formatCount(user.statuses_count) : '--',
-        onPress: handleOpenMyTimeline,
-      },
-      {
-        label: t('profileStatFollowing'),
-        value: user ? formatCount(user.friends_count) : '--',
-        onPress: handleOpenFollowing,
-      },
-      {
-        label: t('profileStatFollowers'),
-        value: user ? formatCount(user.followers_count) : '--',
-        onPress: handleOpenFollowers,
-      },
-    ],
-    [handleOpenFollowers, handleOpenFollowing, handleOpenMyTimeline, t, user],
-  );
-
-  const profileStatsSecondary = useMemo<ProfileStatItem[]>(
-    () => [
-      {
-        label: t('profileStatFavorites'),
-        value: user ? formatCount(user.favourites_count) : '--',
-        onPress: handleOpenFavorites,
-      },
-      {
-        label: t('profileStatPhotos'),
-        value: user ? formatCount(user.photo_count) : '--',
-        onPress: handleOpenPhotos,
-      },
-    ],
-    [handleOpenFavorites, handleOpenPhotos, t, user],
-  );
-
-  const entries = useMemo<MoreEntry[]>(
-    () => [
-      {
-        key: 'messages',
-        label: t('morePrivateMessages'),
-        value: '',
-        helper: t('morePrivateMessagesHelper'),
-        showChevron: true,
-        icon: PostageStampIcon,
-        noIconBox: true,
-        onPress: handleOpenPrivateMessages,
-      },
-    ],
-    [handleOpenPrivateMessages, t],
-  );
-
-  const handleSignOut = useCallback(() => {
+  };
+  const profileStatsPrimary = [
+    {
+      label: t('profileStatPosts'),
+      value: user ? formatCount(user.statuses_count) : '--',
+      onPress: handleOpenMyTimeline,
+    },
+    {
+      label: t('profileStatFollowing'),
+      value: user ? formatCount(user.friends_count) : '--',
+      onPress: handleOpenFollowing,
+    },
+    {
+      label: t('profileStatFollowers'),
+      value: user ? formatCount(user.followers_count) : '--',
+      onPress: handleOpenFollowers,
+    },
+  ];
+  const profileStatsSecondary = [
+    {
+      label: t('profileStatFavorites'),
+      value: user ? formatCount(user.favourites_count) : '--',
+      onPress: handleOpenFavorites,
+    },
+    {
+      label: t('profileStatPhotos'),
+      value: user ? formatCount(user.photo_count) : '--',
+      onPress: handleOpenPhotos,
+    },
+  ];
+  const entries = [
+    {
+      key: 'messages',
+      label: t('morePrivateMessages'),
+      value: '',
+      helper: t('morePrivateMessagesHelper'),
+      showChevron: true,
+      icon: PostageStampIcon,
+      noIconBox: true,
+      onPress: handleOpenPrivateMessages,
+    },
+  ];
+  const handleSignOut = () => {
     if (isSigningOut) {
       return;
     }
@@ -571,7 +561,10 @@ const MoreRouteContent = ({
       t('moreSignOutConfirmTitle'),
       t('moreSignOutConfirmMessage'),
       [
-        { text: t('messageDeleteCancel'), style: 'cancel' },
+        {
+          text: t('messageDeleteCancel'),
+          style: 'cancel',
+        },
         {
           text: t('moreSignOut'),
           style: 'destructive',
@@ -580,57 +573,50 @@ const MoreRouteContent = ({
             try {
               await saveAuthAccessToken(null);
             } finally {
+              queryClient.clear();
               setAuthAccessToken(null);
               setIsSigningOut(false);
             }
           },
         },
       ],
-      { cancelable: true },
+      {
+        cancelable: true,
+      },
     );
-  }, [isSigningOut, t]);
-
-  const handleSelectFontPreference = useCallback(
-    async (next: AppFontOption) => {
-      if (updatingFontOption || appFontPreference === next) {
-        return;
-      }
-
-      setUpdatingFontOption(next);
-      try {
-        await persistAppFontPreference(next);
-      } catch (updateError) {
-        Alert.alert(
-          t('moreFontUpdateFailed'),
-          getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
-        );
-      } finally {
-        setUpdatingFontOption(null);
-      }
-    },
-    [appFontPreference, t, updatingFontOption],
-  );
-
-  const handleSelectLanguagePreference = useCallback(
-    async (next: AppLanguageOption) => {
-      if (updatingLanguageOption || appLanguagePreference === next) {
-        return;
-      }
-      setUpdatingLanguageOption(next);
-      try {
-        await setAppLanguagePreference(next);
-      } catch (updateError) {
-        Alert.alert(
-          t('moreFontUpdateFailed'),
-          getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
-        );
-      } finally {
-        setUpdatingLanguageOption(null);
-      }
-    },
-    [appLanguagePreference, t, updatingLanguageOption],
-  );
-
+  };
+  const handleSelectFontPreference = async (next: AppFontOption) => {
+    if (updatingFontOption || appFontPreference === next) {
+      return;
+    }
+    setUpdatingFontOption(next);
+    try {
+      await persistAppFontPreference(next);
+    } catch (updateError) {
+      Alert.alert(
+        t('moreFontUpdateFailed'),
+        getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
+      );
+    } finally {
+      setUpdatingFontOption(null);
+    }
+  };
+  const handleSelectLanguagePreference = async (next: AppLanguageOption) => {
+    if (updatingLanguageOption || appLanguagePreference === next) {
+      return;
+    }
+    setUpdatingLanguageOption(next);
+    try {
+      await setAppLanguagePreference(next);
+    } catch (updateError) {
+      Alert.alert(
+        t('moreFontUpdateFailed'),
+        getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
+      );
+    } finally {
+      setUpdatingLanguageOption(null);
+    }
+  };
   return (
     <ScrollShadow
       className="flex-1"
@@ -646,15 +632,27 @@ const MoreRouteContent = ({
         }}
         contentContainerStyle={contentContainerStyle}
       >
-        <View className="flex-1" style={{ marginTop: SECTION_TOP_MARGIN }}>
-          <View style={{ gap: SECTION_GAP }}>
+        <View
+          className="flex-1"
+          style={{
+            marginTop: SECTION_TOP_MARGIN,
+          }}
+        >
+          <View
+            style={{
+              gap: SECTION_GAP,
+            }}
+          >
             <DropShadowBox>
               {showLoadingState ? (
                 <Surface className="bg-surface border-2 border-foreground dark:border-border px-5 py-6">
                   <View className="flex-row items-center gap-4">
                     <View
                       className="items-center justify-center rounded-full border-2 border-foreground dark:border-border bg-surface-secondary"
-                      style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+                      style={{
+                        width: AVATAR_SIZE,
+                        height: AVATAR_SIZE,
+                      }}
                     >
                       <NeobrutalActivityIndicator size="small" />
                     </View>
@@ -687,7 +685,9 @@ const MoreRouteContent = ({
                   profileUrl={profileUrl}
                   description={description}
                   rightSlot={
-                    isFetching ? <NeobrutalActivityIndicator size="small" /> : null
+                    isFetching ? (
+                      <NeobrutalActivityIndicator size="small" />
+                    ) : null
                   }
                   footer={
                     errorMessage ? (
@@ -714,7 +714,11 @@ const MoreRouteContent = ({
               </>
             ) : null}
 
-            <View style={{ gap: ENTRY_GAP }}>
+            <View
+              style={{
+                gap: ENTRY_GAP,
+              }}
+            >
               {entries.map(entry => {
                 const { key, ...entryProps } = entry;
                 return <EntryRow key={key} {...entryProps} iconColor={muted} />;
@@ -784,27 +788,27 @@ const MoreRouteContent = ({
     </ScrollShadow>
   );
 };
-
 const MissingUserIdPlaceholder = () => {
   const { t } = useTranslation();
   const [background] = useThemeColor(['background']);
   const scrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
-  const placeholderContentPadding = getContentBottomPadding(insets.bottom, true);
-  const placeholderScrollInset = getScrollIndicatorBottomInset(insets.bottom, true);
-  useScrollToTop(scrollRef);
-
-  const contentContainerStyle = useMemo(
-    () => ({
-      flexGrow: 1,
-      paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-      paddingTop: insets.top,
-      paddingBottom: placeholderContentPadding + PAGE_BOTTOM_PADDING,
-      justifyContent: 'center' as const,
-    }),
-    [insets.top, placeholderContentPadding],
+  const placeholderContentPadding = getContentBottomPadding(
+    insets.bottom,
+    true,
   );
-
+  const placeholderScrollInset = getScrollIndicatorBottomInset(
+    insets.bottom,
+    true,
+  );
+  useScrollToTop(scrollRef);
+  const contentContainerStyle = {
+    flexGrow: 1,
+    paddingHorizontal: PAGE_HORIZONTAL_PADDING,
+    paddingTop: insets.top,
+    paddingBottom: placeholderContentPadding + PAGE_BOTTOM_PADDING,
+    justifyContent: 'center' as const,
+  };
   return (
     <ScrollShadow
       className="flex-1"
@@ -833,15 +837,12 @@ const MissingUserIdPlaceholder = () => {
     </ScrollShadow>
   );
 };
-
 const MoreRoute = () => {
   const auth = useAuthSession();
   const accessToken = auth.accessToken;
-
   if (!accessToken) {
     return <MissingUserIdPlaceholder />;
   }
-
   return (
     <MoreRouteContent
       userId={accessToken.userId}
@@ -849,5 +850,4 @@ const MoreRoute = () => {
     />
   );
 };
-
 export default MoreRoute;
