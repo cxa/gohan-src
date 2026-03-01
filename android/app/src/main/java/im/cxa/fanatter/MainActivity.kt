@@ -44,10 +44,9 @@ class MainActivity : ReactActivity() {
     window.navigationBarColor = Color.TRANSPARENT
 
     // API 29+: disable the contrast-enforcement scrim the system adds behind
-    // gesture navigation bars and the status bar on some OEMs.
+    // gesture navigation bars on some OEMs.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       window.isNavigationBarContrastEnforced = false
-      window.isStatusBarContrastEnforced = false
     }
 
     super.onCreate(savedInstanceState)

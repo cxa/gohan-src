@@ -174,6 +174,7 @@ type BaseTranslations = {
   moreAccountLoading: string;
   moreAccountLoadFailed: string;
   moreAccountLoadFailedNoId: string;
+  moreEditProfile: string;
 
   // Edit profile screen
   editProfileLoading: string;
@@ -376,6 +377,7 @@ const enUS: BaseTranslations = {
   moreAccountLoading: 'Loading account…',
   moreAccountLoadFailed: 'Failed to load account.',
   moreAccountLoadFailedNoId: 'Cannot load account: missing user ID.',
+  moreEditProfile: 'Edit Profile',
 
   // Edit profile screen
   editProfileLoading: 'Loading profile…',
@@ -578,6 +580,7 @@ const zhCN: BaseTranslations = {
   moreAccountLoading: '正在加载账号…',
   moreAccountLoadFailed: '无法加载账号信息。',
   moreAccountLoadFailedNoId: '无法加载账号信息，缺少用户 ID。',
+  moreEditProfile: '编辑资料',
 
   // Edit profile screen
   editProfileLoading: '正在加载个人资料…',

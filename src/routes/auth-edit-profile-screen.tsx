@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import NeobrutalActivityIndicator from '@/components/neobrutal-activity-indicator';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Surface, useThemeColor } from 'heroui-native';
@@ -44,6 +45,7 @@ const EditProfileRoute = () => {
   const queryClient = useQueryClient();
   const [background, muted] = useThemeColor(['background', 'muted']);
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const userId = auth.accessToken?.userId ?? null;
   const accountUserId = userId ?? '';
   const accountUserQueryKey = userQueryKeys.account(accountUserId);
@@ -56,7 +58,6 @@ const EditProfileRoute = () => {
   const {
     data: user,
     isLoading,
-    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -78,13 +79,170 @@ const EditProfileRoute = () => {
   const errorMessage = error
     ? getErrorMessage(error, t('editProfileLoadFailed'))
     : null;
+  const topPadding =
+    Platform.OS === 'android'
+      ? headerHeight + PAGE_TOP_PADDING
+      : PAGE_TOP_PADDING;
   const contentContainerStyle = {
     paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-    paddingTop: PAGE_TOP_PADDING,
+    paddingTop: topPadding,
     paddingBottom: insets.bottom + PAGE_BOTTOM_PADDING,
     gap: PAGE_SECTION_GAP,
   };
-  const handleSave = async () => {
+  const formScrollView = (
+    <ScrollView
+      className="flex-1 bg-background"
+      contentInsetAdjustmentBehavior="automatic"
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      contentContainerStyle={contentContainerStyle}
+    >
+      {!isInitialized && isLoading ? (
+        <DropShadowBox>
+          <Surface className="bg-surface border-2 border-foreground dark:border-border px-5 py-6">
+            <View className="flex-row items-center gap-3">
+              <NeobrutalActivityIndicator size="small" />
+              <Text className="text-[14px] text-foreground">
+                {t('editProfileLoading')}
+              </Text>
+            </View>
+          </Surface>
+        </DropShadowBox>
+      ) : null}
+
+      {!user && !isLoading ? (
+        <DropShadowBox type="danger" containerClassName="pb-2">
+          <Surface
+            className={`bg-surface border-2 ${getDropShadowBorderClass(
+              'danger',
+            )} px-4 py-3`}
+          >
+            <Text className="text-[13px] text-danger">
+              {errorMessage ?? t('editProfileLoadFailed')}
+            </Text>
+            <View className="mt-3">
+              <Pressable
+                onPress={() => {
+                  refetch().catch(() => undefined);
+                }}
+                className="self-start border border-danger bg-danger-soft px-3 py-2"
+                accessibilityRole="button"
+                accessibilityLabel={t('editProfileRetry')}
+              >
+                <Text className="text-[12px] text-danger">
+                  {t('editProfileRetry')}
+                </Text>
+              </Pressable>
+            </View>
+          </Surface>
+        </DropShadowBox>
+      ) : null}
+
+      {user ? (
+        <>
+          <DropShadowBox>
+            <Surface className="bg-surface border-2 border-foreground dark:border-border px-5 py-6">
+              <View
+                style={{
+                  gap: FORM_FIELD_GAP,
+                }}
+              >
+                <View className="gap-1">
+                  <Text className={FORM_LABEL_CLASS}>
+                    {t('editProfileName')}
+                  </Text>
+                  <TextInput
+                    value={name}
+                    onChangeText={setName}
+                    placeholder={t('editProfileNamePlaceholder')}
+                    placeholderTextColor={muted}
+                    className={INPUT_CLASS}
+                    editable={!isSaving}
+                  />
+                </View>
+
+                <View className="gap-1">
+                  <Text className={FORM_LABEL_CLASS}>
+                    {t('editProfileLocation')}
+                  </Text>
+                  <TextInput
+                    value={location}
+                    onChangeText={setLocation}
+                    placeholder={t('editProfileLocationPlaceholder')}
+                    placeholderTextColor={muted}
+                    className={INPUT_CLASS}
+                    editable={!isSaving}
+                  />
+                </View>
+
+                <View className="gap-1">
+                  <Text className={FORM_LABEL_CLASS}>
+                    {t('editProfileWebsite')}
+                  </Text>
+                  <TextInput
+                    value={url}
+                    onChangeText={setUrl}
+                    placeholder={t('editProfileWebsitePlaceholder')}
+                    placeholderTextColor={muted}
+                    autoCapitalize="none"
+                    keyboardType="url"
+                    className={INPUT_CLASS}
+                    editable={!isSaving}
+                  />
+                </View>
+
+                <View className="gap-1">
+                  <Text className={FORM_LABEL_CLASS}>
+                    {t('editProfileBio')}
+                  </Text>
+                  <TextInput
+                    value={description}
+                    onChangeText={setDescription}
+                    placeholder={t('editProfileBioPlaceholder')}
+                    placeholderTextColor={muted}
+                    multiline
+                    textAlignVertical="top"
+                    className={`min-h-[120px] ${INPUT_CLASS}`}
+                    editable={!isSaving}
+                  />
+                </View>
+              </View>
+            </Surface>
+          </DropShadowBox>
+
+          <DropShadowBox
+            containerClassName="w-full"
+            shadowOffsetClassName="-translate-x-1.5 translate-y-1.5"
+          >
+            <Pressable
+              onPress={handleSave}
+              disabled={isSaving}
+              className={`w-full h-14 items-center justify-center border-2 border-foreground dark:border-border bg-accent ${
+                isSaving
+                  ? 'opacity-70'
+                  : 'active:translate-x-[-3px] active:translate-y-[3px]'
+              }`}
+              accessibilityRole="button"
+              accessibilityLabel={t('editProfileSave')}
+              accessibilityState={{
+                disabled: isSaving,
+                busy: isSaving,
+              }}
+            >
+              {isSaving ? (
+                <NeobrutalActivityIndicator size="small" />
+              ) : (
+                <Text className="text-[16px] font-bold text-accent-foreground">
+                  {t('editProfileSave')}
+                </Text>
+              )}
+            </Pressable>
+          </DropShadowBox>
+        </>
+      ) : null}
+    </ScrollView>
+  );
+  async function handleSave() {
     if (!userId || isSaving) {
       return;
     }
@@ -119,10 +277,10 @@ const EditProfileRoute = () => {
                 description: nextDescription,
               }
             : previous,
-      );
-      await queryClient.invalidateQueries({
-        queryKey: accountUserQueryKey,
-      });
+      ),
+        await queryClient.invalidateQueries({
+          queryKey: accountUserQueryKey,
+        });
       navigation.goBack();
     } catch (updateError) {
       Alert.alert(
@@ -132,7 +290,7 @@ const EditProfileRoute = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }
   if (!userId) {
     return (
       <View className="flex-1 bg-background px-6 pt-8">
@@ -146,162 +304,13 @@ const EditProfileRoute = () => {
   }
   return (
     <NativeEdgeScrollShadow className="flex-1 bg-background" color={background}>
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          className="flex-1 bg-background"
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === 'ios' ? 'interactive' : 'on-drag'
-          }
-          contentContainerStyle={contentContainerStyle}
-        >
-          {!isInitialized && isLoading ? (
-            <DropShadowBox>
-              <Surface className="bg-surface border-2 border-foreground dark:border-border px-5 py-6">
-                <View className="flex-row items-center gap-3">
-                  <NeobrutalActivityIndicator size="small" />
-                  <Text className="text-[14px] text-foreground">
-                    {t('editProfileLoading')}
-                  </Text>
-                </View>
-              </Surface>
-            </DropShadowBox>
-          ) : null}
-
-          {!user && !isLoading ? (
-            <DropShadowBox type="danger" containerClassName="pb-2">
-              <Surface
-                className={`bg-surface border-2 ${getDropShadowBorderClass(
-                  'danger',
-                )} px-4 py-3`}
-              >
-                <Text className="text-[13px] text-danger">
-                  {errorMessage ?? t('editProfileLoadFailed')}
-                </Text>
-                <View className="mt-3">
-                  <Pressable
-                    onPress={() => {
-                      refetch().catch(() => undefined);
-                    }}
-                    className="self-start border border-danger bg-danger-soft px-3 py-2"
-                    accessibilityRole="button"
-                    accessibilityLabel={t('editProfileRetry')}
-                  >
-                    <Text className="text-[12px] text-danger">
-                      {t('editProfileRetry')}
-                    </Text>
-                  </Pressable>
-                </View>
-              </Surface>
-            </DropShadowBox>
-          ) : null}
-
-          {user ? (
-            <>
-              <DropShadowBox>
-                <Surface className="bg-surface border-2 border-foreground dark:border-border px-5 py-6">
-                  <View
-                    style={{
-                      gap: FORM_FIELD_GAP,
-                    }}
-                  >
-                    <View className="gap-1">
-                      <Text className={FORM_LABEL_CLASS}>
-                        {t('editProfileName')}
-                      </Text>
-                      <TextInput
-                        value={name}
-                        onChangeText={setName}
-                        placeholder={t('editProfileNamePlaceholder')}
-                        placeholderTextColor={muted}
-                        className={INPUT_CLASS}
-                        editable={!isSaving}
-                      />
-                    </View>
-
-                    <View className="gap-1">
-                      <Text className={FORM_LABEL_CLASS}>
-                        {t('editProfileLocation')}
-                      </Text>
-                      <TextInput
-                        value={location}
-                        onChangeText={setLocation}
-                        placeholder={t('editProfileLocationPlaceholder')}
-                        placeholderTextColor={muted}
-                        className={INPUT_CLASS}
-                        editable={!isSaving}
-                      />
-                    </View>
-
-                    <View className="gap-1">
-                      <Text className={FORM_LABEL_CLASS}>
-                        {t('editProfileWebsite')}
-                      </Text>
-                      <TextInput
-                        value={url}
-                        onChangeText={setUrl}
-                        placeholder={t('editProfileWebsitePlaceholder')}
-                        placeholderTextColor={muted}
-                        autoCapitalize="none"
-                        keyboardType="url"
-                        className={INPUT_CLASS}
-                        editable={!isSaving}
-                      />
-                    </View>
-
-                    <View className="gap-1">
-                      <Text className={FORM_LABEL_CLASS}>
-                        {t('editProfileBio')}
-                      </Text>
-                      <TextInput
-                        value={description}
-                        onChangeText={setDescription}
-                        placeholder={t('editProfileBioPlaceholder')}
-                        placeholderTextColor={muted}
-                        multiline
-                        textAlignVertical="top"
-                        className={`min-h-[120px] ${INPUT_CLASS}`}
-                        editable={!isSaving}
-                      />
-                    </View>
-                  </View>
-                </Surface>
-              </DropShadowBox>
-
-              <DropShadowBox
-                containerClassName="w-full"
-                shadowOffsetClassName="-translate-x-1.5 translate-y-1.5"
-              >
-                <Pressable
-                  onPress={handleSave}
-                  disabled={isSaving}
-                  className={`w-full h-14 items-center justify-center border-2 border-foreground dark:border-border bg-accent ${
-                    isSaving
-                      ? 'opacity-70'
-                      : 'active:translate-x-[-3px] active:translate-y-[3px]'
-                  }`}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('editProfileSave')}
-                >
-                  <Text className="text-[16px] font-bold text-accent-foreground">
-                    {isSaving ? t('editProfileSaving') : t('editProfileSave')}
-                  </Text>
-                </Pressable>
-              </DropShadowBox>
-            </>
-          ) : null}
-
-          {isFetching && user ? (
-            <View className="items-center py-1">
-              <NeobrutalActivityIndicator size="small" />
-            </View>
-          ) : null}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      {Platform.OS === 'ios' ? (
+        <KeyboardAvoidingView className="flex-1" behavior="padding">
+          {formScrollView}
+        </KeyboardAvoidingView>
+      ) : (
+        formScrollView
+      )}
     </NativeEdgeScrollShadow>
   );
 };

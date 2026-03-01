@@ -6,10 +6,12 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
 class SystemUiInfoPackage : ReactPackage {
+  @Suppress("OVERRIDE_DEPRECATION")
   override fun createNativeModules(
       reactContext: ReactApplicationContext,
   ): List<NativeModule> = listOf(SystemUiInfoModule(reactContext))
 
+  @Suppress("OVERRIDE_DEPRECATION")
   override fun createViewManagers(
       reactContext: ReactApplicationContext,
   ): List<ViewManager<*, *>> = emptyList()
