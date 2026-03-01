@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useEffectEvent, useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -19,7 +19,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollShadow, Surface, useThemeColor } from 'heroui-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronRight, SquarePen } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { setAuthAccessToken, useAuthSession } from '@/auth/auth-session';
@@ -366,7 +366,6 @@ const MoreRouteContent = ({
   const appFontPreference = useAppFontPreference();
   const appLanguagePreference = useAppLanguagePreference();
   const isFocused = useIsFocused();
-  const accountUserQueryKey = userQueryKeys.account(userId);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [updatingFontOption, setUpdatingFontOption] =
     useState<AppFontOption | null>(null);
@@ -391,16 +390,18 @@ const MoreRouteContent = ({
     refetchOnMount: 'always',
   });
 
+  const invalidateFocusedAccountQuery = useEffectEvent(() => {
+    queryClient.invalidateQueries({
+      queryKey: userQueryKeys.account(userId),
+    });
+  });
+
   useEffect(() => {
     if (!isFocused) {
       return;
     }
-    queryClient
-      .invalidateQueries({
-        queryKey: accountUserQueryKey,
-      })
-      .catch(() => undefined);
-  }, [accountUserQueryKey, isFocused, queryClient]);
+    invalidateFocusedAccountQuery();
+  }, [isFocused, userId]);
 
   const errorMessage = error
     ? getErrorMessage(error, t('moreAccountLoadFailed'))
@@ -494,14 +495,6 @@ const MoreRouteContent = ({
     parentNavigation.navigate(AUTH_STACK_ROUTE.MESSAGES, {
       screen: AUTH_MESSAGES_ROUTE.LIST,
     });
-  };
-  const handleOpenEditProfile = () => {
-    const parentNavigation =
-      navigation.getParent<NavigationProp<AuthStackParamList>>();
-    if (!parentNavigation) {
-      return;
-    }
-    parentNavigation.navigate(AUTH_STACK_ROUTE.EDIT_PROFILE);
   };
   const handleOpenFavorites = () => {
     const parentNavigation =
@@ -697,21 +690,6 @@ const MoreRouteContent = ({
                   joinedAt={joinedAt}
                   profileUrl={profileUrl}
                   description={description}
-                  rightSlot={
-                    <Pressable
-                      onPress={handleOpenEditProfile}
-                      accessibilityRole="button"
-                      accessibilityLabel={t('moreEditProfile')}
-                      className="active:translate-x-[-2px] active:translate-y-[2px]"
-                    >
-                      <View className="flex-row items-center gap-1.5 border-2 border-foreground dark:border-border bg-surface-secondary px-2.5 py-1.5">
-                        <SquarePen size={13} color={muted} />
-                        <Text className="text-[12px] font-semibold text-foreground">
-                          {t('moreEditProfile')}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  }
                   footer={
                     errorMessage ? (
                       <View className="mt-4 rounded-sm border border-danger bg-danger-soft px-3 py-2">
