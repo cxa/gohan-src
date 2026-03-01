@@ -10,6 +10,7 @@ import DropShadowBox, {
   type DropShadowBoxType,
 } from '@/components/drop-shadow-box';
 import FavoriteHeartIcon from '@/components/favorite-heart-icon';
+import { useAppFontFamily } from '@/settings/app-font-preference';
 import { formatTimestamp } from '@/utils/format-timestamp';
 import { parseHtmlToSegments, parseHtmlToText } from '@/utils/parse-html';
 import { openLink } from '@/utils/open-link';
@@ -86,6 +87,7 @@ const TimelineStatusCard = ({
 }: TimelineStatusCardProps) => {
   const { t } = useTranslation();
   const [danger] = useThemeColor(['danger']);
+  const fontFamily = useAppFontFamily();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [footerWidth, setFooterWidth] = React.useState(0);
@@ -407,11 +409,17 @@ const TimelineStatusCard = ({
           <Dialog.Overlay className="bg-foreground/55 dark:bg-background/85" />
           <Dialog.Content className="w-[92%] max-w-[360px] self-center border-[6px] border-danger bg-surface px-4 py-4">
             <View className="gap-1">
-              <Dialog.Title className="text-[20px] leading-[24px] font-bold text-foreground">
+              <Dialog.Title
+                className="text-[20px] leading-[24px] font-bold text-foreground"
+                style={fontFamily ? { fontFamily } : undefined}
+              >
                 {t('statusDeleteTitle')}
               </Dialog.Title>
             </View>
-            <Dialog.Description className="mt-3 text-[14px] leading-5 text-danger">
+            <Dialog.Description
+              className="mt-3 text-[14px] leading-5 text-danger"
+              style={fontFamily ? { fontFamily } : undefined}
+            >
               {t('statusDeleteConfirm')}
             </Dialog.Description>
             <View className="mt-5 flex-row gap-2">

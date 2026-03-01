@@ -437,8 +437,8 @@ const zhCN: BaseTranslations = {
   tabCompose: '发布',
 
   // Composer
-  composerWritePost: '写饭否',
-  composerWhatsNew: '此刻有什么新鲜事？',
+  composerWritePost: '新消息',
+  composerWhatsNew: '吃了没？',
   composerReply: '回复',
   composerReplyTo: '回复 @{{name}}',
   composerRepost: '转播',

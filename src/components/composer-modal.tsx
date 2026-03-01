@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { showToastAlert } from '@/utils/toast-alert';
+import { ImagePlus, X } from 'lucide-react-native';
 import {
   Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  TextInput,
+  StyleSheet,
   View,
 } from 'react-native';
 import { useThemeColor } from 'heroui-native';
 import { useTranslation } from 'react-i18next';
-import { Text } from '@/components/app-text';
+import { Text, TextInput } from '@/components/app-text';
 import {
   pickImageFromLibrary,
   type PickedImage,
@@ -45,14 +46,18 @@ const ComposerModal = ({
   onSubmit,
 }: ComposerModalProps) => {
   const { t } = useTranslation();
-  const [placeholderColor] = useThemeColor(['muted']);
+  const [placeholderColor, foreground, danger] = useThemeColor([
+    'muted',
+    'foreground',
+    'danger',
+  ]);
   const [value, setValue] = useState(initialText);
   const [photo, setPhoto] = useState<PickedImage | null>(null);
   const [isPhotoPicking, setIsPhotoPicking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const canDismiss = !isSubmitting && !isPhotoPicking;
   const containerStyle = {
-    marginTop: Math.max(topInset + 20, 40),
+    marginTop: Math.max(topInset + 10, 24),
   };
   const photoUri = photo?.uri ?? null;
   useEffect(() => {
@@ -118,26 +123,25 @@ const ComposerModal = ({
         >
           <Pressable
             onPress={event => event.stopPropagation()}
-            className="border border-border bg-surface p-[14px] gap-[10px]"
+            className="relative border-2 border-border bg-surface p-[14px] gap-[10px]"
             style={containerStyle}
           >
-            <View className="flex-row items-center justify-between gap-3">
+            <Pressable
+              onPress={canDismiss ? onCancel : undefined}
+              className="absolute right-[2px] top-[2px] z-10 h-9 w-9 items-center justify-center"
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t('composerCancel')}
+            >
+              <X size={18} color={danger} />
+            </Pressable>
+            <View className="flex-row items-center gap-3 pr-10">
               <Text
-                className="text-[22px] leading-[28px] font-semibold text-foreground"
+                className="flex-1 text-[22px] leading-[28px] font-semibold text-foreground"
                 dynamicTypeRamp="title2"
               >
                 {title}
               </Text>
-              <Pressable
-                onPress={canDismiss ? onCancel : undefined}
-                className="border border-border bg-surface-secondary px-3 py-2"
-                accessibilityRole="button"
-                accessibilityLabel={t('composerCancel')}
-              >
-                <Text className="text-[13px] text-foreground">
-                  {t('composerCancel')}
-                </Text>
-              </Pressable>
             </View>
             <TextInput
               value={value}
@@ -145,13 +149,17 @@ const ComposerModal = ({
               placeholder={placeholder}
               placeholderTextColor={placeholderColor}
               multiline
+              textAlignVertical="top"
               autoFocus
-              className="min-h-[120px] max-h-[260px] border border-border bg-surface-secondary px-2.5 py-2 text-[15px] text-foreground"
+              className="min-h-[120px] max-h-[260px] border-2 border-border bg-surface-secondary px-2.5 py-2 text-[15px] text-foreground"
+              style={
+                Platform.OS === 'android' ? styles.textInputAndroid : undefined
+              }
               editable={!isSubmitting}
             />
 
             {photoUri ? (
-              <View className="overflow-hidden border border-border bg-surface-secondary">
+              <View className="overflow-hidden border-2 border-border bg-surface-secondary">
                 <Image
                   source={{
                     uri: photoUri,
@@ -171,7 +179,9 @@ const ComposerModal = ({
                         ? handlePickPhoto
                         : undefined
                     }
-                    className="border border-border bg-surface-secondary px-3 py-2"
+                    className={`w-10 items-center justify-center border-2 border-border bg-surface-secondary py-2 ${
+                      isPhotoPicking ? 'opacity-60' : ''
+                    }`}
                     accessibilityRole="button"
                     accessibilityLabel={
                       photoUri
@@ -179,20 +189,14 @@ const ComposerModal = ({
                         : t('composerAttachPhoto')
                     }
                   >
-                    <Text className="text-[13px] text-foreground">
-                      {isPhotoPicking
-                        ? t('composerPickingPhoto')
-                        : photoUri
-                        ? t('composerChangePhoto')
-                        : t('composerAttachPhoto')}
-                    </Text>
+                    <ImagePlus size={18} color={foreground} />
                   </Pressable>
                 ) : null}
 
                 {photoUri ? (
                   <Pressable
                     onPress={canDismiss ? handleRemovePhoto : undefined}
-                    className="border border-border bg-surface-secondary px-3 py-2"
+                    className="border-2 border-border bg-surface-secondary px-3 py-2"
                     accessibilityRole="button"
                     accessibilityLabel={t('composerRemovePhotoA11y')}
                   >
@@ -206,11 +210,11 @@ const ComposerModal = ({
               <View className="flex-row gap-2">
                 <Pressable
                   onPress={!isSubmitting ? handleSubmit : undefined}
-                  className="border border-border bg-accent px-3 py-2"
+                  className="min-w-[120px] items-center border-2 border-border bg-accent px-5 py-2"
                   accessibilityRole="button"
                   accessibilityLabel={submitLabel}
                 >
-                  <Text className="text-[13px] text-accent-foreground">
+                  <Text className="text-[13px] font-semibold text-accent-foreground">
                     {isSubmitting ? t('composerSending') : submitLabel}
                   </Text>
                 </Pressable>
@@ -222,4 +226,11 @@ const ComposerModal = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  textInputAndroid: {
+    includeFontPadding: false,
+  },
+});
+
 export default ComposerModal;

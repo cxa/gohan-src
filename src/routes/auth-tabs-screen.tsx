@@ -108,6 +108,7 @@ const AuthTabBar = ({
     const isFocused = isComposeRoute
       ? isComposerVisible
       : state.index === state.routes.indexOf(route);
+    const shouldShowLabel = isFocused && !isComposeRoute;
 
     // Neobrutalism colors
     const activeColor = isComposeRoute ? '#FF4F00' : accent;
@@ -118,8 +119,8 @@ const AuthTabBar = ({
       styles.tabButton,
       {
         backgroundColor: bgColor,
-        paddingHorizontal: isFocused ? 20 : 0,
-        width: isFocused ? ('auto' as const) : TAB_BAR_BUTTON_HEIGHT,
+        paddingHorizontal: shouldShowLabel ? 20 : 0,
+        width: shouldShowLabel ? ('auto' as const) : TAB_BAR_BUTTON_HEIGHT,
       },
     ]);
     const onPress = () => {
@@ -173,7 +174,7 @@ const AuthTabBar = ({
           >
             {iconForRoute(route.name, iconColor)}
           </Animated.View>
-          {isFocused && (
+          {shouldShowLabel && (
             <Animated.Text
               entering={FadeInRight.duration(200)}
               exiting={FadeOutRight.duration(200)}

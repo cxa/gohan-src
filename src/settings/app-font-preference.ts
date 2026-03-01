@@ -111,6 +111,9 @@ export const useAppFontClassName = () => {
   return APP_FONT_CLASS_NAME[currentFont];
 };
 
+export const getAppFontClassNameSnapshot = () =>
+  APP_FONT_CLASS_NAME[getAppFontPreferenceSnapshot()];
+
 export const useAppFontFamily = () => {
   const currentFont = useAppFontPreference();
   return APP_FONT_FAMILY[currentFont];
