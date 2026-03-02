@@ -2,8 +2,10 @@ import React, { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { showToastAlert, showVariantToast } from '@/utils/toast-alert';
 import {
   Image,
+  NativeModules,
   Platform,
   Pressable,
+  StatusBar,
   type StyleProp,
   type TextStyle,
   useColorScheme,
@@ -79,11 +81,52 @@ import {
 } from '@/utils/profile-theme';
 const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
-const SECTION_TOP_MARGIN = 16;
 const SECTION_GAP = 24;
 const AVATAR_SIZE = 80;
 const ENTRY_ICON_SIZE = 18;
 const ENTRY_ICON_WRAPPER = 36;
+const IOS_TOP_CONTENT_OFFSET = 0.1;
+const IOS_TOP_CONTENT_EQUAL_STATUS_BAR_PADDING = 4;
+const IOS_TOP_CONTENT_LARGER_SAFE_AREA_PADDING = 0;
+const getStatusBarHeight = (): number | undefined => {
+  if (Platform.OS === 'android') {
+    return StatusBar.currentHeight;
+  }
+  if (Platform.OS === 'ios') {
+    const statusBarManager = NativeModules.StatusBarManager as
+      | {
+          statusBarFrame?: {
+            height?: number;
+          };
+          HEIGHT?: number;
+        }
+      | undefined;
+    const frameHeight = statusBarManager?.statusBarFrame?.height;
+    if (typeof frameHeight === 'number' && frameHeight > 0) {
+      return frameHeight;
+    }
+    const legacyHeight = statusBarManager?.HEIGHT;
+    if (typeof legacyHeight === 'number' && legacyHeight > 0) {
+      return legacyHeight;
+    }
+  }
+  return undefined;
+};
+const resolveTopContentPadding = ({
+  safeAreaTop,
+  statusBarHeight,
+}: {
+  safeAreaTop: number;
+  statusBarHeight?: number;
+}) => {
+  const hasStatusBarHeight =
+    typeof statusBarHeight === 'number' && statusBarHeight > 0;
+  let extraPadding = IOS_TOP_CONTENT_EQUAL_STATUS_BAR_PADDING;
+  if (hasStatusBarHeight && safeAreaTop > statusBarHeight) {
+    extraPadding = IOS_TOP_CONTENT_LARGER_SAFE_AREA_PADDING;
+  }
+  return safeAreaTop + extraPadding + IOS_TOP_CONTENT_OFFSET;
+};
 const POSTAGE_STAMP_PATH =
   'M14 1v1.5c-.75 0-.75 1.5 0 1.5v1.25c-.75 0-.75 1.5 0 1.5v1.5c-.75 0-.75 1.5 0 1.5V11c-.75 0-.75 1.5 0 1.5V14h-1.5c0-.75-1.5-.75-1.5 0H9.75c0-.75-1.5-.75-1.5 0h-1.5c0-.75-1.5-.75-1.5 0H4c0-.75-1.5-.75-1.5 0H1v-1.5c.75 0 .75-1.5 0-1.5V9.75c.75 0 .75-1.5 0-1.5v-1.5c.75 0 .75-1.5 0-1.5V4c.75 0 .75-1.5 0-1.5V1h1.5c0 .75 1.5.75 1.5 0h1.25c0 .75 1.5.75 1.5 0h1.5c0 .75 1.5.75 1.5 0H11c0 .75 1.5.75 1.5 0z';
 
@@ -433,6 +476,7 @@ const MoreRouteContent = ({
   const scrollRef =
     useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
   const insets = useSafeAreaInsets();
+  const statusBarHeight = getStatusBarHeight();
   const contentBottomPadding = getContentBottomPadding(insets.bottom, true);
   const scrollIndicatorBottom = getScrollIndicatorBottomInset(
     insets.bottom,
@@ -554,7 +598,10 @@ const MoreRouteContent = ({
   const contentContainerStyle = {
     flexGrow: 1,
     paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-    paddingTop: Platform.OS === 'android' ? headerHeight : 0,
+    paddingTop: resolveTopContentPadding({
+      safeAreaTop: insets.top,
+      statusBarHeight,
+    }),
     paddingBottom: contentBottomPadding + PAGE_BOTTOM_PADDING,
   };
   const handleOpenMyTimeline = () => {
@@ -745,20 +792,17 @@ const MoreRouteContent = ({
         <Animated.ScrollView
           ref={scrollRef}
           className="flex-1"
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustsScrollIndicatorInsets={false}
           scrollIndicatorInsets={{
+            top: insets.top,
             bottom: scrollIndicatorBottom,
           }}
           contentContainerStyle={contentContainerStyle}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
         >
-          <View
-            className="flex-1"
-            style={{
-              marginTop: SECTION_TOP_MARGIN,
-            }}
-          >
+          <View className="flex-1">
             <View
               style={{
                 gap: SECTION_GAP,
@@ -982,6 +1026,7 @@ const MissingUserIdPlaceholder = () => {
   const scrollRef =
     useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
   const insets = useSafeAreaInsets();
+  const statusBarHeight = getStatusBarHeight();
   const placeholderContentPadding = getContentBottomPadding(
     insets.bottom,
     true,
@@ -994,7 +1039,10 @@ const MissingUserIdPlaceholder = () => {
   const contentContainerStyle = {
     flexGrow: 1,
     paddingHorizontal: PAGE_HORIZONTAL_PADDING,
-    paddingTop: 0,
+    paddingTop: resolveTopContentPadding({
+      safeAreaTop: insets.top,
+      statusBarHeight,
+    }),
     paddingBottom: placeholderContentPadding + PAGE_BOTTOM_PADDING,
     justifyContent: 'center' as const,
   };
@@ -1007,8 +1055,10 @@ const MissingUserIdPlaceholder = () => {
       <Animated.ScrollView
         ref={scrollRef}
         className="flex-1"
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustsScrollIndicatorInsets={false}
         scrollIndicatorInsets={{
+          top: insets.top,
           bottom: placeholderScrollInset,
         }}
         contentContainerStyle={contentContainerStyle}
