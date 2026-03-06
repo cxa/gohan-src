@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions, useColorScheme, Pressable } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing, FadeInDown } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, withSequence, Easing, FadeInDown } from 'react-native-reanimated';
 import { requestFanfouAccessToken, resolveAuthAccessTokenIdentity } from '@/auth/fanfou-client';
 import { setAuthAccessToken } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
@@ -22,32 +22,52 @@ const FlyingBird = ({
 }: {
   insets: { top: number; bottom: number; left: number; right: number };
 }) => {
-  const translateX = useSharedValue(-20);
+  // Start visible on screen initially
+  const translateX = useSharedValue(SCREEN_WIDTH * 0.2);
   const translateY = useSharedValue(SCREEN_HEIGHT * 0.4);
   const wingSway = useSharedValue(0);
 
   useEffect(() => {
-    // Slow, solitary flight across the screen
-    translateX.value = withRepeat(
-      withTiming(SCREEN_WIDTH + 50, {
-        duration: 35000, // Very slow to emphasize profound quietness
+    // 1. Horizontal Flight
+    // First flight: start from current visible position and fly off screen
+    // Subsequent flights: start from off-screen left and fly off screen right
+    translateX.value = withSequence(
+      // Initial flight off-screen (takes less time since it starts closer)
+      withTiming(SCREEN_WIDTH * 1.3, {
+        duration: 35000,
         easing: Easing.linear,
       }),
-      -1,
-      false
+      // Infinite loop after the first flight
+      withRepeat(
+        withSequence(
+          // Instantly jump to off-screen left
+          withTiming(-SCREEN_WIDTH * 0.3, { duration: 0 }),
+          // Fly across the entire screen
+          withTiming(SCREEN_WIDTH * 1.3, {
+            duration: 45000,
+            easing: Easing.linear,
+          })
+        ),
+        -1,
+        false
+      )
     );
 
-    // Subtle up and down motion
+    // 2. Vertical Flight: Organic randomized swaying
+    // Let's use a long sequence of pseudo-random points to keep it purely declarative and safe:
     translateY.value = withRepeat(
-      withTiming(SCREEN_HEIGHT * 0.35, {
-        duration: 12000,
-        easing: Easing.inOut(Easing.sin),
-      }),
+      withSequence(
+        withTiming(SCREEN_HEIGHT * 0.3, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(SCREEN_HEIGHT * 0.45, { duration: 12000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(SCREEN_HEIGHT * 0.25, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(SCREEN_HEIGHT * 0.35, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(SCREEN_HEIGHT * 0.4, { duration: 8000, easing: Easing.inOut(Easing.sin) })
+      ),
       -1,
-      true
+      true // Reverse the whole sequence on repeat for even more variation
     );
 
-    // Wing flapping motion
+    // 3. Wing flapping motion
     wingSway.value = withRepeat(
       withTiming(1, {
         duration: 1500,
@@ -59,12 +79,17 @@ const FlyingBird = ({
   }, [translateX, translateY, wingSway]);
 
   const animatedStyle = useAnimatedStyle(() => {
+    // Add a high-frequency tiny sine wave to translateY for extra organic flutter
+    const flutter = Math.sin(translateX.value / 15) * 2;
+    // Calculate a dynamic flight angle based on the vertical movement
+    // But keep it subtle since the bird is small and far
+    const baseRotation = -10;
+
     return {
       transform: [
         { translateX: translateX.value },
-        { translateY: translateY.value },
-        // Slight rotation mimicking flight angle
-        { rotateZ: '-10deg' }
+        { translateY: translateY.value + flutter },
+        { rotateZ: `${baseRotation}deg` }
       ],
     };
   });
@@ -109,7 +134,7 @@ const BirdMountainBackground = ({
   const m1Color = `rgba(${inkBase}, 0.15)`;
   const m2Color = `rgba(${inkBase}, 0.35)`;
   const m3Color = `rgba(${inkBase}, 0.7)`;
-  const moonColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(200, 50, 50, 0.15)'; // Red sun/stamp in light mode, pale moon in dark
+  const moonColor = isDark ? 'rgba(255, 250, 200, 0.4)' : 'rgba(200, 50, 50, 0.15)'; // Red sun/stamp in light mode, bright yellow moon in dark
 
   // Procedural-like SVG paths for mountains
   return (
@@ -117,28 +142,57 @@ const BirdMountainBackground = ({
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
 
         {/* Sun/Moon */}
-        <Circle
-          cx={SCREEN_WIDTH * 0.75}
-          cy={SCREEN_HEIGHT * 0.25}
-          r={SCREEN_WIDTH * 0.15}
-          fill={moonColor}
-        />
+        {isDark ? (
+          <Path
+            d={`M${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.25 - SCREEN_WIDTH * 0.15} 
+               A${SCREEN_WIDTH * 0.15},${SCREEN_WIDTH * 0.15} 0 0,1 ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.25 + SCREEN_WIDTH * 0.15} 
+               A${SCREEN_WIDTH * 0.16},${SCREEN_WIDTH * 0.16} 0 0,0 ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.25 - SCREEN_WIDTH * 0.15} Z`}
+            fill={moonColor}
+            transform={`rotate(45, ${SCREEN_WIDTH * 0.75}, ${SCREEN_HEIGHT * 0.25})`}
+          />
+        ) : (
+          <Circle
+            cx={SCREEN_WIDTH * 0.75}
+            cy={SCREEN_HEIGHT * 0.25}
+            r={SCREEN_WIDTH * 0.15}
+            fill={moonColor}
+          />
+        )}
 
         {/* Distant Mountains (Lightest Ink) */}
         <Path
-          d={`M0,${SCREEN_HEIGHT * 0.45} C${SCREEN_WIDTH * 0.25},${SCREEN_HEIGHT * 0.35} ${SCREEN_WIDTH * 0.4},${SCREEN_HEIGHT * 0.48} ${SCREEN_WIDTH * 0.6},${SCREEN_HEIGHT * 0.45} C${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.42} ${SCREEN_WIDTH * 0.9},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH},${SCREEN_HEIGHT * 0.4} L${SCREEN_WIDTH},${SCREEN_HEIGHT} L0,${SCREEN_HEIGHT} Z`}
+          d={`M0,${SCREEN_HEIGHT * 0.45} 
+             C${SCREEN_WIDTH * 0.1},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.2},${SCREEN_HEIGHT * 0.35} ${SCREEN_WIDTH * 0.25},${SCREEN_HEIGHT * 0.35} 
+             C${SCREEN_WIDTH * 0.28},${SCREEN_HEIGHT * 0.35} ${SCREEN_WIDTH * 0.3},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.32},${SCREEN_HEIGHT * 0.38} 
+             C${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.38},${SCREEN_HEIGHT * 0.32} ${SCREEN_WIDTH * 0.45},${SCREEN_HEIGHT * 0.32} 
+             C${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.32} ${SCREEN_WIDTH * 0.55},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.65},${SCREEN_HEIGHT * 0.45} 
+             C${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.38} 
+             C${SCREEN_WIDTH * 0.9},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH},${SCREEN_HEIGHT * 0.45} 
+             L${SCREEN_WIDTH},${SCREEN_HEIGHT} L0,${SCREEN_HEIGHT} Z`}
           fill={m1Color}
         />
 
         {/* Mid Mountains (Medium Ink) */}
         <Path
-          d={`M-50,${SCREEN_HEIGHT * 0.6} C${SCREEN_WIDTH * 0.1},${SCREEN_HEIGHT * 0.52} ${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.58} ${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.65} C${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.75} ${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.55} ${SCREEN_WIDTH + 50},${SCREEN_HEIGHT * 0.6} L${SCREEN_WIDTH + 50},${SCREEN_HEIGHT} L-50,${SCREEN_HEIGHT} Z`}
+          d={`M-50,${SCREEN_HEIGHT * 0.6} 
+             C${SCREEN_WIDTH * 0.05},${SCREEN_HEIGHT * 0.6} ${SCREEN_WIDTH * 0.15},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.25},${SCREEN_HEIGHT * 0.45} 
+             C${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.45},${SCREEN_HEIGHT * 0.58} ${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.58} 
+             C${SCREEN_WIDTH * 0.55},${SCREEN_HEIGHT * 0.58} ${SCREEN_WIDTH * 0.6},${SCREEN_HEIGHT * 0.5} ${SCREEN_WIDTH * 0.65},${SCREEN_HEIGHT * 0.5} 
+             C${SCREEN_WIDTH * 0.7},${SCREEN_HEIGHT * 0.5} ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.42} ${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.42} 
+             C${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.42} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.55} ${SCREEN_WIDTH + 50},${SCREEN_HEIGHT * 0.55} 
+             L${SCREEN_WIDTH + 50},${SCREEN_HEIGHT} L-50,${SCREEN_HEIGHT} Z`}
           fill={m2Color}
         />
 
         {/* Foreground Mountains/Hills (Darkest Ink) */}
         <Path
-          d={`M0,${SCREEN_HEIGHT * 0.75} C${SCREEN_WIDTH * 0.3},${SCREEN_HEIGHT * 0.65} ${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.82} ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.8} C${SCREEN_WIDTH * 0.9},${SCREEN_HEIGHT * 0.78} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.82} ${SCREEN_WIDTH},${SCREEN_HEIGHT * 0.85} L${SCREEN_WIDTH},${SCREEN_HEIGHT} L0,${SCREEN_HEIGHT} Z`}
+          d={`M0,${SCREEN_HEIGHT * 0.8} 
+             C${SCREEN_WIDTH * 0.1},${SCREEN_HEIGHT * 0.8} ${SCREEN_WIDTH * 0.2},${SCREEN_HEIGHT * 0.62} ${SCREEN_WIDTH * 0.3},${SCREEN_HEIGHT * 0.62} 
+             C${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.62} ${SCREEN_WIDTH * 0.4},${SCREEN_HEIGHT * 0.68} ${SCREEN_WIDTH * 0.45},${SCREEN_HEIGHT * 0.68} 
+             C${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.68} ${SCREEN_WIDTH * 0.55},${SCREEN_HEIGHT * 0.78} ${SCREEN_WIDTH * 0.65},${SCREEN_HEIGHT * 0.78} 
+             C${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.78} ${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.65} ${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.65} 
+             C${SCREEN_WIDTH * 0.9},${SCREEN_HEIGHT * 0.65} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.75} ${SCREEN_WIDTH},${SCREEN_HEIGHT * 0.75} 
+             L${SCREEN_WIDTH},${SCREEN_HEIGHT} L0,${SCREEN_HEIGHT} Z`}
           fill={m3Color}
         />
       </Svg>
