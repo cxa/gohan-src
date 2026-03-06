@@ -1,9 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions, useColorScheme, Pressable } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, useColorScheme, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import Svg, { Path, Circle } from 'react-native-svg';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, withSequence, Easing, FadeInDown } from 'react-native-reanimated';
 import { requestFanfouAccessToken, resolveAuthAccessTokenIdentity } from '@/auth/fanfou-client';
 import { setAuthAccessToken } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
@@ -12,211 +10,24 @@ import { AUTH_STACK_ROUTE, ROOT_STACK_ROUTE } from '@/navigation/route-names';
 import type { LoginStackParamList, RootStackParamList } from '@/navigation/types';
 import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/app-text';
+
 const CALLBACK_URL = 'gohan://authorize_callback';
-const {
-  width: SCREEN_WIDTH,
-  height: SCREEN_HEIGHT
-} = Dimensions.get('window');
-const FlyingBird = ({
-  insets: _insets,
-}: {
-  insets: { top: number; bottom: number; left: number; right: number };
-}) => {
-  // Start visible on screen initially
-  const translateX = useSharedValue(SCREEN_WIDTH * 0.2);
-  const translateY = useSharedValue(SCREEN_HEIGHT * 0.4);
-  const wingSway = useSharedValue(0);
 
-  useEffect(() => {
-    // 1. Horizontal Flight
-    // First flight: start from current visible position and fly off screen
-    // Subsequent flights: start from off-screen left and fly off screen right
-    translateX.value = withSequence(
-      // Initial flight off-screen (takes less time since it starts closer)
-      withTiming(SCREEN_WIDTH * 1.3, {
-        duration: 35000,
-        easing: Easing.linear,
-      }),
-      // Infinite loop after the first flight
-      withRepeat(
-        withSequence(
-          // Instantly jump to off-screen left
-          withTiming(-SCREEN_WIDTH * 0.3, { duration: 0 }),
-          // Fly across the entire screen
-          withTiming(SCREEN_WIDTH * 1.3, {
-            duration: 45000,
-            easing: Easing.linear,
-          })
-        ),
-        -1,
-        false
-      )
-    );
-
-    // 2. Vertical Flight: Organic randomized swaying
-    // Let's use a long sequence of pseudo-random points to keep it purely declarative and safe:
-    translateY.value = withRepeat(
-      withSequence(
-        withTiming(SCREEN_HEIGHT * 0.3, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(SCREEN_HEIGHT * 0.45, { duration: 12000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(SCREEN_HEIGHT * 0.25, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(SCREEN_HEIGHT * 0.35, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(SCREEN_HEIGHT * 0.4, { duration: 8000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true // Reverse the whole sequence on repeat for even more variation
-    );
-
-    // 3. Wing flapping motion
-    wingSway.value = withRepeat(
-      withTiming(1, {
-        duration: 1500,
-        easing: Easing.inOut(Easing.sin),
-      }),
-      -1,
-      true
-    );
-  }, [translateX, translateY, wingSway]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    // Add a high-frequency tiny sine wave to translateY for extra organic flutter
-    const flutter = Math.sin(translateX.value / 15) * 2;
-    // Calculate a dynamic flight angle based on the vertical movement
-    // But keep it subtle since the bird is small and far
-    const baseRotation = -10;
-
-    return {
-      transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value + flutter },
-        { rotateZ: `${baseRotation}deg` }
-      ],
-    };
-  });
-
-  const wingStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scaleY: 0.6 + wingSway.value * 0.4 }
-      ]
-    };
-  });
-
-  const isDark = useColorScheme() === 'dark';
-  const birdColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.7)';
-
-  return (
-    <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]} pointerEvents="none">
-      <Animated.View style={wingStyle}>
-        <Svg width="30" height="20" viewBox="0 0 30 20">
-          <Path
-            d="M0,10 Q5,0 15,10 Q25,0 30,10 Q25,5 15,15 Q5,5 0,10 Z"
-            fill={birdColor}
-          />
-        </Svg>
-      </Animated.View>
-    </Animated.View>
-  );
-};
-
-const BirdMountainBackground = ({
-  insets,
-}: {
-  insets: { top: number; bottom: number; left: number; right: number };
-}) => {
-  const isDark = useColorScheme() === 'dark';
-
-  // Ink wash painting aesthetics
-  const bgColor = isDark ? '#121212' : '#F5F5F0'; // Dark vs Parchment
-  const inkBase = isDark ? '220, 220, 225' : '15, 15, 20';
-
-  // Distant, mid, and close mountains overlapping
-  const m1Color = `rgba(${inkBase}, 0.15)`;
-  const m2Color = `rgba(${inkBase}, 0.35)`;
-  const m3Color = `rgba(${inkBase}, 0.7)`;
-  const moonColor = isDark ? 'rgba(255, 250, 200, 0.4)' : 'rgba(200, 50, 50, 0.15)'; // Red sun/stamp in light mode, bright yellow moon in dark
-
-  // Procedural-like SVG paths for mountains
-  return (
-    <View className="absolute inset-0" style={{ backgroundColor: bgColor }} pointerEvents="none">
-      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-
-        {/* Sun/Moon */}
-        {isDark ? (
-          <Path
-            d={`M${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.25 - SCREEN_WIDTH * 0.15} 
-               A${SCREEN_WIDTH * 0.15},${SCREEN_WIDTH * 0.15} 0 0,1 ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.25 + SCREEN_WIDTH * 0.15} 
-               A${SCREEN_WIDTH * 0.16},${SCREEN_WIDTH * 0.16} 0 0,0 ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.25 - SCREEN_WIDTH * 0.15} Z`}
-            fill={moonColor}
-            transform={`rotate(45, ${SCREEN_WIDTH * 0.75}, ${SCREEN_HEIGHT * 0.25})`}
-          />
-        ) : (
-          <Circle
-            cx={SCREEN_WIDTH * 0.75}
-            cy={SCREEN_HEIGHT * 0.25}
-            r={SCREEN_WIDTH * 0.15}
-            fill={moonColor}
-          />
-        )}
-
-        {/* Distant Mountains (Lightest Ink) */}
-        <Path
-          d={`M0,${SCREEN_HEIGHT * 0.45} 
-             C${SCREEN_WIDTH * 0.1},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.2},${SCREEN_HEIGHT * 0.35} ${SCREEN_WIDTH * 0.25},${SCREEN_HEIGHT * 0.35} 
-             C${SCREEN_WIDTH * 0.28},${SCREEN_HEIGHT * 0.35} ${SCREEN_WIDTH * 0.3},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.32},${SCREEN_HEIGHT * 0.38} 
-             C${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.38},${SCREEN_HEIGHT * 0.32} ${SCREEN_WIDTH * 0.45},${SCREEN_HEIGHT * 0.32} 
-             C${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.32} ${SCREEN_WIDTH * 0.55},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.65},${SCREEN_HEIGHT * 0.45} 
-             C${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.38} 
-             C${SCREEN_WIDTH * 0.9},${SCREEN_HEIGHT * 0.38} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH},${SCREEN_HEIGHT * 0.45} 
-             L${SCREEN_WIDTH},${SCREEN_HEIGHT} L0,${SCREEN_HEIGHT} Z`}
-          fill={m1Color}
-        />
-
-        {/* Mid Mountains (Medium Ink) */}
-        <Path
-          d={`M-50,${SCREEN_HEIGHT * 0.6} 
-             C${SCREEN_WIDTH * 0.05},${SCREEN_HEIGHT * 0.6} ${SCREEN_WIDTH * 0.15},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.25},${SCREEN_HEIGHT * 0.45} 
-             C${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.45} ${SCREEN_WIDTH * 0.45},${SCREEN_HEIGHT * 0.58} ${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.58} 
-             C${SCREEN_WIDTH * 0.55},${SCREEN_HEIGHT * 0.58} ${SCREEN_WIDTH * 0.6},${SCREEN_HEIGHT * 0.5} ${SCREEN_WIDTH * 0.65},${SCREEN_HEIGHT * 0.5} 
-             C${SCREEN_WIDTH * 0.7},${SCREEN_HEIGHT * 0.5} ${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.42} ${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.42} 
-             C${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.42} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.55} ${SCREEN_WIDTH + 50},${SCREEN_HEIGHT * 0.55} 
-             L${SCREEN_WIDTH + 50},${SCREEN_HEIGHT} L-50,${SCREEN_HEIGHT} Z`}
-          fill={m2Color}
-        />
-
-        {/* Foreground Mountains/Hills (Darkest Ink) */}
-        <Path
-          d={`M0,${SCREEN_HEIGHT * 0.8} 
-             C${SCREEN_WIDTH * 0.1},${SCREEN_HEIGHT * 0.8} ${SCREEN_WIDTH * 0.2},${SCREEN_HEIGHT * 0.62} ${SCREEN_WIDTH * 0.3},${SCREEN_HEIGHT * 0.62} 
-             C${SCREEN_WIDTH * 0.35},${SCREEN_HEIGHT * 0.62} ${SCREEN_WIDTH * 0.4},${SCREEN_HEIGHT * 0.68} ${SCREEN_WIDTH * 0.45},${SCREEN_HEIGHT * 0.68} 
-             C${SCREEN_WIDTH * 0.5},${SCREEN_HEIGHT * 0.68} ${SCREEN_WIDTH * 0.55},${SCREEN_HEIGHT * 0.78} ${SCREEN_WIDTH * 0.65},${SCREEN_HEIGHT * 0.78} 
-             C${SCREEN_WIDTH * 0.75},${SCREEN_HEIGHT * 0.78} ${SCREEN_WIDTH * 0.8},${SCREEN_HEIGHT * 0.65} ${SCREEN_WIDTH * 0.85},${SCREEN_HEIGHT * 0.65} 
-             C${SCREEN_WIDTH * 0.9},${SCREEN_HEIGHT * 0.65} ${SCREEN_WIDTH * 0.95},${SCREEN_HEIGHT * 0.75} ${SCREEN_WIDTH},${SCREEN_HEIGHT * 0.75} 
-             L${SCREEN_WIDTH},${SCREEN_HEIGHT} L0,${SCREEN_HEIGHT} Z`}
-          fill={m3Color}
-        />
-      </Svg>
-
-      <FlyingBird insets={insets} />
-    </View>
-  );
-};
-// Removed TechnicalAnimation, useGlobePathProps, and GEOMETRY logic.
 const LoginView = () => {
-  const {
-    t
-  } = useTranslation();
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<LoginStackParamList>>();
   const rootNavigation = navigation.getParent<NavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const signInAttemptIdRef = useRef(0);
+
   const handleCancelSignIn = () => {
     signInAttemptIdRef.current += 1;
     setIsSigningIn(false);
     setErrorMessage(null);
   };
+
   const handleSignIn = async () => {
     if (isSigningIn) {
       return;
@@ -262,6 +73,7 @@ const LoginView = () => {
       }
     }
   };
+
   const containerStyle = {
     paddingTop: insets.top,
     paddingBottom: insets.bottom
@@ -269,33 +81,70 @@ const LoginView = () => {
   const bottomButtonStyle = {
     bottom: insets.bottom + 40
   };
+
   const isDark = useColorScheme() === 'dark';
   const bgColor = isDark ? '#121212' : '#F5F5F0';
 
-  return <View className="flex-1" style={[containerStyle, { backgroundColor: bgColor }]}>
-    <BirdMountainBackground insets={insets} />
-    <View className="flex-1 items-center justify-center -mt-10 pointer-events-none">
-      {errorMessage ? <View className="absolute top-[65%] bg-red-500/10 px-4 py-3 rounded border border-red-500/20 pointer-events-auto">
-        <Text className="text-[12px] text-red-600 font-mono text-center uppercase tracking-wide">
-          [ ERROR: {errorMessage} ]
-        </Text>
-      </View> : null}
-    </View>
+  return (
+    <View className="flex-1" style={[containerStyle, { backgroundColor: bgColor }]}>
+      <View className="flex-1 items-center justify-center px-6 -mt-20 z-10 w-full pointer-events-none">
+        
+        {/* Main Title Card - Simplified */}
+        <View className="w-full max-w-[320px] pointer-events-auto items-center">
+          <Text className="text-6xl font-black tracking-widest text-foreground dark:text-foreground uppercase leading-tight text-center mb-10">
+            饭
+          </Text>
+          <Text className="text-xl font-bold text-foreground/80 dark:text-foreground/80 tracking-widest text-center" style={styles.poemText}>
+            我生亦何须
+          </Text>
+          <Text className="mt-4 text-xl font-bold text-foreground/80 dark:text-foreground/80 tracking-widest text-center" style={styles.poemText}>
+            一饱万想灭
+          </Text>
+        </View>
 
-    {/* Bottom Button Layout */}
-    <View className="absolute left-0 right-0 w-full px-8 items-center" style={bottomButtonStyle}>
-      <Animated.View entering={FadeInDown.delay(500).duration(800).springify()} className="w-full max-w-[320px] pointer-events-auto">
-        {isSigningIn && <Animated.View entering={FadeInDown.duration(300)} className="mb-6 items-center">
-          <Pressable onPress={handleCancelSignIn} hitSlop={10} className="opacity-70 active:opacity-100">
-            <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
-              {t('loginCancel')}
-            </Text>
-          </Pressable>
-        </Animated.View>}
+        {/* Error Message */}
+        {errorMessage ? (
+          <View className="w-full max-w-[320px] pointer-events-auto mt-8">
+            <View className="bg-danger px-4 py-3 border-[3px] border-foreground dark:border-border rounded-none">
+              <Text className="text-sm text-danger-foreground font-bold text-center tracking-wide">
+                ERROR: {errorMessage}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+      </View>
 
-        <AuthActionButton label={t('loginButton')} loadingLabel={t('loginLoading')} onPress={handleSignIn} isLoading={isSigningIn} />
-      </Animated.View>
+      {/* Bottom Actions */}
+      <View className="absolute left-0 right-0 w-full px-8 items-center z-20" style={bottomButtonStyle}>
+        <View className="w-full max-w-[320px] pointer-events-auto">
+          {isSigningIn && (
+            <View className="mb-6 items-center">
+              <Pressable onPress={handleCancelSignIn} hitSlop={10} className="active:opacity-70">
+                <View className="border-b-[3px] border-foreground dark:border-border">
+                  <Text className="text-foreground dark:text-foreground text-sm font-black tracking-widest uppercase pb-1">
+                    {t('loginCancel')}
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          )}
+
+          <AuthActionButton
+            label={t('loginButton')}
+            loadingLabel={t('loginLoading')}
+            onPress={handleSignIn}
+            isLoading={isSigningIn}
+          />
+        </View>
+      </View>
     </View>
-  </View>;
+  );
 };
+
+const styles = StyleSheet.create({
+  poemText: {
+    fontFamily: 'Huiwen-MinchoGBK-Regular',
+  },
+});
+
 export default LoginView;
