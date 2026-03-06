@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { View, useColorScheme, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import { useThemeColor } from 'heroui-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { requestFanfouAccessToken, resolveAuthAccessTokenIdentity } from '@/auth/fanfou-client';
@@ -10,6 +12,7 @@ import { AUTH_STACK_ROUTE, ROOT_STACK_ROUTE } from '@/navigation/route-names';
 import type { LoginStackParamList, RootStackParamList } from '@/navigation/types';
 import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/app-text';
+import { LAUNCH_CONTENT_VIEWPORT, LAUNCH_FAN_PATH, LAUNCH_POEM_PATH } from '@/components/launch-content-paths';
 
 const CALLBACK_URL = 'gohan://authorize_callback';
 
@@ -82,24 +85,22 @@ const LoginView = () => {
     bottom: insets.bottom + 40
   };
 
-  const isDark = useColorScheme() === 'dark';
-  const bgColor = isDark ? '#121212' : '#F5F5F0';
+  const [background, foreground] = useThemeColor(['background', 'foreground']);
 
   return (
-    <View className="flex-1" style={[containerStyle, { backgroundColor: bgColor }]}>
+    <View className="flex-1" style={[containerStyle, { backgroundColor: background }]}>
       <View className="flex-1 items-center justify-center px-6 -mt-20 z-10 w-full pointer-events-none">
-        
-        {/* Main Title Card - Simplified */}
+
+        {/* Main Title — font glyphs as SVG paths */}
         <View className="w-full max-w-[320px] pointer-events-auto items-center">
-          <Text className="text-6xl font-black tracking-widest text-foreground dark:text-foreground uppercase leading-tight text-center mb-10">
-            饭
-          </Text>
-          <Text className="text-xl font-bold text-foreground/80 dark:text-foreground/80 tracking-widest text-center" style={styles.poemText}>
-            我生亦何须
-          </Text>
-          <Text className="mt-4 text-xl font-bold text-foreground/80 dark:text-foreground/80 tracking-widest text-center" style={styles.poemText}>
-            一饱万想灭
-          </Text>
+          <Svg
+            width={LAUNCH_CONTENT_VIEWPORT.width}
+            height={LAUNCH_CONTENT_VIEWPORT.height}
+            viewBox={`0 0 ${LAUNCH_CONTENT_VIEWPORT.width} ${LAUNCH_CONTENT_VIEWPORT.height}`}
+          >
+            <Path d={LAUNCH_FAN_PATH} fill={foreground} />
+            <Path d={LAUNCH_POEM_PATH} fill={foreground} fillOpacity={0.8} />
+          </Svg>
         </View>
 
         {/* Error Message */}
@@ -140,11 +141,5 @@ const LoginView = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  poemText: {
-    fontFamily: 'Huiwen-MinchoGBK-Regular',
-  },
-});
 
 export default LoginView;
