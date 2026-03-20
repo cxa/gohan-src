@@ -619,7 +619,7 @@ const StatusDetailRoute = () => {
           {!mainStatus && !isStatusLoading && !isContextLoading ? (
             <DropShadowBox type="danger" containerClassName="pb-2">
               <Surface
-                className="rounded-[24px] bg-danger-soft px-4 py-3"
+                className="bg-danger-soft px-4 py-3"
               >
                 <Text className="text-[13px] text-danger">
                   {statusErrorMessage ?? t('statusLoadFailed')}

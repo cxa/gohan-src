@@ -47,7 +47,7 @@ const ProfileSummaryCard = ({
   const normalizedDescription = normalizeText(description);
 
   return (
-    <Surface className="rounded-[24px] bg-accent/10 px-5 py-6" style={panelStyle}>
+    <Surface className="bg-accent/10 px-5 py-6" style={panelStyle}>
       <View className="flex-row items-start gap-5">
         {avatar}
         <View className="flex-1 gap-2">

@@ -913,7 +913,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                 shadowStyle={profilePanelShadowStyle}
               >
                 <Surface
-                  className="rounded-[24px] bg-surface-secondary px-4 py-4"
+                  className="bg-surface-secondary px-4 py-4"
                   style={profileThemeStyles.panelStyle}
                 >
                   <View className="flex-row gap-3">
@@ -1004,7 +1004,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             {isProtectedTimeline ? (
               <DropShadowBox type="warning" containerClassName="pb-2">
                 <Surface
-                  className={`rounded-[24px] bg-surface-secondary ${getDropShadowBorderClass(
+                  className={`bg-surface-secondary ${getDropShadowBorderClass(
                     'warning',
                   )} px-4 py-4`}
                 >

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Pressable, Text as RNText, useColorScheme, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text as RNText, useColorScheme, View } from 'react-native';
 import { MessageCircle, Repeat2, Trash2 } from 'lucide-react-native';
 import { Dialog, useThemeColor } from 'heroui-native';
 import { useTranslation } from 'react-i18next';
@@ -199,8 +199,8 @@ const TimelineStatusCard = ({
       <Pressable
         onPress={() => onPressStatus(statusId, shadowType)}
         unstable_pressDelay={100}
-        className="rounded-[24px] px-5 py-4 active:opacity-75"
-        style={{ backgroundColor: cardBgColor }}
+        className="rounded-3xl px-5 py-4 active:opacity-75"
+        style={[{ backgroundColor: cardBgColor }, styles.card]}
       >
         <View className={showAvatar ? 'flex-row gap-3' : undefined}>
           {showAvatar ? (
@@ -433,7 +433,7 @@ const TimelineStatusCard = ({
       >
         <Dialog.Portal>
           <Dialog.Overlay className="bg-foreground/55 dark:bg-background/85" />
-          <Dialog.Content className="w-[92%] max-w-[360px] self-center rounded-[24px] bg-surface px-4 py-4">
+          <Dialog.Content className="w-[92%] max-w-[360px] self-center rounded-3xl bg-surface px-4 py-4">
             <View className="gap-1">
               <Dialog.Title
                 className="text-[20px] leading-[24px] font-bold text-foreground"
@@ -486,4 +486,9 @@ const TimelineStatusCard = ({
     </>
   );
 };
+const styles = StyleSheet.create({
+  card: {
+    borderCurve: 'continuous',
+  },
+});
 export default TimelineStatusCard;

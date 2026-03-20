@@ -678,7 +678,7 @@ const MoreRouteContent = ({
               <View style={{ gap: PROFILE_GROUP_GAP }}>
                 {showLoadingState ? (
                     <Surface
-                      className="rounded-[24px] bg-surface-secondary px-5 py-6"
+                      className="bg-surface-secondary px-5 py-6"
                       style={panelStyle.profile}
                     >
                       <View className="flex-row items-center gap-4">
@@ -778,10 +778,10 @@ const MoreRouteContent = ({
               <PressableFeedback
                 onPress={handleOpenPrivateMessages}
                 accessibilityRole="button"
-                className="rounded-[24px] overflow-hidden"
+                className="rounded-3xl overflow-hidden"
               >
                 <Surface
-                  className="rounded-[24px] bg-surface-secondary px-4 py-3.5"
+                  className="bg-surface-secondary px-4 py-3.5"
                   style={panelStyle.messages}
                 >
                   <PressableFeedback.Highlight />
@@ -808,7 +808,7 @@ const MoreRouteContent = ({
 
               {/* Settings */}
               <Surface
-                className="rounded-[24px] bg-surface-secondary overflow-hidden"
+                className="bg-surface-secondary overflow-hidden"
                 style={panelStyle.settings}
               >
                     <Select
@@ -830,7 +830,7 @@ const MoreRouteContent = ({
                       </Select.Trigger>
                       <Select.Portal>
                         <Select.Overlay />
-                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-3xl">
                           {APP_FONT_OPTIONS.map(option => {
                             const fontFamily = getFontPreviewFamily(option.value);
                             return (
@@ -863,7 +863,7 @@ const MoreRouteContent = ({
                       </Select.Trigger>
                       <Select.Portal>
                         <Select.Overlay />
-                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-3xl">
                           {APP_FONT_SIZE_OPTIONS.map(option => (
                             <Select.Item key={option.value} value={option.value} label={option.label} />
                           ))}
@@ -890,7 +890,7 @@ const MoreRouteContent = ({
                       </Select.Trigger>
                       <Select.Portal>
                         <Select.Overlay />
-                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-3xl">
                           {APP_LANGUAGE_OPTIONS.map(option => (
                             <Select.Item
                               key={option.value}
@@ -921,7 +921,7 @@ const MoreRouteContent = ({
                       </Select.Trigger>
                       <Select.Portal>
                         <Select.Overlay />
-                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-3xl">
                           {APP_THEME_OPTIONS.map(option => (
                             <Select.Item
                               key={option.value}
@@ -938,7 +938,7 @@ const MoreRouteContent = ({
             <View className="flex-1" />
 
             <View className="mt-6">
-              <Surface className="rounded-[24px] bg-surface-secondary px-4 py-3.5">
+              <Surface className="bg-surface-secondary px-4 py-3.5">
                   <View className="flex-row items-center justify-between">
                     <Text className="text-[15px] font-semibold text-foreground">
                       {t('moreFollowProfile')}
@@ -1015,7 +1015,7 @@ const MissingUserIdPlaceholder = () => {
         }}
         contentContainerStyle={contentContainerStyle}
       >
-        <Surface className="rounded-[24px] bg-surface-secondary px-5 py-6">
+        <Surface className="bg-surface-secondary px-5 py-6">
           <View className="rounded-sm border bg-danger-soft px-3 py-2">
             <Text className="text-[12px] text-danger">
               {t('moreAccountLoadFailedNoId')}

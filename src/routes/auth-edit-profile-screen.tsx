@@ -97,7 +97,7 @@ const EditProfileRoute = () => {
     >
       {!isInitialized && isLoading ? (
         <DropShadowBox>
-          <Surface className="rounded-[24px] bg-surface-secondary px-5 py-6">
+          <Surface className="bg-surface-secondary px-5 py-6">
             <View className="flex-row items-center gap-3">
               <NeobrutalActivityIndicator size="small" />
               <Text className="text-[14px] text-foreground">
@@ -110,7 +110,7 @@ const EditProfileRoute = () => {
 
       {!user && !isLoading ? (
         <DropShadowBox type="danger" containerClassName="pb-2">
-          <Surface className="rounded-[24px] bg-danger-soft px-4 py-3">
+          <Surface className="bg-danger-soft px-4 py-3">
             <Text className="text-[13px] text-danger">
               {errorMessage ?? t('editProfileLoadFailed')}
             </Text>
@@ -135,7 +135,7 @@ const EditProfileRoute = () => {
       {user ? (
         <>
           <DropShadowBox>
-            <Surface className="rounded-[24px] bg-surface-secondary px-5 py-6">
+            <Surface className="bg-surface-secondary px-5 py-6">
               <View
                 style={{
                   gap: FORM_FIELD_GAP,

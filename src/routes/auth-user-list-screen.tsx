@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  StyleSheet,
   useColorScheme,
   useWindowDimensions,
   View,
@@ -199,9 +200,9 @@ const UserListRoute = () => {
               <DropShadowBox>
                 <Pressable
                   onPress={() => handleOpenProfile(item.id)}
-                  style={cardBgStyle}
+                  style={[cardBgStyle, styles.card]}
                   accessibilityRole="button"
-                  className="flex-row gap-3 overflow-hidden rounded-[24px] px-4 py-4 active:translate-x-[-4px] active:translate-y-[4px]"
+                  className="flex-row gap-3 overflow-hidden rounded-3xl px-4 py-4 active:translate-x-[-4px] active:translate-y-[4px]"
                 >
                   {avatarUrl ? (
                     <Image
@@ -264,7 +265,7 @@ const UserListRoute = () => {
               </View>
             ) : (
               <DropShadowBox>
-                <Surface className="rounded-[24px] bg-surface-secondary px-4 py-4">
+                <Surface className="bg-surface-secondary px-4 py-4">
                   <Text className="text-[13px] text-muted">
                     {mode === 'following'
                       ? t(isSelf ? 'followingEmpty' : 'followingEmptyOther')
@@ -294,4 +295,9 @@ const UserListRoute = () => {
     </>
   );
 };
+const styles = StyleSheet.create({
+  card: {
+    borderCurve: 'continuous',
+  },
+});
 export default UserListRoute;

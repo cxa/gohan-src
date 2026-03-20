@@ -151,7 +151,7 @@ const ComposerModal = ({
             </Text>
             <Pressable
               onPress={!isSubmitting ? handleSubmit : undefined}
-              className={`items-center rounded-[24px] bg-accent px-5 py-2 ${isSubmitting ? 'opacity-70' : ''}`}
+              className={`items-center rounded-full bg-accent px-5 py-2 ${isSubmitting ? 'opacity-70' : ''}`}
               accessibilityRole="button"
               accessibilityLabel={submitLabel}
             >
@@ -212,7 +212,7 @@ const ComposerModal = ({
               {photoUri ? (
                 <Pressable
                   onPress={canDismiss ? handleRemovePhoto : undefined}
-                  className="rounded-[24px] bg-surface-secondary px-4 py-2"
+                  className="rounded-full bg-surface-secondary px-4 py-2"
                   accessibilityRole="button"
                   accessibilityLabel={t('composerRemovePhotoA11y')}
                 >

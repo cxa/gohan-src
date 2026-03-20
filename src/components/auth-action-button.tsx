@@ -39,7 +39,7 @@ const AuthActionButton = ({
         onPress={onPress}
         disabled={isLoading}
         className={`w-full ${backgroundClassMap[variant]
-          } h-14 items-center justify-center rounded-[24px] active:opacity-75 ${isLoading ? 'opacity-70' : ''
+          } h-14 items-center justify-center rounded-full active:opacity-75 ${isLoading ? 'opacity-70' : ''
           }`}
       >
         <Text className={$('text-[16px] font-bold', labelClassMap[variant])}>

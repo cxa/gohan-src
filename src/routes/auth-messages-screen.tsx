@@ -129,7 +129,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 const TimelineEmptyMessage = ({ message }: { message: string }) => (
   <DropShadowBox>
-    <Surface className="rounded-[24px] bg-surface px-4 py-4">
+    <Surface className="bg-surface px-4 py-4">
       <Text className="text-[13px] text-muted">{message}</Text>
     </Surface>
   </DropShadowBox>

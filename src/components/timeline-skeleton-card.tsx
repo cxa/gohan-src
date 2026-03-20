@@ -110,8 +110,8 @@ const TimelineSkeletonCard = ({
 
   return (
     <View
-      className="relative rounded-[24px] px-5 py-6 overflow-hidden"
-      style={{ backgroundColor: cardBg }}
+      className="relative rounded-3xl px-5 py-6 overflow-hidden"
+      style={[{ backgroundColor: cardBg }, styles.card]}
     >
       {message ? (
         <Text className="text-[14px] text-muted">{message}</Text>
@@ -144,6 +144,9 @@ const TimelineSkeletonCard = ({
 };
 
 const styles = StyleSheet.create({
+  card: {
+    borderCurve: 'continuous',
+  },
   shimmer: {
     position: 'absolute',
     left: 0,
