@@ -786,12 +786,12 @@ const MoreRouteContent = ({
                 className="rounded-3xl overflow-hidden"
               >
                 <Surface
-                  className="bg-surface-secondary"
+                  className="bg-surface-secondary overflow-hidden"
                   style={panelStyle.messages}
                 >
                   <PressableFeedback.Highlight />
-                  <View className="flex-row items-center gap-3 px-4 py-3.5">
-                    <PostageStampIcon color={entryIconColor} size={40} />
+                  <View className="flex-row items-center gap-3 px-4">
+                    <PostageStampIcon color={entryIconColor} size={32} />
                     <View className="flex-1">
                       <Text
                         className="text-[15px] font-semibold text-foreground"
