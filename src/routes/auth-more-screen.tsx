@@ -1,6 +1,7 @@
 import React, { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { showToastAlert, showVariantToast } from '@/utils/toast-alert';
+import { showVariantToast } from '@/utils/toast-alert';
 import {
+  Alert,
   Image,
   NativeModules,
   Platform,
@@ -538,7 +539,7 @@ const MoreRouteContent = ({
     if (isSigningOut) {
       return;
     }
-    showToastAlert(
+    Alert.alert(
       t('moreSignOutConfirmTitle'),
       t('moreSignOutConfirmMessage'),
       [
