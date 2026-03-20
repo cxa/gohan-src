@@ -28,6 +28,7 @@ import {
 import type { AuthTabParamList } from '@/navigation/types';
 import AuthHomeRoute from '@/routes/auth-home-screen';
 import { useAppFontFamily } from '@/settings/app-font-preference';
+import { useSystemFontFamilyOverride } from '@/settings/app-ui-style-preference';
 import { useTranslation } from 'react-i18next';
 import MentionsRoute from '@/routes/auth-mentions-screen';
 import MoreRoute from '@/routes/auth-more-screen';
@@ -108,6 +109,8 @@ const AuthTabBar = ({
     r => r.name === AUTH_TAB_ROUTE.COMPOSE,
   );
   const fontFamily = useAppFontFamily();
+  const systemFontOverride = useSystemFontFamilyOverride();
+  const resolvedFontFamily = fontFamily ?? systemFontOverride;
   const renderItem = (
     route: BottomTabBarProps['state']['routes'][number] | null,
   ) => {
@@ -200,7 +203,7 @@ const AuthTabBar = ({
               className="ml-2 font-bold text-base"
               style={{
                 color: textColor,
-                fontFamily,
+                fontFamily: resolvedFontFamily,
               }}
               numberOfLines={1}
             >
@@ -246,6 +249,8 @@ const MoreStackRoute = () => {
   const { t } = useTranslation();
   const [foreground] = useThemeColor(['foreground']);
   const headerFontFamily = useAppFontFamily();
+  const headerSystemFontOverride = useSystemFontFamilyOverride();
+  const resolvedHeaderFontFamily = headerFontFamily ?? headerSystemFontOverride;
 
   return (
     <MoreStack.Navigator
@@ -260,7 +265,7 @@ const MoreStackRoute = () => {
           ? { top: 'automatic' }
           : undefined,
         headerTitleStyle: {
-          fontFamily: headerFontFamily,
+          fontFamily: resolvedHeaderFontFamily,
           fontSize: HEADER_TITLE_FONT_SIZE,
           color: foreground,
         },

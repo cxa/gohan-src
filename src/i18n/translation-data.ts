@@ -191,6 +191,9 @@ type BaseTranslations = {
   moreThemePlain: string;
   moreFontUpdateFailed: string;
   moreFontUpdateFailedMessage: string;
+  moreStyle: string;
+  moreStyleSoft: string;
+  moreStyleSharp: string;
   moreFollowProfile: string;
   moreFollowProfileHint: string;
   moreAccountLoading: string;
@@ -417,6 +420,9 @@ const enUS: BaseTranslations = {
   moreThemePlain: 'Plain',
   moreFontUpdateFailed: 'Update Failed',
   moreFontUpdateFailedMessage: 'Cannot update font setting.',
+  moreStyle: 'Style',
+  moreStyleSoft: 'Soft',
+  moreStyleSharp: 'Sharp',
   moreFollowProfile: 'Follow User Color Settings',
   moreFollowProfileHint: "If this page looks off, set your background and color scheme on Fanfou's website, or turn off Follow User Color Settings.",
   moreAccountLoading: 'Loading account…',
@@ -643,6 +649,9 @@ const zhCN: BaseTranslations = {
   moreThemePlain: '纯色',
   moreFontUpdateFailed: '更新失败',
   moreFontUpdateFailedMessage: '无法更新字体设置。',
+  moreStyle: '风格',
+  moreStyleSoft: '柔和',
+  moreStyleSharp: '干练',
   moreFollowProfile: '跟随用户颜色设置',
   moreFollowProfileHint: '如果觉得这个页面的颜色不好看，可以前往饭否官网设置自己的背景图和配色，或者关闭「跟随用户颜色设置」。',
   moreAccountLoading: '正在加载账号…',

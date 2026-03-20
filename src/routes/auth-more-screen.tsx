@@ -84,6 +84,12 @@ import {
   setAppProfileThemePreference,
   useAppProfileThemePreference,
 } from '@/settings/app-profile-theme-preference';
+import {
+  APP_UI_STYLE_OPTIONS,
+  setAppUiStylePreference,
+  type AppUiStyleOption,
+  useAppUiStylePreference,
+} from '@/settings/app-ui-style-preference';
 import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
 import {
@@ -298,6 +304,7 @@ const MoreRouteContent = ({
   const appFontSizePreference = useAppFontSizePreference();
   const appLanguagePreference = useAppLanguagePreference();
   const appThemePreference = useAppThemePreference();
+  const appUiStylePreference = useAppUiStylePreference();
   const isFocused = useIsFocused();
   const headerTitleVisible = useSharedValue(false);
   const [showHeaderTitle, setShowHeaderTitle] = useState(false);
@@ -635,6 +642,20 @@ const MoreRouteContent = ({
       );
     }
   };
+  const handleSelectUiStylePreference = async (next: AppUiStyleOption) => {
+    if (appUiStylePreference === next) {
+      return;
+    }
+    try {
+      await setAppUiStylePreference(next);
+    } catch (updateError) {
+      showVariantToast(
+        'danger',
+        t('moreFontUpdateFailed'),
+        getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
+      );
+    }
+  };
   const fontSelectValue = (() => {
     const opt = APP_FONT_OPTIONS.find(o => o.value === appFontPreference);
     return opt ? { value: opt.value, label: fontOptionLabels[opt.value] } : undefined;
@@ -657,6 +678,13 @@ const MoreRouteContent = ({
       appThemePreference === 'colorful'
         ? t('moreThemeColorful')
         : t('moreThemePlain'),
+  };
+  const uiStyleSelectValue = {
+    value: appUiStylePreference,
+    label:
+      appUiStylePreference === 'soft'
+        ? t('moreStyleSoft')
+        : t('moreStyleSharp'),
   };
   return (
     <ProfilePageBackdrop
@@ -939,6 +967,37 @@ const MoreRouteContent = ({
                               key={option.value}
                               value={option.value}
                               label={option.value === 'colorful' ? t('moreThemeColorful') : t('moreThemePlain')}
+                            />
+                          ))}
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
+                    <Separator />
+                    <Select
+                      value={uiStyleSelectValue}
+                      onValueChange={opt =>
+                        opt &&
+                        handleSelectUiStylePreference(opt.value as AppUiStyleOption)
+                      }
+                    >
+                      <Select.Trigger variant="unstyled" className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70">
+                        <Text
+                          className="flex-1 text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('moreStyle')}
+                        </Text>
+                        <Text className="text-[13px] text-muted">{uiStyleSelectValue.label}</Text>
+                        <ChevronDown size={13} color={muted} />
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Overlay />
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-3xl">
+                          {APP_UI_STYLE_OPTIONS.map(option => (
+                            <Select.Item
+                              key={option.value}
+                              value={option.value}
+                              label={option.value === 'soft' ? t('moreStyleSoft') : t('moreStyleSharp')}
                             />
                           ))}
                         </Select.Content>
