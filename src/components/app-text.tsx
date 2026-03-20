@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Platform,
+  StyleSheet,
   Text as RNText,
   TextInput as RNTextInput,
   type TextInputProps,
@@ -8,8 +9,10 @@ import {
 } from 'react-native';
 import Animated, { type SharedValue } from 'react-native-reanimated';
 import { $ } from '@cxa/twx';
+import { useResolveClassNames } from 'uniwind';
 
 import { useAppFontClassName } from '@/settings/app-font-preference';
+import { useAppFontSizeScale } from '@/settings/app-font-size-preference';
 
 // Custom fonts lack emoji glyphs. On Android there is no automatic fallback to
 // the system emoji font, so emoji appear as boxes. Wrap each emoji character in
@@ -89,6 +92,7 @@ const Text = React.forwardRef<
       allowFontScaling = true,
       dynamicTypeRamp,
       maxFontSizeMultiplier,
+      style,
       children,
       ...props
     },
@@ -96,11 +100,22 @@ const Text = React.forwardRef<
   ) => {
     const rawFontClassName = useAppFontClassName();
     const fontClassName = skipFont ? undefined : rawFontClassName;
+    const mergedClassName = withFont(fontClassName, className);
+    const fontSizeScale = useAppFontSizeScale();
+    const resolvedStyles = useResolveClassNames(mergedClassName ?? '');
+    const classFontSize = (resolvedStyles as { fontSize?: number }).fontSize;
+    const styleFontSize = (StyleSheet.flatten(style) as { fontSize?: number } | null)?.fontSize;
+    const baseFontSize = styleFontSize ?? classFontSize;
+    const sizeOverride =
+      baseFontSize !== undefined && fontSizeScale !== 1.0
+        ? { fontSize: Math.round(baseFontSize * fontSizeScale) }
+        : undefined;
 
     return (
       <RNText
         ref={ref}
         {...props}
+        style={sizeOverride ? [style, sizeOverride] : style}
         allowFontScaling={allowFontScaling}
         dynamicTypeRamp={
           Platform.OS === 'ios'
@@ -108,7 +123,7 @@ const Text = React.forwardRef<
             : dynamicTypeRamp
         }
         maxFontSizeMultiplier={maxFontSizeMultiplier}
-        className={withFont(fontClassName, className)}
+        className={mergedClassName}
       >
         {fontClassName ? processEmojiChildren(children) : children}
       </RNText>
@@ -146,17 +161,29 @@ const AnimatedText = React.forwardRef<
       allowFontScaling = true,
       dynamicTypeRamp,
       maxFontSizeMultiplier,
+      style,
       children,
       ...props
     },
     ref,
   ) => {
     const fontClassName = useAppFontClassName();
+    const mergedClassName = withFontAnimated(fontClassName, className);
+    const fontSizeScale = useAppFontSizeScale();
+    const resolvedStyles = useResolveClassNames(typeof mergedClassName === 'string' ? mergedClassName : '');
+    const classFontSize = (resolvedStyles as { fontSize?: number }).fontSize;
+    const styleFontSize = (StyleSheet.flatten(style as Parameters<typeof StyleSheet.flatten>[0]) as { fontSize?: number } | null)?.fontSize;
+    const baseFontSize = styleFontSize ?? classFontSize;
+    const sizeOverride =
+      baseFontSize !== undefined && fontSizeScale !== 1.0
+        ? { fontSize: Math.round(baseFontSize * fontSizeScale) }
+        : undefined;
 
     return (
       <Animated.Text
         ref={ref}
         {...props}
+        style={sizeOverride ? [style, sizeOverride] : style}
         allowFontScaling={allowFontScaling}
         dynamicTypeRamp={
           Platform.OS === 'ios'
@@ -164,7 +191,7 @@ const AnimatedText = React.forwardRef<
             : dynamicTypeRamp
         }
         maxFontSizeMultiplier={maxFontSizeMultiplier}
-        className={withFontAnimated(fontClassName, className)}
+        className={mergedClassName}
       >
         {fontClassName ? processEmojiChildren(children as React.ReactNode) : children}
       </Animated.Text>

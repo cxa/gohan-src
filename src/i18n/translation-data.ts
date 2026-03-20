@@ -33,14 +33,12 @@ type BaseTranslations = {
   composerChangePhoto: string;
   composerRemovePhoto: string;
   composerRemovePhotoA11y: string;
-  composerPickingPhoto: string;
   composerPhotoError: string;
 
   // Post/send results
   sentTitle: string;
   replySent: string;
   repostSent: string;
-  postSent: string;
   postPendingReviewMessage: string;
   replyFailedTitle: string;
   repostFailedTitle: string;
@@ -179,12 +177,10 @@ type BaseTranslations = {
   moreSignOutConfirmTitle: string;
   moreSignOutConfirmMessage: string;
   moreFontStyle: string;
-  moreFontStyleHelper: string;
+  moreFontSize: string;
   moreLanguage: string;
-  moreLanguageHelper: string;
   moreLanguageSystemDefault: string;
   moreTheme: string;
-  moreThemeHelper: string;
   moreThemeColorful: string;
   moreThemePlain: string;
   moreFontUpdateFailed: string;
@@ -192,7 +188,6 @@ type BaseTranslations = {
   moreAccountLoading: string;
   moreAccountLoadFailed: string;
   moreAccountLoadFailedNoId: string;
-  moreEditProfile: string;
 
   // Edit profile screen
   editProfileLoading: string;
@@ -207,7 +202,6 @@ type BaseTranslations = {
   editProfileBio: string;
   editProfileBioPlaceholder: string;
   editProfileSave: string;
-  editProfileSaving: string;
   editProfileSaveFailedTitle: string;
   editProfileNameRequired: string;
   editProfileUpdateFailedTitle: string;
@@ -255,14 +249,12 @@ const enUS: BaseTranslations = {
   composerChangePhoto: 'Change Photo',
   composerRemovePhoto: 'Remove',
   composerRemovePhotoA11y: 'Remove photo',
-  composerPickingPhoto: 'Selecting…',
   composerPhotoError: 'Cannot attach photo',
 
   // Post/send results
   sentTitle: 'Sent',
   replySent: 'Reply posted.',
   repostSent: 'Reposted.',
-  postSent: 'Your post has been sent.',
   postPendingReviewMessage:
     'Your post has been sent. Due to content review, it may take 10 minutes or longer to appear.',
   replyFailedTitle: 'Reply Failed',
@@ -403,12 +395,10 @@ const enUS: BaseTranslations = {
   moreSignOutConfirmTitle: 'Sign Out',
   moreSignOutConfirmMessage: 'Are you sure you want to sign out?',
   moreFontStyle: 'Font Style',
-  moreFontStyleHelper: 'Choose your preferred font.',
+  moreFontSize: 'Font Size',
   moreLanguage: 'Language',
-  moreLanguageHelper: 'Choose your preferred language.',
   moreLanguageSystemDefault: 'System Default',
   moreTheme: 'Theme',
-  moreThemeHelper: 'Choose the card background style.',
   moreThemeColorful: 'Colorful',
   moreThemePlain: 'Plain',
   moreFontUpdateFailed: 'Update Failed',
@@ -416,7 +406,6 @@ const enUS: BaseTranslations = {
   moreAccountLoading: 'Loading account…',
   moreAccountLoadFailed: 'Failed to load account.',
   moreAccountLoadFailedNoId: 'Cannot load account: missing user ID.',
-  moreEditProfile: 'Edit Profile',
 
   // Edit profile screen
   editProfileLoading: 'Loading profile…',
@@ -431,7 +420,6 @@ const enUS: BaseTranslations = {
   editProfileBio: 'Bio',
   editProfileBioPlaceholder: 'Tell us about yourself',
   editProfileSave: 'Save',
-  editProfileSaving: 'Saving…',
   editProfileSaveFailedTitle: 'Cannot Save',
   editProfileNameRequired: 'Name cannot be empty.',
   editProfileUpdateFailedTitle: 'Update Failed',
@@ -480,14 +468,12 @@ const zhCN: BaseTranslations = {
   composerChangePhoto: '更换图片',
   composerRemovePhoto: '移除',
   composerRemovePhotoA11y: '移除图片',
-  composerPickingPhoto: '选择中…',
   composerPhotoError: '无法附上图片',
 
   // Post/send results
   sentTitle: '已发送',
   replySent: '回复已发布。',
   repostSent: '已转播。',
-  postSent: '你的饭否已发出。',
   postPendingReviewMessage:
     '你的饭否已发出。由于内容审查，可能需要 10 分钟或更久才会显示。',
   replyFailedTitle: '回复失败',
@@ -627,12 +613,10 @@ const zhCN: BaseTranslations = {
   moreSignOutConfirmTitle: '退出登录',
   moreSignOutConfirmMessage: '确认退出登录？',
   moreFontStyle: '字体风格',
-  moreFontStyleHelper: '选择你偏好的应用字体。',
+  moreFontSize: '字体大小',
   moreLanguage: '语言',
-  moreLanguageHelper: '选择你偏好的应用语言。',
   moreLanguageSystemDefault: '跟随系统',
   moreTheme: '主题',
-  moreThemeHelper: '选择卡片背景风格。',
   moreThemeColorful: '多彩',
   moreThemePlain: '纯色',
   moreFontUpdateFailed: '更新失败',
@@ -640,7 +624,6 @@ const zhCN: BaseTranslations = {
   moreAccountLoading: '正在加载账号…',
   moreAccountLoadFailed: '无法加载账号信息。',
   moreAccountLoadFailedNoId: '无法加载账号信息，缺少用户 ID。',
-  moreEditProfile: '编辑资料',
 
   // Edit profile screen
   editProfileLoading: '正在加载个人资料…',
@@ -655,7 +638,6 @@ const zhCN: BaseTranslations = {
   editProfileBio: '简介',
   editProfileBioPlaceholder: '介绍一下你自己',
   editProfileSave: '保存',
-  editProfileSaving: '保存中…',
   editProfileSaveFailedTitle: '无法保存',
   editProfileNameRequired: '昵称不能为空。',
   editProfileUpdateFailedTitle: '更新失败',

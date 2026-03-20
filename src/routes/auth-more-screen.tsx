@@ -4,13 +4,9 @@ import {
   Image,
   NativeModules,
   Platform,
-  Pressable,
   StatusBar,
-  type StyleProp,
-  type TextStyle,
   useColorScheme,
   View,
-  type ViewStyle,
 } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -27,9 +23,9 @@ import {
 } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Surface, useThemeColor } from 'heroui-native';
+import { PressableFeedback, Select, Separator, Surface, useThemeColor } from 'heroui-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronDown, ChevronRight } from 'lucide-react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { setAuthAccessToken, useAuthSession } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
@@ -65,6 +61,12 @@ import {
   useAppFontPreference,
 } from '@/settings/app-font-preference';
 import {
+  APP_FONT_SIZE_OPTIONS,
+  setAppFontSizePreference,
+  type AppFontSizeOption,
+  useAppFontSizePreference,
+} from '@/settings/app-font-size-preference';
+import {
   APP_LANGUAGE_OPTIONS,
   setAppLanguagePreference,
   type AppLanguageOption,
@@ -89,8 +91,6 @@ const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
 const SECTION_GAP = 24;
 const AVATAR_SIZE = 80;
-const ENTRY_ICON_SIZE = 18;
-const ENTRY_ICON_WRAPPER = 36;
 const IOS_TOP_CONTENT_OFFSET = 0.1;
 const IOS_TOP_CONTENT_EQUAL_STATUS_BAR_PADDING = 4;
 const IOS_TOP_CONTENT_LARGER_SAFE_AREA_PADDING = 0;
@@ -222,10 +222,9 @@ const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
   );
 };
 const PROFILE_GROUP_GAP = 12;
-const SETTINGS_GROUP_GAP = 16;
 const HEADER_TITLE_REVEAL_RATIO = 0.25;
 const SYSTEM_FONT_FAMILY = Platform.select({
-  ios: 'System',
+  ios: 'ui-rounded',
   android: 'sans-serif',
   default: undefined,
 });
@@ -241,6 +240,7 @@ const getFontPreviewFamily = (option: AppFontOption) => {
   }
   return SYSTEM_FONT_FAMILY;
 };
+
 const formatCount = (value?: number) => {
   if (typeof value !== 'number') {
     return '--';
@@ -253,246 +253,9 @@ const formatCount = (value?: number) => {
 };
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
-type MoreEntry = {
-  key: string;
-  label: string;
-  value: string;
-  helper?: string;
-  showChevron?: boolean;
-  icon: React.ComponentType<{
-    color: string;
-    size: number;
-  }>;
-  noIconBox?: boolean;
-  onPress?: () => void;
-};
-type EntryRowProps = MoreEntry & {
-  iconColor: string;
-  panelStyle?: StyleProp<ViewStyle>;
-  shadowStyle?: StyleProp<ViewStyle>;
-  primaryTextStyle?: StyleProp<TextStyle>;
-  mutedTextStyle?: StyleProp<TextStyle>;
-};
-type FontSettingRowProps = {
-  option: {
-    value: AppFontOption;
-    label: string;
-  };
-  isLast: boolean;
-  isSelected: boolean;
-  isBusy: boolean;
-  onPress: (next: AppFontOption) => void;
-  primaryTextStyle?: StyleProp<TextStyle>;
-};
-type LanguageSettingRowProps = {
-  option: {
-    value: AppLanguageOption;
-    label: string;
-    nativeLabel: string;
-  };
-  isLast: boolean;
-  isSelected: boolean;
-  isBusy: boolean;
-  onPress: (next: AppLanguageOption) => void;
-  primaryTextStyle?: StyleProp<TextStyle>;
-};
-type ThemeSettingRowProps = {
-  option: {
-    value: AppThemeOption;
-    label: string;
-    nativeLabel: string;
-  };
-  isLast: boolean;
-  isSelected: boolean;
-  isBusy: boolean;
-  onPress: (next: AppThemeOption) => void;
-  primaryTextStyle?: StyleProp<TextStyle>;
-};
 type MoreRouteContentProps = {
   userId: string;
   displayNameFallback: string;
-};
-const EntryRow = ({
-  label,
-  value,
-  helper,
-  showChevron,
-  icon: Icon,
-  noIconBox,
-  onPress,
-  iconColor,
-  panelStyle,
-  shadowStyle,
-  primaryTextStyle,
-  mutedTextStyle,
-}: EntryRowProps) => {
-  const isDisabled = !onPress;
-  return (
-    <DropShadowBox shadowStyle={shadowStyle}>
-      <Pressable
-        onPress={onPress}
-        disabled={isDisabled}
-        accessibilityRole={isDisabled ? undefined : 'button'}
-        className={isDisabled ? 'opacity-70' : 'active:opacity-75'}
-      >
-        <Surface className="rounded-[24px] bg-surface-secondary px-4 py-4" style={panelStyle}>
-          <View className="flex-row items-center gap-4">
-            {noIconBox ? (
-              <Icon color={iconColor} size={ENTRY_ICON_WRAPPER} />
-            ) : (
-              <View
-                className="items-center justify-center bg-surface-tertiary"
-                style={{
-                  width: ENTRY_ICON_WRAPPER,
-                  height: ENTRY_ICON_WRAPPER,
-                }}
-              >
-                <Icon color={iconColor} size={ENTRY_ICON_SIZE} />
-              </View>
-            )}
-            <View className="flex-1">
-              <Text
-                className="text-[15px] font-semibold text-foreground"
-                style={primaryTextStyle}
-              >
-                {label}
-              </Text>
-              {helper ? (
-                <Text
-                  className="mt-0.5 text-[12px] text-muted"
-                  style={mutedTextStyle}
-                >
-                  {helper}
-                </Text>
-              ) : null}
-            </View>
-            {showChevron ? (
-              <ChevronRight size={16} color={iconColor} />
-            ) : (
-              <Text
-                className="text-[14px] text-foreground"
-                style={primaryTextStyle}
-              >
-                {value}
-              </Text>
-            )}
-          </View>
-        </Surface>
-      </Pressable>
-    </DropShadowBox>
-  );
-};
-const FontSettingRow = ({
-  option,
-  isLast,
-  isSelected,
-  isBusy,
-  onPress,
-  primaryTextStyle,
-}: FontSettingRowProps) => {
-  const isDisabled = isSelected || isBusy;
-  const previewFamily = getFontPreviewFamily(option.value);
-  return (
-    <Pressable
-      disabled={isDisabled}
-      accessibilityRole="button"
-      onPress={() => onPress(option.value)}
-      className={`flex-row items-center gap-3 px-4 py-4 ${isLast ? 'rounded-b-[24px]' : 'border-b'
-        } ${isDisabled ? 'opacity-80' : 'active:bg-surface-tertiary'}`}
-    >
-      <View
-        className={`h-5 w-5 rounded-full items-center justify-center ${isSelected ? 'bg-accent' : 'bg-surface-tertiary'
-          }`}
-      >
-        {isSelected ? <View className="h-2 w-2 rounded-full bg-accent-foreground" /> : null}
-      </View>
-      <Text
-        className="flex-1 text-[15px] text-foreground"
-        style={[
-          primaryTextStyle,
-          previewFamily
-            ? {
-              fontFamily: previewFamily,
-            }
-            : undefined,
-        ]}
-      >
-        {option.label}
-      </Text>
-    </Pressable>
-  );
-};
-const LanguageSettingRow = ({
-  option,
-  isLast,
-  isSelected,
-  isBusy,
-  onPress,
-  primaryTextStyle,
-}: LanguageSettingRowProps) => {
-  const { t } = useTranslation();
-  const isDisabled = isSelected || isBusy;
-  const label =
-    option.value === 'system'
-      ? t('moreLanguageSystemDefault')
-      : option.nativeLabel;
-  return (
-    <Pressable
-      disabled={isDisabled}
-      accessibilityRole="button"
-      onPress={() => onPress(option.value)}
-      className={`flex-row items-center gap-3 px-4 py-4 ${isLast ? 'rounded-b-[24px]' : 'border-b'
-        } ${isDisabled ? 'opacity-80' : 'active:bg-surface-tertiary'}`}
-    >
-      <View
-        className={`h-5 w-5 rounded-full items-center justify-center ${isSelected ? 'bg-accent' : 'bg-surface-tertiary'
-          }`}
-      >
-        {isSelected ? <View className="h-2 w-2 rounded-full bg-accent-foreground" /> : null}
-      </View>
-      <Text
-        className="flex-1 text-[15px] text-foreground"
-        style={primaryTextStyle}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-};
-const ThemeSettingRow = ({
-  option,
-  isLast,
-  isSelected,
-  isBusy,
-  onPress,
-  primaryTextStyle,
-}: ThemeSettingRowProps) => {
-  const { t } = useTranslation();
-  const isDisabled = isSelected || isBusy;
-  const label =
-    option.value === 'colorful' ? t('moreThemeColorful') : t('moreThemePlain');
-  return (
-    <Pressable
-      disabled={isDisabled}
-      accessibilityRole="button"
-      onPress={() => onPress(option.value)}
-      className={`flex-row items-center gap-3 px-4 py-4 ${isLast ? 'rounded-b-[24px]' : 'border-b'
-        } ${isDisabled ? 'opacity-80' : 'active:bg-surface-tertiary'}`}
-    >
-      <View
-        className={`h-5 w-5 rounded-full items-center justify-center ${isSelected ? 'bg-accent' : 'bg-surface-tertiary'
-          }`}
-      >
-        {isSelected ? <View className="h-2 w-2 rounded-full bg-accent-foreground" /> : null}
-      </View>
-      <Text
-        className="flex-1 text-[15px] text-foreground"
-        style={primaryTextStyle}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
 };
 const MoreRouteContent = ({
   userId,
@@ -507,18 +270,13 @@ const MoreRouteContent = ({
   const queryClient = useQueryClient();
   const [background, muted] = useThemeColor(['background', 'muted']);
   const appFontPreference = useAppFontPreference();
+  const appFontSizePreference = useAppFontSizePreference();
   const appLanguagePreference = useAppLanguagePreference();
   const appThemePreference = useAppThemePreference();
   const isFocused = useIsFocused();
   const headerTitleVisible = useSharedValue(false);
   const [showHeaderTitle, setShowHeaderTitle] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [updatingFontOption, setUpdatingFontOption] =
-    useState<AppFontOption | null>(null);
-  const [updatingLanguageOption, setUpdatingLanguageOption] =
-    useState<AppLanguageOption | null>(null);
-  const [updatingThemeOption, setUpdatingThemeOption] =
-    useState<AppThemeOption | null>(null);
   const scrollRef =
     useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
   const insets = useSafeAreaInsets();
@@ -746,18 +504,6 @@ const MoreRouteContent = ({
       onPress: handleOpenPhotos,
     },
   ];
-  const entries = [
-    {
-      key: 'messages',
-      label: t('morePrivateMessages'),
-      value: '',
-      helper: t('morePrivateMessagesHelper'),
-      showChevron: true,
-      icon: PostageStampIcon,
-      noIconBox: true,
-      onPress: handleOpenPrivateMessages,
-    },
-  ];
   const handleSignOut = () => {
     if (isSigningOut) {
       return;
@@ -790,11 +536,24 @@ const MoreRouteContent = ({
       },
     );
   };
-  const handleSelectFontPreference = async (next: AppFontOption) => {
-    if (updatingFontOption || appFontPreference === next) {
+  const handleSelectFontSizePreference = async (next: AppFontSizeOption) => {
+    if (appFontSizePreference === next) {
       return;
     }
-    setUpdatingFontOption(next);
+    try {
+      await setAppFontSizePreference(next);
+    } catch (updateError) {
+      showVariantToast(
+        'danger',
+        t('moreFontUpdateFailed'),
+        getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
+      );
+    }
+  };
+  const handleSelectFontPreference = async (next: AppFontOption) => {
+    if (appFontPreference === next) {
+      return;
+    }
     try {
       await persistAppFontPreference(next);
     } catch (updateError) {
@@ -803,15 +562,12 @@ const MoreRouteContent = ({
         t('moreFontUpdateFailed'),
         getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
       );
-    } finally {
-      setUpdatingFontOption(null);
     }
   };
   const handleSelectLanguagePreference = async (next: AppLanguageOption) => {
-    if (updatingLanguageOption || appLanguagePreference === next) {
+    if (appLanguagePreference === next) {
       return;
     }
-    setUpdatingLanguageOption(next);
     try {
       await setAppLanguagePreference(next);
     } catch (updateError) {
@@ -820,15 +576,12 @@ const MoreRouteContent = ({
         t('moreFontUpdateFailed'),
         getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
       );
-    } finally {
-      setUpdatingLanguageOption(null);
     }
   };
   const handleSelectThemePreference = async (next: AppThemeOption) => {
-    if (updatingThemeOption || appThemePreference === next) {
+    if (appThemePreference === next) {
       return;
     }
-    setUpdatingThemeOption(next);
     try {
       await setAppThemePreference(next);
     } catch (updateError) {
@@ -837,9 +590,30 @@ const MoreRouteContent = ({
         t('moreFontUpdateFailed'),
         getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
       );
-    } finally {
-      setUpdatingThemeOption(null);
     }
+  };
+  const fontSelectValue = (() => {
+    const opt = APP_FONT_OPTIONS.find(o => o.value === appFontPreference);
+    return opt ? { value: opt.value, label: opt.label } : undefined;
+  })();
+  const fontSizeSelectValue = (() => {
+    const opt = APP_FONT_SIZE_OPTIONS.find(o => o.value === appFontSizePreference);
+    return opt ? { value: opt.value, label: opt.label } : undefined;
+  })();
+  const languageSelectValue = {
+    value: appLanguagePreference,
+    label:
+      appLanguagePreference === 'system'
+        ? t('moreLanguageSystemDefault')
+        : APP_LANGUAGE_OPTIONS.find(o => o.value === appLanguagePreference)
+            ?.nativeLabel ?? appLanguagePreference,
+  };
+  const themeSelectValue = {
+    value: appThemePreference,
+    label:
+      appThemePreference === 'colorful'
+        ? t('moreThemeColorful')
+        : t('moreThemePlain'),
   };
   return (
     <ProfilePageBackdrop
@@ -973,122 +747,169 @@ const MoreRouteContent = ({
                 ) : null}
               </View>
 
-              {/* Settings block: navigation entries + preferences */}
-              <View style={{ gap: SETTINGS_GROUP_GAP }}>
-                {entries.map(entry => {
-                  const { key, ...entryProps } = entry;
-                  return (
-                    <EntryRow
-                      key={key}
-                      {...entryProps}
-                      iconColor={entryIconColor}
-                      panelStyle={profileThemeStyles.panelStyle}
-                      shadowStyle={profilePanelShadowStyle}
-                      primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                      mutedTextStyle={profileThemeStyles.mutedTextStyle}
-                    />
-                  );
-                })}
-
-                <DropShadowBox shadowStyle={profilePanelShadowStyle}>
+              {/* Messages */}
+              <DropShadowBox shadowStyle={profilePanelShadowStyle}>
+                <PressableFeedback
+                  onPress={handleOpenPrivateMessages}
+                  accessibilityRole="button"
+                  className="rounded-[24px] overflow-hidden"
+                >
                   <Surface
-                    className="rounded-[24px] bg-surface-secondary"
+                    className="rounded-[24px] bg-surface-secondary px-4 py-3.5"
                     style={profileThemeStyles.panelStyle}
                   >
-                    <View className="border-b px-4 py-4">
-                      <Text
-                        className="text-[15px] font-semibold text-foreground"
-                        style={profileThemeStyles.primaryTextStyle}
-                      >
-                        {t('moreFontStyle')}
-                      </Text>
-                      <Text
-                        className="mt-0.5 text-[12px] text-muted"
-                        style={profileThemeStyles.mutedTextStyle}
-                      >
-                        {t('moreFontStyleHelper')}
-                      </Text>
+                    <PressableFeedback.Highlight />
+                    <View className="flex-row items-center gap-3">
+                      <PostageStampIcon color={entryIconColor} size={28} />
+                      <View className="flex-1">
+                        <Text
+                          className="text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('morePrivateMessages')}
+                        </Text>
+                        <Text
+                          className="mt-0.5 text-[12px] text-muted"
+                          style={profileThemeStyles.mutedTextStyle}
+                        >
+                          {t('morePrivateMessagesHelper')}
+                        </Text>
+                      </View>
+                      <ChevronRight size={16} color={entryIconColor} />
                     </View>
-                    {APP_FONT_OPTIONS.map((option, index) => (
-                      <FontSettingRow
-                        key={option.value}
-                        option={option}
-                        isLast={index === APP_FONT_OPTIONS.length - 1}
-                        isSelected={appFontPreference === option.value}
-                        isBusy={Boolean(updatingFontOption)}
-                        onPress={handleSelectFontPreference}
-                        primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                      />
-                    ))}
                   </Surface>
-                </DropShadowBox>
+                </PressableFeedback>
+              </DropShadowBox>
 
-                <DropShadowBox shadowStyle={profilePanelShadowStyle}>
+              {/* Settings */}
+              <DropShadowBox shadowStyle={profilePanelShadowStyle}>
                   <Surface
-                    className="rounded-[24px] bg-surface-secondary"
+                    className="rounded-[24px] bg-surface-secondary overflow-hidden"
                     style={profileThemeStyles.panelStyle}
                   >
-                    <View className="border-b px-4 py-4">
-                      <Text
-                        className="text-[15px] font-semibold text-foreground"
-                        style={profileThemeStyles.primaryTextStyle}
-                      >
-                        {t('moreLanguage')}
-                      </Text>
-                      <Text
-                        className="mt-0.5 text-[12px] text-muted"
-                        style={profileThemeStyles.mutedTextStyle}
-                      >
-                        {t('moreLanguageHelper')}
-                      </Text>
-                    </View>
-                    {APP_LANGUAGE_OPTIONS.map((option, index) => (
-                      <LanguageSettingRow
-                        key={option.value}
-                        option={option}
-                        isLast={index === APP_LANGUAGE_OPTIONS.length - 1}
-                        isSelected={appLanguagePreference === option.value}
-                        isBusy={Boolean(updatingLanguageOption)}
-                        onPress={handleSelectLanguagePreference}
-                        primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                      />
-                    ))}
+                    <Select
+                      value={fontSelectValue}
+                      onValueChange={opt =>
+                        opt &&
+                        handleSelectFontPreference(opt.value as AppFontOption)
+                      }
+                    >
+                      <Select.Trigger variant="unstyled" className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70">
+                        <Text
+                          className="flex-1 text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('moreFontStyle')}
+                        </Text>
+                        <Text className="text-[13px] text-muted">{fontSelectValue?.label}</Text>
+                        <ChevronDown size={13} color={muted} />
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Overlay />
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                          {APP_FONT_OPTIONS.map(option => {
+                            const fontFamily = getFontPreviewFamily(option.value);
+                            return (
+                              <Select.Item key={option.value} value={option.value} label={option.label}>
+                                <Select.ItemLabel style={fontFamily ? { fontFamily } : undefined} />
+                                <Select.ItemIndicator />
+                              </Select.Item>
+                            );
+                          })}
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
+                    <Separator />
+                    <Select
+                      value={fontSizeSelectValue}
+                      onValueChange={opt =>
+                        opt &&
+                        handleSelectFontSizePreference(opt.value as AppFontSizeOption)
+                      }
+                    >
+                      <Select.Trigger variant="unstyled" className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70">
+                        <Text
+                          className="flex-1 text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('moreFontSize')}
+                        </Text>
+                        <Text className="text-[13px] text-muted">{fontSizeSelectValue?.label}</Text>
+                        <ChevronDown size={13} color={muted} />
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Overlay />
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                          {APP_FONT_SIZE_OPTIONS.map(option => (
+                            <Select.Item key={option.value} value={option.value} label={option.label} />
+                          ))}
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
+                    <Separator />
+                    <Select
+                      value={languageSelectValue}
+                      onValueChange={opt =>
+                        opt &&
+                        handleSelectLanguagePreference(opt.value as AppLanguageOption)
+                      }
+                    >
+                      <Select.Trigger variant="unstyled" className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70">
+                        <Text
+                          className="flex-1 text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('moreLanguage')}
+                        </Text>
+                        <Text className="text-[13px] text-muted">{languageSelectValue.label}</Text>
+                        <ChevronDown size={13} color={muted} />
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Overlay />
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                          {APP_LANGUAGE_OPTIONS.map(option => (
+                            <Select.Item
+                              key={option.value}
+                              value={option.value}
+                              label={option.value === 'system' ? t('moreLanguageSystemDefault') : option.nativeLabel}
+                            />
+                          ))}
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
+                    <Separator />
+                    <Select
+                      value={themeSelectValue}
+                      onValueChange={opt =>
+                        opt &&
+                        handleSelectThemePreference(opt.value as AppThemeOption)
+                      }
+                    >
+                      <Select.Trigger variant="unstyled" className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70">
+                        <Text
+                          className="flex-1 text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('moreTheme')}
+                        </Text>
+                        <Text className="text-[13px] text-muted">{themeSelectValue.label}</Text>
+                        <ChevronDown size={13} color={muted} />
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Overlay />
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-[24px]">
+                          {APP_THEME_OPTIONS.map(option => (
+                            <Select.Item
+                              key={option.value}
+                              value={option.value}
+                              label={option.value === 'colorful' ? t('moreThemeColorful') : t('moreThemePlain')}
+                            />
+                          ))}
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
                   </Surface>
                 </DropShadowBox>
-
-                <DropShadowBox shadowStyle={profilePanelShadowStyle}>
-                  <Surface
-                    className="rounded-[24px] bg-surface-secondary"
-                    style={profileThemeStyles.panelStyle}
-                  >
-                    <View className="border-b px-4 py-4">
-                      <Text
-                        className="text-[15px] font-semibold text-foreground"
-                        style={profileThemeStyles.primaryTextStyle}
-                      >
-                        {t('moreTheme')}
-                      </Text>
-                      <Text
-                        className="mt-0.5 text-[12px] text-muted"
-                        style={profileThemeStyles.mutedTextStyle}
-                      >
-                        {t('moreThemeHelper')}
-                      </Text>
-                    </View>
-                    {APP_THEME_OPTIONS.map((option, index) => (
-                      <ThemeSettingRow
-                        key={option.value}
-                        option={option}
-                        isLast={index === APP_THEME_OPTIONS.length - 1}
-                        isSelected={appThemePreference === option.value}
-                        isBusy={Boolean(updatingThemeOption)}
-                        onPress={handleSelectThemePreference}
-                        primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                      />
-                    ))}
-                  </Surface>
-                </DropShadowBox>
-              </View>
             </View>
 
             <View className="flex-1" />
