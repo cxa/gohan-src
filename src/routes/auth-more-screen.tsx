@@ -215,7 +215,8 @@ const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
     </Svg>
   );
 };
-const ENTRY_GAP = 12;
+const PROFILE_GROUP_GAP = 12;
+const SETTINGS_GROUP_GAP = 16;
 const HEADER_TITLE_REVEAL_RATIO = 0.25;
 const SYSTEM_FONT_FAMILY = Platform.select({
   ios: 'System',
@@ -792,119 +793,115 @@ const MoreRouteContent = ({
           scrollEventThrottle={16}
         >
           <View className="flex-1">
-            <View
-              style={{
-                gap: SECTION_GAP,
-              }}
-            >
-              <DropShadowBox shadowStyle={profilePanelShadowStyle}>
-                {showLoadingState ? (
-                  <Surface
-                    className="rounded-[24px] bg-surface-secondary px-5 py-6"
-                    style={profileThemeStyles.panelStyle}
-                  >
-                    <View className="flex-row items-center gap-4">
-                      <View
-                        className="items-center justify-center rounded-full bg-surface-tertiary"
-                        style={{
-                          width: AVATAR_SIZE,
-                          height: AVATAR_SIZE,
-                        }}
-                      >
-                        <NeobrutalActivityIndicator size="small" />
-                      </View>
-                      <View className="flex-1">
-                        <Text
-                          className="text-[16px] font-semibold text-foreground"
-                          style={profileThemeStyles.primaryTextStyle}
+            <View style={{ gap: SECTION_GAP }}>
+              {/* Profile block: summary card + stat rows */}
+              <View style={{ gap: PROFILE_GROUP_GAP }}>
+                <DropShadowBox shadowStyle={profilePanelShadowStyle}>
+                  {showLoadingState ? (
+                    <Surface
+                      className="rounded-[24px] bg-surface-secondary px-5 py-6"
+                      style={profileThemeStyles.panelStyle}
+                    >
+                      <View className="flex-row items-center gap-4">
+                        <View
+                          className="items-center justify-center rounded-full bg-surface-tertiary"
+                          style={{
+                            width: AVATAR_SIZE,
+                            height: AVATAR_SIZE,
+                          }}
                         >
-                          {t('moreAccountLoading')}
-                        </Text>
-                        {handleName ? (
+                          <NeobrutalActivityIndicator size="small" />
+                        </View>
+                        <View className="flex-1">
                           <Text
-                            className="mt-1 text-[12px] text-muted"
-                            style={profileThemeStyles.mutedTextStyle}
+                            className="text-[16px] font-semibold text-foreground"
+                            style={profileThemeStyles.primaryTextStyle}
                           >
-                            {handleName}
+                            {t('moreAccountLoading')}
                           </Text>
-                        ) : null}
+                          {handleName ? (
+                            <Text
+                              className="mt-1 text-[12px] text-muted"
+                              style={profileThemeStyles.mutedTextStyle}
+                            >
+                              {handleName}
+                            </Text>
+                          ) : null}
+                        </View>
                       </View>
-                    </View>
-                    {errorMessage ? (
-                      <View className="mt-4 rounded-sm border bg-danger-soft px-3 py-2">
-                        <Text className="text-[12px] text-danger">
-                          {errorMessage}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </Surface>
-                ) : (
-                  <ProfileSummaryCard
-                    avatar={accountAvatar}
-                    displayName={displayName}
-                    handleName={handleName}
-                    location={location}
-                    joinedAt={joinedAt}
-                    profileUrl={profileUrl}
-                    description={description}
-                    panelStyle={profileThemeStyles.panelStyle}
-                    primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                    mutedTextStyle={profileThemeStyles.mutedTextStyle}
-                    linkTextStyle={profileThemeStyles.linkTextStyle}
-                    footer={
-                      errorMessage ? (
+                      {errorMessage ? (
                         <View className="mt-4 rounded-sm border bg-danger-soft px-3 py-2">
                           <Text className="text-[12px] text-danger">
                             {errorMessage}
                           </Text>
                         </View>
-                      ) : null
-                    }
-                  />
-                )}
-              </DropShadowBox>
+                      ) : null}
+                    </Surface>
+                  ) : (
+                    <ProfileSummaryCard
+                      avatar={accountAvatar}
+                      displayName={displayName}
+                      handleName={handleName}
+                      location={location}
+                      joinedAt={joinedAt}
+                      profileUrl={profileUrl}
+                      description={description}
+                      panelStyle={profileThemeStyles.panelStyle}
+                      primaryTextStyle={profileThemeStyles.primaryTextStyle}
+                      mutedTextStyle={profileThemeStyles.mutedTextStyle}
+                      linkTextStyle={profileThemeStyles.linkTextStyle}
+                      footer={
+                        errorMessage ? (
+                          <View className="mt-4 rounded-sm border bg-danger-soft px-3 py-2">
+                            <Text className="text-[12px] text-danger">
+                              {errorMessage}
+                            </Text>
+                          </View>
+                        ) : null
+                      }
+                    />
+                  )}
+                </DropShadowBox>
 
-              {user ? (
-                <>
-                  <ProfileStatRow
-                    stats={profileStatsPrimary}
-                    panelStyle={profileThemeStyles.panelStyle}
-                    shadowStyle={profilePanelShadowStyle}
-                    valueTextStyle={profileThemeStyles.primaryTextStyle}
-                    labelTextStyle={profileThemeStyles.primaryTextStyle}
-                  />
-                  <ProfileStatRow
-                    stats={profileStatsSecondary}
-                    panelStyle={profileThemeStyles.panelStyle}
-                    shadowStyle={profilePanelShadowStyle}
-                    valueTextStyle={profileThemeStyles.primaryTextStyle}
-                    labelTextStyle={profileThemeStyles.primaryTextStyle}
-                  />
-                </>
-              ) : showLoadingState ? (
-                <>
-                  <ProfileStatRow
-                    stats={[]}
-                    skeleton
-                    itemCount={3}
-                    panelStyle={profileThemeStyles.panelStyle}
-                    shadowStyle={profilePanelShadowStyle}
-                  />
-                  <ProfileStatRow
-                    stats={[]}
-                    skeleton
-                    itemCount={2}
-                    panelStyle={profileThemeStyles.panelStyle}
-                    shadowStyle={profilePanelShadowStyle}
-                  />
-                </>
-              ) : null}
+                {user ? (
+                  <>
+                    <ProfileStatRow
+                      stats={profileStatsPrimary}
+                      panelStyle={profileThemeStyles.panelStyle}
+                      shadowStyle={profilePanelShadowStyle}
+                      valueTextStyle={profileThemeStyles.primaryTextStyle}
+                      labelTextStyle={profileThemeStyles.primaryTextStyle}
+                    />
+                    <ProfileStatRow
+                      stats={profileStatsSecondary}
+                      panelStyle={profileThemeStyles.panelStyle}
+                      shadowStyle={profilePanelShadowStyle}
+                      valueTextStyle={profileThemeStyles.primaryTextStyle}
+                      labelTextStyle={profileThemeStyles.primaryTextStyle}
+                    />
+                  </>
+                ) : showLoadingState ? (
+                  <>
+                    <ProfileStatRow
+                      stats={[]}
+                      skeleton
+                      itemCount={3}
+                      panelStyle={profileThemeStyles.panelStyle}
+                      shadowStyle={profilePanelShadowStyle}
+                    />
+                    <ProfileStatRow
+                      stats={[]}
+                      skeleton
+                      itemCount={2}
+                      panelStyle={profileThemeStyles.panelStyle}
+                      shadowStyle={profilePanelShadowStyle}
+                    />
+                  </>
+                ) : null}
+              </View>
 
-              <View
-                style={{
-                  gap: ENTRY_GAP,
-                }}
-              >
+              {/* Settings block: navigation entries + preferences */}
+              <View style={{ gap: SETTINGS_GROUP_GAP }}>
                 {entries.map(entry => {
                   const { key, ...entryProps } = entry;
                   return (
@@ -919,73 +916,73 @@ const MoreRouteContent = ({
                     />
                   );
                 })}
+
+                <DropShadowBox shadowStyle={profilePanelShadowStyle}>
+                  <Surface
+                    className="rounded-[24px] bg-surface-secondary"
+                    style={profileThemeStyles.panelStyle}
+                  >
+                    <View className="border-b px-4 py-4">
+                      <Text
+                        className="text-[15px] font-semibold text-foreground"
+                        style={profileThemeStyles.primaryTextStyle}
+                      >
+                        {t('moreFontStyle')}
+                      </Text>
+                      <Text
+                        className="mt-0.5 text-[12px] text-muted"
+                        style={profileThemeStyles.mutedTextStyle}
+                      >
+                        {t('moreFontStyleHelper')}
+                      </Text>
+                    </View>
+                    {APP_FONT_OPTIONS.map((option, index) => (
+                      <FontSettingRow
+                        key={option.value}
+                        option={option}
+                        isLast={index === APP_FONT_OPTIONS.length - 1}
+                        isSelected={appFontPreference === option.value}
+                        isBusy={Boolean(updatingFontOption)}
+                        onPress={handleSelectFontPreference}
+                        primaryTextStyle={profileThemeStyles.primaryTextStyle}
+                      />
+                    ))}
+                  </Surface>
+                </DropShadowBox>
+
+                <DropShadowBox shadowStyle={profilePanelShadowStyle}>
+                  <Surface
+                    className="rounded-[24px] bg-surface-secondary"
+                    style={profileThemeStyles.panelStyle}
+                  >
+                    <View className="border-b px-4 py-4">
+                      <Text
+                        className="text-[15px] font-semibold text-foreground"
+                        style={profileThemeStyles.primaryTextStyle}
+                      >
+                        {t('moreLanguage')}
+                      </Text>
+                      <Text
+                        className="mt-0.5 text-[12px] text-muted"
+                        style={profileThemeStyles.mutedTextStyle}
+                      >
+                        {t('moreLanguageHelper')}
+                      </Text>
+                    </View>
+                    {APP_LANGUAGE_OPTIONS.map((option, index) => (
+                      <LanguageSettingRow
+                        key={option.value}
+                        option={option}
+                        isLast={index === APP_LANGUAGE_OPTIONS.length - 1}
+                        isSelected={appLanguagePreference === option.value}
+                        isBusy={Boolean(updatingLanguageOption)}
+                        onPress={handleSelectLanguagePreference}
+                        primaryTextStyle={profileThemeStyles.primaryTextStyle}
+                      />
+                    ))}
+                  </Surface>
+                </DropShadowBox>
               </View>
-
-              <DropShadowBox shadowStyle={profilePanelShadowStyle}>
-                <Surface
-                  className="rounded-[24px] bg-surface-secondary"
-                  style={profileThemeStyles.panelStyle}
-                >
-                  <View className="border-b px-4 py-4">
-                    <Text
-                      className="text-[15px] font-semibold text-foreground"
-                      style={profileThemeStyles.primaryTextStyle}
-                    >
-                      {t('moreFontStyle')}
-                    </Text>
-                    <Text
-                      className="mt-0.5 text-[12px] text-muted"
-                      style={profileThemeStyles.mutedTextStyle}
-                    >
-                      {t('moreFontStyleHelper')}
-                    </Text>
-                  </View>
-                  {APP_FONT_OPTIONS.map((option, index) => (
-                    <FontSettingRow
-                      key={option.value}
-                      option={option}
-                      isLast={index === APP_FONT_OPTIONS.length - 1}
-                      isSelected={appFontPreference === option.value}
-                      isBusy={Boolean(updatingFontOption)}
-                      onPress={handleSelectFontPreference}
-                      primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                    />
-                  ))}
-                </Surface>
-              </DropShadowBox>
-
-              <DropShadowBox shadowStyle={profilePanelShadowStyle}>
-                <Surface
-                  className="rounded-[24px] bg-surface-secondary"
-                  style={profileThemeStyles.panelStyle}
-                >
-                  <View className="border-b px-4 py-4">
-                    <Text
-                      className="text-[15px] font-semibold text-foreground"
-                      style={profileThemeStyles.primaryTextStyle}
-                    >
-                      {t('moreLanguage')}
-                    </Text>
-                    <Text
-                      className="mt-0.5 text-[12px] text-muted"
-                      style={profileThemeStyles.mutedTextStyle}
-                    >
-                      {t('moreLanguageHelper')}
-                    </Text>
-                  </View>
-                  {APP_LANGUAGE_OPTIONS.map((option, index) => (
-                    <LanguageSettingRow
-                      key={option.value}
-                      option={option}
-                      isLast={index === APP_LANGUAGE_OPTIONS.length - 1}
-                      isSelected={appLanguagePreference === option.value}
-                      isBusy={Boolean(updatingLanguageOption)}
-                      onPress={handleSelectLanguagePreference}
-                      primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                    />
-                  ))}
-                </Surface>
-              </DropShadowBox>
             </View>
 
             <View className="flex-1" />
