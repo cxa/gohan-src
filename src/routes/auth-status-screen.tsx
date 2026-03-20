@@ -592,7 +592,6 @@ const StatusDetailRoute = () => {
       <NativeEdgeScrollShadow
         className="flex-1 bg-background"
         color={background}
-        hasTabBar={false}
       >
         <Animated.ScrollView
           ref={scrollViewRef}

@@ -252,7 +252,7 @@ const FavoritesRoute = () => {
   }
   return (
     <>
-      <NativeEdgeScrollShadow className="flex-1" color={background} hasTabBar={false}>
+      <NativeEdgeScrollShadow className="flex-1" color={background}>
         <Animated.FlatList
           className="flex-1 bg-background"
           data={items}

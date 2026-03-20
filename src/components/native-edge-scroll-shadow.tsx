@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import { ScrollShadow } from 'heroui-native';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated from 'react-native-reanimated';
 
@@ -18,13 +18,6 @@ type NativeEdgeScrollShadowProps = Omit<
   'LinearGradientComponent' | 'isEnabled' | 'children'
 > & {
   children: React.ReactNode;
-  /**
-   * When false, uses DEFAULT_SCROLL_SHADOW_SIZE for the bottom edge instead of
-   * the header-height-based top size. Pass false on screens without a tab bar.
-   */
-  hasTabBar?: boolean;
-  /** Explicit override for the bottom edge shadow size. Takes precedence over hasTabBar. */
-  bottomSize?: number;
 };
 
 type ResolveNativeEdgeScrollShadowSizeParams = {
@@ -154,20 +147,13 @@ export const resolveNativeEdgeScrollShadowSize = ({
   return DEFAULT_SCROLL_SHADOW_SIZE;
 };
 
-const BOTTOM_GRADIENT_STYLE = StyleSheet.create({
-  overlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    pointerEvents: 'none',
-  },
-});
+// iOS 26+ provides a native scroll-edge blur effect automatically.
+// Rendering our own ScrollShadow on top would be redundant and visually noisy.
+const supportsNativeEdgeEffect =
+  Platform.OS === 'ios' && Number(Platform.Version) >= 26;
 
 const NativeEdgeScrollShadow = ({
   size,
-  bottomSize,
-  hasTabBar,
   visibility,
   children,
   color,
@@ -188,10 +174,10 @@ const NativeEdgeScrollShadow = ({
     size,
     headerHeight,
   });
-  const resolvedBottomSize =
-    bottomSize ??
-    (hasTabBar === false ? DEFAULT_SCROLL_SHADOW_SIZE : resolvedSize);
-  const hasSeparateBottomSize = resolvedBottomSize < resolvedSize;
+
+  if (supportsNativeEdgeEffect) {
+    return <View style={styles.flex1}>{children}</View>;
+  }
 
   return (
     <View style={styles.flex1}>
@@ -199,7 +185,7 @@ const NativeEdgeScrollShadow = ({
         {...props}
         color={color}
         size={resolvedSize}
-        visibility={hasSeparateBottomSize ? 'top' : (visibility ?? 'both')}
+        visibility={visibility ?? 'both'}
         isEnabled
         LinearGradientComponent={LinearGradient}
       >
@@ -212,12 +198,6 @@ const NativeEdgeScrollShadow = ({
           {children}
         </ScrollShadowChildrenContainer>
       </ScrollShadow>
-      {hasSeparateBottomSize ? (
-        <LinearGradient
-          colors={['transparent', color ?? 'transparent']}
-          style={[BOTTOM_GRADIENT_STYLE.overlay, { height: resolvedBottomSize }]}
-        />
-      ) : null}
     </View>
   );
 };

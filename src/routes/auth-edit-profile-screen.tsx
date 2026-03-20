@@ -303,7 +303,7 @@ const EditProfileRoute = () => {
     );
   }
   return (
-    <NativeEdgeScrollShadow className="flex-1 bg-background" color={background} hasTabBar={false}>
+    <NativeEdgeScrollShadow className="flex-1 bg-background" color={background}>
       {Platform.OS === 'ios' ? (
         <KeyboardAvoidingView className="flex-1" behavior="padding">
           {formScrollView}

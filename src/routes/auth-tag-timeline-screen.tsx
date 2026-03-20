@@ -509,7 +509,7 @@ const TagTimelineRoute = () => {
   }
   return (
     <>
-      <NativeEdgeScrollShadow className="flex-1" color={background} hasTabBar={false}>
+      <NativeEdgeScrollShadow className="flex-1" color={background}>
         <Animated.FlatList
           ref={listRef}
           className="flex-1 bg-background"
