@@ -5,6 +5,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  useColorScheme,
   View,
 } from 'react-native';
 import Animated, {
@@ -83,6 +84,7 @@ import type { FanfouStatus, FanfouUser } from '@/types/fanfou';
 import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
 import {
+  adaptProfilePaletteForDarkMode,
   createProfileThemeStyles,
   isColorDark,
   resolveReadableTextColor,
@@ -121,6 +123,7 @@ type ProfileRouteContentProps = {
 };
 const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const { t } = useTranslation();
+  const isDark = useColorScheme() === 'dark';
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
@@ -649,7 +652,10 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const recentStatusesErrorMessage = recentStatusesError
     ? getErrorMessage(recentStatusesError, t('recentActivityEmpty'))
     : null;
-  const profileThemePalette = resolveProfileThemePalette(user);
+  const profileThemePalette = (() => {
+    const palette = resolveProfileThemePalette(user);
+    return isDark ? adaptProfilePaletteForDarkMode(palette) : palette;
+  })();
   const hasBackgroundImage = Boolean(profileThemePalette.backgroundImageUrl);
   const preferredHeaderTintColor =
     profileThemePalette.linkColor ?? profileThemePalette.textColor;

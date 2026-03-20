@@ -125,6 +125,118 @@ export const resolveProfilePanelShadowStyle = (
   };
 };
 
+// ─── Dark-mode palette adaptation ────────────────────────────────────────────
+
+const hexToHSL = (hex: string): [number, number, number] => {
+  const [r, g, b] = resolveColorChannels(hex).map(v => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) {
+    return [0, 0, l];
+  }
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === r) {
+    h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  } else if (max === g) {
+    h = ((b - r) / d + 2) / 6;
+  } else {
+    h = ((r - g) / d + 4) / 6;
+  }
+  return [h, s, l];
+};
+
+const hslToHex = (h: number, s: number, l: number): string => {
+  const hue2rgb = (p: number, q: number, t: number): number => {
+    const tt = t < 0 ? t + 1 : t > 1 ? t - 1 : t;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  let r: number;
+  let g: number;
+  let b: number;
+  if (s === 0) {
+    r = l;
+    g = l;
+    b = l;
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  const toHex = (v: number) =>
+    Math.round(v * 255).toString(16).padStart(2, '0').toUpperCase();
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+/**
+ * Adapt a single hex color for dark mode.
+ *
+ * - background: keep hue, mute saturation, target L ≈ 10%
+ * - panel:      same but L ≈ 17% (visually above the background)
+ * - border:     same but L ≈ 26%
+ * - text:       if originally dark (for light bg), flip to near-white
+ * - link:       keep hue/saturation, clamp L to [0.60, 0.75] for readability
+ *
+ * Colors already in dark territory are returned as-is.
+ */
+const adaptColorToDark = (
+  hex: string,
+  role: 'background' | 'panel' | 'border' | 'text' | 'link',
+): string => {
+  const [h, s, l] = hexToHSL(hex);
+  switch (role) {
+    case 'background':
+      if (l < 0.2) return hex;
+      return hslToHex(h, Math.min(s * 0.55, 0.3), 0.10);
+    case 'panel':
+      if (l < 0.28) return hex;
+      return hslToHex(h, Math.min(s * 0.55, 0.3), 0.17);
+    case 'border':
+      if (l < 0.35) return hex;
+      return hslToHex(h, Math.min(s * 0.45, 0.25), 0.26);
+    case 'text':
+      if (l >= 0.6) return hex;
+      return hslToHex(h, Math.min(s * 0.25, 0.12), 0.88);
+    case 'link':
+      if (l >= 0.55) return hex;
+      return hslToHex(h, s, Math.min(l + 0.35, 0.68));
+  }
+};
+
+/**
+ * Derive a dark-mode variant of a profile palette.
+ * Call this when the user has opted into profile theme colours and the
+ * device is in dark mode.
+ */
+export const adaptProfilePaletteForDarkMode = (
+  palette: ProfileThemePalette,
+): ProfileThemePalette => {
+  const adapt = (
+    color: string | undefined,
+    role: Parameters<typeof adaptColorToDark>[1],
+  ) => (color ? adaptColorToDark(color, role) : undefined);
+
+  const darkText = adapt(palette.textColor, 'text');
+  return {
+    ...palette,
+    pageBackgroundColor: adapt(palette.pageBackgroundColor, 'background'),
+    panelBackgroundColor: adapt(palette.panelBackgroundColor, 'panel'),
+    panelBorderColor: adapt(palette.panelBorderColor, 'border'),
+    textColor: darkText,
+    mutedTextColor: darkText ? withAlpha(darkText, 0.74) : palette.mutedTextColor,
+    linkColor: adapt(palette.linkColor, 'link'),
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const toLinearChannel = (value: number) => {
   const normalized = value / 255;
   if (normalized <= 0.03928) {

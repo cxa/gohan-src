@@ -87,6 +87,7 @@ import {
 import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
 import {
+  adaptProfilePaletteForDarkMode,
   createProfileThemeStyles,
   isColorDark,
   resolveReadableTextColor,
@@ -352,9 +353,14 @@ const MoreRouteContent = ({
   const errorMessage = error
     ? getErrorMessage(error, t('moreAccountLoadFailed'))
     : null;
-  const profileThemePalette = followProfileTheme
-    ? resolveProfileThemePalette(user)
-    : resolveProfileThemePalette(undefined);
+  const profileThemePalette = (() => {
+    const palette = followProfileTheme
+      ? resolveProfileThemePalette(user)
+      : resolveProfileThemePalette(undefined);
+    return followProfileTheme && isDark
+      ? adaptProfilePaletteForDarkMode(palette)
+      : palette;
+  })();
   // Shuffle pastels once on mount so sections get a fresh random combo each visit.
   const colorfulPaletteRef = useRef<typeof CARD_PASTEL_CYCLE | null>(null);
   if (colorfulPaletteRef.current === null) {
