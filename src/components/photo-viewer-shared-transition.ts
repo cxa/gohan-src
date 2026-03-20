@@ -3,6 +3,7 @@ export type PhotoViewerOriginRect = {
   y: number;
   width: number;
   height: number;
+  borderRadius?: number;
 };
 
 type ShouldUsePhotoSharedTransitionParams = {

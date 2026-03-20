@@ -59,17 +59,10 @@ import {
 } from '@/navigation/route-names';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
-import { shouldUsePhotoSharedTransition } from '@/components/photo-viewer-shared-transition';
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import type { FanfouStatus } from '@/types/fanfou';
 import { Text } from '@/components/app-text';
 import { useTranslation } from 'react-i18next';
-type PhotoViewerOriginRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
 type TimelineComposerMode = 'reply' | 'repost' | null;
 type ReplyTarget = {
   statusId: string;
@@ -129,14 +122,6 @@ const MentionsRoute = () => {
   );
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
-  const [photoViewerPreviewKey, setPhotoViewerPreviewKey] = useState<
-    string | null
-  >(null);
-  const [photoViewerOriginRect, setPhotoViewerOriginRect] =
-    useState<PhotoViewerOriginRect | null>(null);
-  const photoPreviewRefs = useRef(
-    new Map<string, React.ComponentRef<typeof View>>(),
-  );
   const listRef = useRef<FlatList<FanfouStatus>>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasReachedTimelineEnd, setHasReachedTimelineEnd] = useState(false);
@@ -258,65 +243,12 @@ const MentionsRoute = () => {
       },
     });
   };
-  const openPhotoViewer = (
-    photoUrl: string,
-    originRect: PhotoViewerOriginRect | null,
-    previewKey: string,
-  ) => {
-    const useSharedTransition = shouldUsePhotoSharedTransition({
-      originRect,
-      viewportHeight: windowHeight,
-      topInset: insets.top,
-      bottomOccludedHeight: getTabBarOccludedHeight(insets.bottom),
-      scrollShadowSize: TIMELINE_SCROLL_SHADOW_SIZE,
-    });
+  const handlePhotoPress = (photoUrl: string) => {
     Image.prefetch(photoUrl).catch(() => undefined);
-    setPhotoViewerPreviewKey(useSharedTransition ? previewKey : null);
-    setPhotoViewerOriginRect(useSharedTransition ? originRect : null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
-  const registerPhotoPreviewRef = (
-    key: string,
-    node: React.ComponentRef<typeof View> | null,
-  ) => {
-    if (node) {
-      photoPreviewRefs.current.set(key, node);
-      return;
-    }
-    photoPreviewRefs.current.delete(key);
-  };
-  const handlePhotoPress = (photoUrl: string, previewKey: string) => {
-    const previewNode = photoPreviewRefs.current.get(previewKey);
-    if (!previewNode || typeof previewNode.measureInWindow !== 'function') {
-      openPhotoViewer(photoUrl, null, previewKey);
-      return;
-    }
-    previewNode.measureInWindow((x, y, width, height) => {
-      const hasValidRect =
-        Number.isFinite(x) &&
-        Number.isFinite(y) &&
-        Number.isFinite(width) &&
-        Number.isFinite(height) &&
-        width > 0 &&
-        height > 0;
-      openPhotoViewer(
-        photoUrl,
-        hasValidRect
-          ? {
-              x,
-              y,
-              width,
-              height,
-            }
-          : null,
-        previewKey,
-      );
-    });
-  };
   const handleClosePhotoViewer = () => {
-    setPhotoViewerPreviewKey(null);
-    setPhotoViewerOriginRect(null);
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
   };
@@ -660,9 +592,6 @@ const MentionsRoute = () => {
               muted={muted}
               shadowType={CARD_PASTEL_CYCLE[index % CARD_PASTEL_CYCLE.length]}
               isBookmarkPending={pendingBookmarkIds.has(getStatusId(item))}
-              photoViewerVisible={photoViewerVisible}
-              photoViewerPreviewKey={photoViewerPreviewKey}
-              registerPhotoPreviewRef={registerPhotoPreviewRef}
               onOpenPhoto={handlePhotoPress}
               onPressStatus={handleStatusPress}
               onPressProfile={handleProfilePress}
@@ -679,10 +608,6 @@ const MentionsRoute = () => {
         <PhotoViewerModal
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
-          topInset={insets.top}
-          bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
-          scrollShadowSize={TIMELINE_SCROLL_SHADOW_SIZE}
-          originRect={photoViewerOriginRect}
           onClose={handleClosePhotoViewer}
         />
       </NativeEdgeScrollShadow>

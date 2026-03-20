@@ -1,17 +1,10 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
-import { Image, View, useWindowDimensions } from 'react-native';
+import { Image } from 'react-native';
 import { post } from '@/auth/fanfou-client';
 import type { ComposerModalSubmitPayload } from '@/components/composer-modal';
 import type { FanfouStatus } from '@/types/fanfou';
-import { shouldUsePhotoSharedTransition } from '@/components/photo-viewer-shared-transition';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
-type PhotoViewerOriginRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
 type ComposerMode = 'reply' | 'repost' | null;
 type ReplyTarget = {
   statusId: string;
@@ -27,29 +20,14 @@ type UseTimelineStatusInteractionsParams = {
     statusId: string,
     updater: (status: FanfouStatus) => FanfouStatus,
   ) => void;
-  topInset: number;
-  bottomOccludedHeight?: number;
-  scrollShadowSize: number;
 };
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 const useTimelineStatusInteractions = ({
   updateStatusById,
-  topInset,
-  bottomOccludedHeight = 0,
-  scrollShadowSize,
 }: UseTimelineStatusInteractionsParams) => {
-  const { height: viewportHeight } = useWindowDimensions();
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
-  const [photoViewerPreviewKey, setPhotoViewerPreviewKey] = useState<
-    string | null
-  >(null);
-  const [photoViewerOriginRect, setPhotoViewerOriginRect] =
-    useState<PhotoViewerOriginRect | null>(null);
-  const photoPreviewRefs = useRef(
-    new Map<string, React.ComponentRef<typeof View>>(),
-  );
   const [composeMode, setComposeMode] = useState<ComposerMode>(null);
   const [composeReplyTarget, setComposeReplyTarget] =
     useState<ReplyTarget | null>(null);
@@ -59,65 +37,12 @@ const useTimelineStatusInteractions = ({
     () => new Set(),
   );
   const statusUpdateMutation = useStatusUpdateMutation();
-  const registerPhotoPreviewRef = (
-    key: string,
-    node: React.ComponentRef<typeof View> | null,
-  ) => {
-    if (node) {
-      photoPreviewRefs.current.set(key, node);
-      return;
-    }
-    photoPreviewRefs.current.delete(key);
-  };
-  const openPhotoViewer = (
-    photoUrl: string,
-    originRect: PhotoViewerOriginRect | null,
-    previewKey: string,
-  ) => {
-    const useSharedTransition = shouldUsePhotoSharedTransition({
-      originRect,
-      viewportHeight,
-      topInset,
-      bottomOccludedHeight,
-      scrollShadowSize,
-    });
+  const handlePhotoPress = (photoUrl: string) => {
     Image.prefetch(photoUrl).catch(() => undefined);
-    setPhotoViewerPreviewKey(useSharedTransition ? previewKey : null);
-    setPhotoViewerOriginRect(useSharedTransition ? originRect : null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
-  const handlePhotoPress = (photoUrl: string, previewKey: string) => {
-    const previewNode = photoPreviewRefs.current.get(previewKey);
-    if (!previewNode || typeof previewNode.measureInWindow !== 'function') {
-      openPhotoViewer(photoUrl, null, previewKey);
-      return;
-    }
-    previewNode.measureInWindow((x, y, width, height) => {
-      const hasValidRect =
-        Number.isFinite(x) &&
-        Number.isFinite(y) &&
-        Number.isFinite(width) &&
-        Number.isFinite(height) &&
-        width > 0 &&
-        height > 0;
-      openPhotoViewer(
-        photoUrl,
-        hasValidRect
-          ? {
-              x,
-              y,
-              width,
-              height,
-            }
-          : null,
-        previewKey,
-      );
-    });
-  };
   const handleClosePhotoViewer = () => {
-    setPhotoViewerPreviewKey(null);
-    setPhotoViewerOriginRect(null);
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
   };
@@ -284,9 +209,6 @@ const useTimelineStatusInteractions = ({
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
-    photoViewerPreviewKey,
-    photoViewerOriginRect,
-    registerPhotoPreviewRef,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,

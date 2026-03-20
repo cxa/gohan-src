@@ -33,9 +33,7 @@ import { useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
 import ComposerModal from '@/components/composer-modal';
-import NativeEdgeScrollShadow, {
-  resolveNativeEdgeScrollShadowSize,
-} from '@/components/native-edge-scroll-shadow';
+import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
@@ -88,9 +86,6 @@ const FavoritesRoute = () => {
   ]);
   const queryKey: [string, string] = ['favorites', resolvedUserId ?? ''];
   const headerHeight = useHeaderHeight();
-  const scrollShadowSize = resolveNativeEdgeScrollShadowSize({
-    headerHeight,
-  });
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
@@ -138,9 +133,6 @@ const FavoritesRoute = () => {
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
-    photoViewerPreviewKey,
-    photoViewerOriginRect,
-    registerPhotoPreviewRef,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,
@@ -148,12 +140,7 @@ const FavoritesRoute = () => {
     handleCloseComposer,
     handleSendComposer,
     handleToggleBookmark,
-  } = useTimelineStatusInteractions({
-    updateStatusById,
-    topInset: insets.top,
-    bottomOccludedHeight: getTabBarOccludedHeight(insets.bottom),
-    scrollShadowSize,
-  });
+  } = useTimelineStatusInteractions({ updateStatusById });
   const {
     data: queryData,
     isPending,
@@ -309,9 +296,6 @@ const FavoritesRoute = () => {
               muted={muted}
               shadowType={CARD_PASTEL_CYCLE[index % CARD_PASTEL_CYCLE.length]}
               isBookmarkPending={pendingBookmarkIds.has(item.id)}
-              photoViewerVisible={photoViewerVisible}
-              photoViewerPreviewKey={photoViewerPreviewKey}
-              registerPhotoPreviewRef={registerPhotoPreviewRef}
               onOpenPhoto={handlePhotoPress}
               onPressStatus={handleOpenStatus}
               onPressProfile={handleOpenProfile}
@@ -335,10 +319,6 @@ const FavoritesRoute = () => {
         <PhotoViewerModal
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
-          topInset={insets.top}
-          bottomOccludedHeight={getTabBarOccludedHeight(insets.bottom)}
-          scrollShadowSize={scrollShadowSize}
-          originRect={photoViewerOriginRect}
           onClose={handleClosePhotoViewer}
         />
       </NativeEdgeScrollShadow>

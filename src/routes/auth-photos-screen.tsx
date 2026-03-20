@@ -28,9 +28,7 @@ import { useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
 import { Text } from '@/components/app-text';
 import ComposerModal from '@/components/composer-modal';
-import NativeEdgeScrollShadow, {
-  resolveNativeEdgeScrollShadowSize,
-} from '@/components/native-edge-scroll-shadow';
+import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
@@ -84,9 +82,6 @@ const PhotosRouteContent = ({
   ]);
   const queryKey: [string, string] = ['photos', userId];
   const headerHeight = useHeaderHeight();
-  const scrollShadowSize = resolveNativeEdgeScrollShadowSize({
-    headerHeight,
-  });
   const timelineListSettings = useTimelineListSettings(insets, {
     hasBottomTabBar: false,
   });
@@ -137,9 +132,6 @@ const PhotosRouteContent = ({
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
-    photoViewerPreviewKey,
-    photoViewerOriginRect,
-    registerPhotoPreviewRef,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,
@@ -147,11 +139,7 @@ const PhotosRouteContent = ({
     handleCloseComposer,
     handleSendComposer,
     handleToggleBookmark,
-  } = useTimelineStatusInteractions({
-    updateStatusById,
-    topInset: insets.top,
-    scrollShadowSize,
-  });
+  } = useTimelineStatusInteractions({ updateStatusById });
   const {
     data,
     isPending,
@@ -318,9 +306,6 @@ const PhotosRouteContent = ({
               showAvatar={false}
               showAuthor={false}
               isBookmarkPending={pendingBookmarkIds.has(item.id)}
-              photoViewerVisible={photoViewerVisible}
-              photoViewerPreviewKey={photoViewerPreviewKey}
-              registerPhotoPreviewRef={registerPhotoPreviewRef}
               onOpenPhoto={handlePhotoPress}
               onPressStatus={handleOpenStatus}
               onPressProfile={handleOpenProfile}
@@ -344,9 +329,6 @@ const PhotosRouteContent = ({
         <PhotoViewerModal
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
-          topInset={insets.top}
-          scrollShadowSize={scrollShadowSize}
-          originRect={photoViewerOriginRect}
           onClose={handleClosePhotoViewer}
         />
       </NativeEdgeScrollShadow>

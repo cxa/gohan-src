@@ -36,14 +36,10 @@ import ComposerModal, {
 import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
 import DropShadowBox, {
   CARD_PASTEL_CYCLE,
-  getDropShadowBorderClass,
   type DropShadowBoxType,
 } from '@/components/drop-shadow-box';
-import NativeEdgeScrollShadow, {
-  resolveNativeEdgeScrollShadowSize,
-} from '@/components/native-edge-scroll-shadow';
+import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
-import { shouldUsePhotoSharedTransition } from '@/components/photo-viewer-shared-transition';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import {
   AUTH_PROFILE_ROUTE,
@@ -65,12 +61,6 @@ import type { FanfouStatus } from '@/types/fanfou';
 import { parseFanfouDate } from '@/utils/fanfou-date';
 const STATUS_THREAD_CARD_GAP = 8;
 const STATUS_THREAD_STACK_STYLE = { gap: STATUS_THREAD_CARD_GAP } as const;
-type PhotoViewerOriginRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
 type ComposerMode = 'reply' | 'repost' | null;
 type ReplyTarget = {
   statusId: string;
@@ -161,9 +151,6 @@ const StatusDetailRoute = () => {
   const insets = useSafeAreaInsets();
   const { height: viewportHeight } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
-  const scrollShadowSize = resolveNativeEdgeScrollShadowSize({
-    headerHeight,
-  });
   const [accent, background, muted] = useThemeColor([
     'accent',
     'background',
@@ -181,14 +168,6 @@ const StatusDetailRoute = () => {
   });
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
-  const [photoViewerPreviewKey, setPhotoViewerPreviewKey] = useState<
-    string | null
-  >(null);
-  const [photoViewerOriginRect, setPhotoViewerOriginRect] =
-    useState<PhotoViewerOriginRect | null>(null);
-  const photoPreviewRefs = useRef(
-    new Map<string, React.ComponentRef<typeof View>>(),
-  );
   const [composeMode, setComposeMode] = useState<ComposerMode>(null);
   const [composeReplyTarget, setComposeReplyTarget] =
     useState<ReplyTarget | null>(null);
@@ -352,64 +331,12 @@ const StatusDetailRoute = () => {
       },
     });
   };
-  const registerPhotoPreviewRef = (
-    key: string,
-    node: React.ComponentRef<typeof View> | null,
-  ) => {
-    if (node) {
-      photoPreviewRefs.current.set(key, node);
-      return;
-    }
-    photoPreviewRefs.current.delete(key);
-  };
-  const openPhotoViewer = (
-    photoUrl: string,
-    originRect: PhotoViewerOriginRect | null,
-    previewKey: string,
-  ) => {
-    const useSharedTransition = shouldUsePhotoSharedTransition({
-      originRect,
-      viewportHeight,
-      topInset: insets.top,
-      scrollShadowSize,
-    });
+  const handlePhotoPress = (photoUrl: string) => {
     Image.prefetch(photoUrl).catch(() => undefined);
-    setPhotoViewerPreviewKey(useSharedTransition ? previewKey : null);
-    setPhotoViewerOriginRect(useSharedTransition ? originRect : null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
-  const handlePhotoPress = (photoUrl: string, previewKey: string) => {
-    const previewNode = photoPreviewRefs.current.get(previewKey);
-    if (!previewNode || typeof previewNode.measureInWindow !== 'function') {
-      openPhotoViewer(photoUrl, null, previewKey);
-      return;
-    }
-    previewNode.measureInWindow((x, y, width, height) => {
-      const hasValidRect =
-        Number.isFinite(x) &&
-        Number.isFinite(y) &&
-        Number.isFinite(width) &&
-        Number.isFinite(height) &&
-        width > 0 &&
-        height > 0;
-      openPhotoViewer(
-        photoUrl,
-        hasValidRect
-          ? {
-            x,
-            y,
-            width,
-            height,
-          }
-          : null,
-        previewKey,
-      );
-    });
-  };
   const handleClosePhotoViewer = () => {
-    setPhotoViewerPreviewKey(null);
-    setPhotoViewerOriginRect(null);
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
   };
@@ -606,9 +533,6 @@ const StatusDetailRoute = () => {
         shadowType={cardShadowType}
         invertColorScheme={isMainStatus}
         isBookmarkPending={pendingBookmarkIds.has(statusId)}
-        photoViewerVisible={photoViewerVisible}
-        photoViewerPreviewKey={photoViewerPreviewKey}
-        registerPhotoPreviewRef={registerPhotoPreviewRef}
         onOpenPhoto={handlePhotoPress}
         onPressStatus={handleOpenStatusDetail}
         onPressProfile={handleProfilePress}
@@ -695,9 +619,7 @@ const StatusDetailRoute = () => {
           {!mainStatus && !isStatusLoading && !isContextLoading ? (
             <DropShadowBox type="danger" containerClassName="pb-2">
               <Surface
-                className={`bg-surface  ${getDropShadowBorderClass(
-                  'danger',
-                )} px-4 py-3`}
+                className="rounded-[24px] bg-danger-soft px-4 py-3"
               >
                 <Text className="text-[13px] text-danger">
                   {statusErrorMessage ?? t('statusLoadFailed')}
@@ -742,9 +664,6 @@ const StatusDetailRoute = () => {
         <PhotoViewerModal
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
-          topInset={insets.top}
-          scrollShadowSize={scrollShadowSize}
-          originRect={photoViewerOriginRect}
           onClose={handleClosePhotoViewer}
         />
       </NativeEdgeScrollShadow>

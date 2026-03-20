@@ -50,14 +50,8 @@ type TimelineStatusCardProps = {
   showAuthor?: boolean;
   shadowType?: DropShadowBoxType;
   isBookmarkPending: boolean;
-  photoViewerVisible: boolean;
-  photoViewerPreviewKey: string | null;
   activeTag?: string;
-  registerPhotoPreviewRef: (
-    key: string,
-    node: React.ComponentRef<typeof View> | null,
-  ) => void;
-  onOpenPhoto: (photoUrl: string, previewKey: string) => void;
+  onOpenPhoto: (photoUrl: string) => void;
   onPressStatus: (statusId: string, shadowType: DropShadowBoxType) => void;
   onPressProfile: (userId: string) => void;
   onPressMention: (userId: string) => void;
@@ -106,10 +100,7 @@ const TimelineStatusCard = ({
   showAuthor = true,
   shadowType = 'default',
   isBookmarkPending,
-  photoViewerVisible,
-  photoViewerPreviewKey,
   activeTag,
-  registerPhotoPreviewRef,
   onOpenPhoto,
   onPressStatus,
   onPressProfile,
@@ -156,7 +147,6 @@ const TimelineStatusCard = ({
   const handle = `@${userId}`;
   const avatarUrl = user.profile_image_url;
   const photoUrl = getStatusPhotoUrl(status);
-  const photoPreviewKey = `${statusId}-photo`;
   const segments = parseHtmlToSegments(status.text || status.status);
   const timestamp = formatTimestamp(status.created_at);
   const sourceClient = parseHtmlToText(status.source).trim();
@@ -314,37 +304,22 @@ const TimelineStatusCard = ({
                 : ''}
             </Text>
             {photoUrl ? (
-              <View
-                className={
-                  photoViewerVisible &&
-                    photoViewerPreviewKey === photoPreviewKey
-                    ? 'opacity-0'
-                    : undefined
-                }
+              <Pressable
+                onPress={() => onOpenPhoto(photoUrl)}
+                className="mt-3 overflow-hidden rounded-[16px]"
+                accessibilityRole="button"
+                accessibilityLabel="Open photo"
               >
-                <Pressable
-                  onPress={() => onOpenPhoto(photoUrl, photoPreviewKey)}
-                  className="mt-3 overflow-hidden rounded-[16px]"
-                  accessibilityRole="button"
-                  accessibilityLabel="Open photo"
-                >
-                  <View
-                    ref={node =>
-                      registerPhotoPreviewRef(photoPreviewKey, node)
-                    }
-                    collapsable={false}
-                    className="h-[220px] w-full"
-                  >
-                    <Image
-                      source={{
-                        uri: photoUrl,
-                      }}
-                      className="h-full w-full bg-surface-secondary"
-                      resizeMode="cover"
-                    />
-                  </View>
-                </Pressable>
-              </View>
+                <View className="h-[220px] w-full">
+                  <Image
+                    source={{
+                      uri: photoUrl,
+                    }}
+                    className="h-full w-full bg-surface-secondary"
+                    resizeMode="cover"
+                  />
+                </View>
+              </Pressable>
             ) : null}
             <View className="absolute opacity-0" pointerEvents="none">
               <View

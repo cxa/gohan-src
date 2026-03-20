@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
 import {
   Image,
@@ -6,7 +6,6 @@ import {
   Pressable,
   RefreshControl,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -46,8 +45,6 @@ import NativeEdgeScrollShadow, {
 } from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import ProfilePageBackdrop from '@/components/profile-page-backdrop';
-import { shouldUsePhotoSharedTransition } from '@/components/photo-viewer-shared-transition';
-import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import ProfileStatRow, {
   type ProfileStatItem,
 } from '@/components/profile-stat-row';
@@ -94,12 +91,6 @@ import {
 } from '@/utils/profile-theme';
 import { useTranslation } from 'react-i18next';
 const PROFILE_CARD_GAP = 16;
-type PhotoViewerOriginRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
 type ComposerMode = 'mention' | 'dm' | 'reply' | 'repost' | null;
 type ReplyTarget = {
   statusId: string;
@@ -132,9 +123,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const insets = useSafeAreaInsets();
-  const { height: viewportHeight } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
-  const tabBarOccludedHeight = getTabBarOccludedHeight(insets.bottom);
   const scrollShadowSize = resolveNativeEdgeScrollShadowSize({
     headerHeight,
   });
@@ -166,14 +155,6 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   });
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
-  const [photoViewerPreviewKey, setPhotoViewerPreviewKey] = useState<
-    string | null
-  >(null);
-  const [photoViewerOriginRect, setPhotoViewerOriginRect] =
-    useState<PhotoViewerOriginRect | null>(null);
-  const photoPreviewRefs = useRef(
-    new Map<string, React.ComponentRef<typeof View>>(),
-  );
   const [isFollowSubmitting, setIsFollowSubmitting] = useState(false);
   const [isBlockSubmitting, setIsBlockSubmitting] = useState(false);
   const [composeMode, setComposeMode] = useState<ComposerMode>(null);
@@ -343,65 +324,12 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       backCount: user?.photo_count,
     });
   };
-  const registerPhotoPreviewRef = (
-    key: string,
-    node: React.ComponentRef<typeof View> | null,
-  ) => {
-    if (node) {
-      photoPreviewRefs.current.set(key, node);
-      return;
-    }
-    photoPreviewRefs.current.delete(key);
-  };
-  const openPhotoViewer = (
-    photoUrl: string,
-    originRect: PhotoViewerOriginRect | null,
-    previewKey: string,
-  ) => {
-    const useSharedTransition = shouldUsePhotoSharedTransition({
-      originRect,
-      viewportHeight,
-      topInset: insets.top,
-      bottomOccludedHeight: tabBarOccludedHeight,
-      scrollShadowSize,
-    });
+  const handlePhotoPress = (photoUrl: string) => {
     Image.prefetch(photoUrl).catch(() => undefined);
-    setPhotoViewerPreviewKey(useSharedTransition ? previewKey : null);
-    setPhotoViewerOriginRect(useSharedTransition ? originRect : null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
-  const handlePhotoPress = (photoUrl: string, previewKey: string) => {
-    const previewNode = photoPreviewRefs.current.get(previewKey);
-    if (!previewNode || typeof previewNode.measureInWindow !== 'function') {
-      openPhotoViewer(photoUrl, null, previewKey);
-      return;
-    }
-    previewNode.measureInWindow((x, y, width, height) => {
-      const hasValidRect =
-        Number.isFinite(x) &&
-        Number.isFinite(y) &&
-        Number.isFinite(width) &&
-        Number.isFinite(height) &&
-        width > 0 &&
-        height > 0;
-      openPhotoViewer(
-        photoUrl,
-        hasValidRect
-          ? {
-            x,
-            y,
-            width,
-            height,
-          }
-          : null,
-        previewKey,
-      );
-    });
-  };
   const handleClosePhotoViewer = () => {
-    setPhotoViewerPreviewKey(null);
-    setPhotoViewerOriginRect(null);
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
   };
@@ -797,32 +725,20 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const avatarUrl = user.profile_image_url_large;
   const hasAvatar = avatarUrl.trim().length > 0;
   const profileAvatar = hasAvatar ? (
-    <View
-      className={
-        photoViewerVisible && photoViewerPreviewKey === 'profile-avatar'
-          ? 'opacity-0'
-          : undefined
-      }
+    <Pressable
+      onPress={() => handlePhotoPress(avatarUrl)}
+      accessibilityRole="button"
+      accessibilityLabel="Open avatar"
     >
-      <Pressable
-        onPress={() => handlePhotoPress(avatarUrl, 'profile-avatar')}
-        accessibilityRole="button"
-        accessibilityLabel="Open avatar"
-      >
-        <View
-          ref={node => registerPhotoPreviewRef('profile-avatar', node)}
-          collapsable={false}
-          className="h-20 w-20"
-        >
-          <Image
-            source={{
-              uri: avatarUrl,
-            }}
-            className="h-full w-full rounded-full bg-surface-secondary"
-          />
-        </View>
-      </Pressable>
-    </View>
+      <View className="h-20 w-20">
+        <Image
+          source={{
+            uri: avatarUrl,
+          }}
+          className="h-full w-full rounded-full bg-surface-secondary"
+        />
+      </View>
+    </Pressable>
   ) : (
     <View className="h-20 w-20 items-center justify-center rounded-full bg-surface-secondary">
       <Text className="text-[24px] text-muted">
@@ -997,14 +913,14 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                 shadowStyle={profilePanelShadowStyle}
               >
                 <Surface
-                  className="rounded-[24px] bg-surface-secondary dark: px-4 py-4"
+                  className="rounded-[24px] bg-surface-secondary px-4 py-4"
                   style={profileThemeStyles.panelStyle}
                 >
                   <View className="flex-row gap-3">
                     <Pressable
                       onPress={handleFollowToggle}
                       disabled={isFollowSubmitting || isBlocked}
-                      className={`flex-1 rounded-[16px] border  px-3 py-2 ${isBlocked ? 'bg-surface' : 'bg-accent'
+                      className={`flex-1 rounded-[16px] border px-3 py-2 ${isBlocked ? 'bg-surface-secondary' : 'bg-accent'
                         }`}
                       accessibilityRole="button"
                       accessibilityLabel={
@@ -1030,7 +946,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                     <Pressable
                       onPress={handleBlockToggle}
                       disabled={isBlockSubmitting || isBlockChecking}
-                      className="flex-1 rounded-[16px] border bg-surface px-3 py-2"
+                      className="flex-1 rounded-[16px] border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={
                         isBlocked
@@ -1053,7 +969,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   <View className="mt-3 flex-row gap-3">
                     <Pressable
                       onPress={handleOpenMentionComposer}
-                      className="flex-1 rounded-[16px] border bg-surface px-3 py-2"
+                      className="flex-1 rounded-[16px] border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionMention')}
                     >
@@ -1064,7 +980,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
 
                     <Pressable
                       onPress={handleOpenDmComposer}
-                      className="flex-1 rounded-[16px] border bg-surface px-3 py-2"
+                      className="flex-1 rounded-[16px] border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionMessage')}
                     >
@@ -1088,7 +1004,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             {isProtectedTimeline ? (
               <DropShadowBox type="warning" containerClassName="pb-2">
                 <Surface
-                  className={`rounded-[24px] bg-surface  ${getDropShadowBorderClass(
+                  className={`rounded-[24px] bg-surface-secondary ${getDropShadowBorderClass(
                     'warning',
                   )} px-4 py-4`}
                 >
@@ -1150,9 +1066,6 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                             isBookmarkPending={pendingBookmarkIds.has(
                               getStatusId(status),
                             )}
-                            photoViewerVisible={photoViewerVisible}
-                            photoViewerPreviewKey={photoViewerPreviewKey}
-                            registerPhotoPreviewRef={registerPhotoPreviewRef}
                             onOpenPhoto={handlePhotoPress}
                             onPressStatus={handleStatusPress}
                             onPressProfile={handleMentionPress}
@@ -1181,10 +1094,6 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
           <PhotoViewerModal
             visible={photoViewerVisible}
             photoUrl={photoViewerUrl}
-            topInset={insets.top}
-            bottomOccludedHeight={tabBarOccludedHeight}
-            scrollShadowSize={scrollShadowSize}
-            originRect={photoViewerOriginRect}
             onClose={handleClosePhotoViewer}
           />
         </NativeEdgeScrollShadow>
