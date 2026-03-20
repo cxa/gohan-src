@@ -294,7 +294,7 @@ const AuthIndexRoute = () => {
   const handleCloseComposer = () => {
     setComposeVisible(false);
   };
-  const handleSubmitComposer = async ({
+  const handleSubmitComposer = ({
     text,
     photo,
   }: ComposerModalSubmitPayload) => {
@@ -304,26 +304,20 @@ const AuthIndexRoute = () => {
       showVariantToast('danger', t('postFailedTitle'), t('replyNeedsContent'));
       return;
     }
-    try {
-      await statusUpdateMutation.mutateAsync({
-        status: photo?.base64 ? trimmedText || undefined : trimmedText,
-        photoBase64: photo?.base64,
-      });
-      setComposeVisible(false);
-      showVariantToast(
-        'success',
-        t('sentTitle'),
-        t('postPendingReviewMessage'),
-      );
-    } catch (requestError) {
+    setComposeVisible(false);
+    showVariantToast('accent', t('composerSending'), '');
+    statusUpdateMutation.mutateAsync({
+      status: photo?.base64 ? trimmedText || undefined : trimmedText,
+      photoBase64: photo?.base64,
+    }).then(() => {
+      showVariantToast('success', t('sentTitle'), t('postPendingReviewMessage'));
+    }).catch((requestError: unknown) => {
       showVariantToast(
         'danger',
         t('postFailedTitle'),
-        requestError instanceof Error
-          ? requestError.message
-          : t('retryMessage'),
+        requestError instanceof Error ? requestError.message : t('retryMessage'),
       );
-    }
+    });
   };
   const renderAuthTabBar = (props: BottomTabBarProps) => (
     <AuthTabBar
@@ -362,7 +356,7 @@ const AuthIndexRoute = () => {
         submitLabel={t('composerSubmitPost')}
         enablePhoto
         resetKey="root-compose"
-        isSubmitting={statusUpdateMutation.isPending}
+        isSubmitting={false}
         onCancel={handleCloseComposer}
         onSubmit={handleSubmitComposer}
       />

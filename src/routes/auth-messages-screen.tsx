@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { showToastAlert, showVariantToast } from '@/utils/toast-alert';
+import { showVariantToast } from '@/utils/toast-alert';
 import {
   FlatList,
   Image,
@@ -27,7 +27,7 @@ import {
   type NavigationProp,
 } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Surface, Tabs, useThemeColor } from 'heroui-native';
+import { Button, Dialog, Surface, Tabs, useThemeColor } from 'heroui-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Inbox, Reply, Send, Trash2 } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -277,7 +277,6 @@ const MessageCard = ({
   onDelete,
   onReply,
 }: MessageCardProps) => {
-  const { t } = useTranslation();
   const isDark = useColorScheme() === 'dark';
   const themePreference = useAppThemePreference();
   const counterpart = mailbox === 'inbox' ? message.sender : message.recipient;
@@ -300,29 +299,7 @@ const MessageCard = ({
   const [danger, muted] = useThemeColor(['danger', 'muted']);
   const dividerColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   const handleDelete = () => {
-    if (!onDelete) {
-      return;
-    }
-    showToastAlert(
-      t('messageDeleteTitle'),
-      t('messageDeleteConfirm', {
-        name: displayName,
-      }),
-      [
-        {
-          text: t('messageDeleteCancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('messageDeleteConfirmButton'),
-          style: 'destructive',
-          onPress: onDelete,
-        },
-      ],
-      {
-        cancelable: true,
-      },
-    );
+    onDelete?.();
   };
   return (
     <DropShadowBox containerClassName="w-full">
@@ -433,6 +410,11 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     userId: string;
     displayName: string;
   } | null>(null);
+  const [retryText, setRetryText] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{
+    messageId: string;
+    displayName: string;
+  } | null>(null);
   const directMessageMutation = useDirectMessageMutation();
   const { pullScrollY, safeAreaTop, scrollInsetTop, updatePullScrollY } =
     usePullScrollY();
@@ -523,32 +505,30 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
     paddingBottom: insets.bottom + PAGE_BOTTOM_PADDING,
     flexGrow: 1,
   };
-  const handleDeleteMessage = async (messageId: string) => {
-    try {
-      await post('/direct_messages/destroy', {
-        id: messageId,
-      });
-      queryClient.setQueryData<MessageGroups>(
-        ['private-messages', userId],
-        prev => {
-          if (!prev) {
-            return prev;
-          }
-          return {
-            inbox: prev.inbox.filter(m => m.id !== messageId),
-            outbox: prev.outbox.filter(m => m.id !== messageId),
-          };
-        },
-      );
-    } catch (deleteError) {
+  const handleDeleteMessage = (messageId: string) => {
+    const previous = queryClient.getQueryData<MessageGroups>(['private-messages', userId]);
+    queryClient.setQueryData<MessageGroups>(
+      ['private-messages', userId],
+      prev => {
+        if (!prev) return prev;
+        return {
+          inbox: prev.inbox.filter(m => m.id !== messageId),
+          outbox: prev.outbox.filter(m => m.id !== messageId),
+        };
+      },
+    );
+    post('/direct_messages/destroy', { id: messageId }).catch((deleteError: unknown) => {
+      if (previous) {
+        queryClient.setQueryData(['private-messages', userId], previous);
+      }
       showVariantToast(
         'danger',
         t('messageDeleteFailed'),
         getErrorMessage(deleteError, t('messageDeleteFailedMessage')),
       );
-    }
+    });
   };
-  const handleSubmitReply = async ({ text }: ComposerModalSubmitPayload) => {
+  const handleSubmitReply = ({ text }: ComposerModalSubmitPayload) => {
     if (!replyTarget) {
       return;
     }
@@ -561,20 +541,25 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
       );
       return;
     }
-    try {
-      await directMessageMutation.mutateAsync({
-        userId: replyTarget.userId,
-        text: trimmedText,
-      });
-      setReplyTarget(null);
-      await refetch();
-    } catch (replyError) {
+    const currentTarget = replyTarget;
+    setReplyTarget(null);
+    setRetryText('');
+    showVariantToast('accent', t('composerSending'), '');
+    directMessageMutation.mutateAsync({
+      userId: currentTarget.userId,
+      text: trimmedText,
+    }).then(() => {
+      showVariantToast('success', t('sentTitle'), t('profileMessageSent'));
+      refetch().catch(() => undefined);
+    }).catch((replyError: unknown) => {
       showVariantToast(
         'danger',
         t('messageReplyFailed'),
         getErrorMessage(replyError, t('messageReplyFailedMessage')),
       );
-    }
+      setRetryText(trimmedText);
+      setReplyTarget(currentTarget);
+    });
   };
   const handleOpenProfile = (targetUserId: string) => {
     navigation.navigate(AUTH_STACK_ROUTE.PROFILE, {
@@ -608,13 +593,16 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           renderItem={({ item, index }) => {
             const sender = item.sender;
             const senderId = sender?.id || item.sender_id;
+            const counterpart = mailbox === 'inbox' ? item.sender : item.recipient;
+            const counterpartId = counterpart?.id || (mailbox === 'inbox' ? item.sender_id : item.recipient_id);
+            const counterpartName = counterpart?.screen_name || counterpart?.name || counterpartId || '';
             return (
               <MessageCard
                 message={item}
                 mailbox={mailbox}
                 shadowType={CARD_PASTEL_CYCLE[index % CARD_PASTEL_CYCLE.length]}
                 onPressProfile={handleOpenProfile}
-                onDelete={() => handleDeleteMessage(item.id)}
+                onDelete={() => setDeleteTarget({ messageId: item.id, displayName: counterpartName })}
                 onReply={
                   mailbox === 'inbox' && senderId
                     ? () =>
@@ -707,11 +695,45 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
         }
         placeholder={t('messageReplyPlaceholder')}
         submitLabel={t('messageSend')}
+        initialText={retryText}
         resetKey={replyTarget ? `dm-reply:${replyTarget.userId}` : ''}
-        isSubmitting={directMessageMutation.isPending}
-        onCancel={() => setReplyTarget(null)}
+        isSubmitting={false}
+        onCancel={() => { setReplyTarget(null); setRetryText(''); }}
         onSubmit={handleSubmitReply}
       />
+
+      <Dialog isOpen={deleteTarget !== null} onOpenChange={open => { if (!open) setDeleteTarget(null); }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="bg-black/80" />
+          <Dialog.Content>
+            <View className="mb-5 gap-1.5">
+              <Dialog.Title>{t('messageDeleteTitle')}</Dialog.Title>
+              <Dialog.Description>
+                {deleteTarget
+                  ? t('messageDeleteConfirm', { name: deleteTarget.displayName })
+                  : ''}
+              </Dialog.Description>
+            </View>
+            <View className="flex-row justify-end gap-3">
+              <Button variant="ghost" size="sm" onPress={() => setDeleteTarget(null)}>
+                {t('messageDeleteCancel')}
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onPress={() => {
+                  if (deleteTarget) {
+                    handleDeleteMessage(deleteTarget.messageId);
+                  }
+                  setDeleteTarget(null);
+                }}
+              >
+                {t('messageDeleteConfirmButton')}
+              </Button>
+            </View>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
     </View>
   );
 };
