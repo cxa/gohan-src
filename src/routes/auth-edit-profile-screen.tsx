@@ -119,7 +119,7 @@ const EditProfileRoute = () => {
                 onPress={() => {
                   refetch().catch(() => undefined);
                 }}
-                className="self-start rounded-[12px] border bg-danger-soft px-3 py-2"
+                className="self-start rounded-xl border bg-danger-soft px-3 py-2"
                 accessibilityRole="button"
                 accessibilityLabel={t('editProfileRetry')}
               >
@@ -294,7 +294,7 @@ const EditProfileRoute = () => {
   if (!userId) {
     return (
       <View className="flex-1 bg-background px-6 pt-8">
-        <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+        <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
           <Text className="text-[13px] text-danger-foreground">
             {t('notLoggedIn')}
           </Text>

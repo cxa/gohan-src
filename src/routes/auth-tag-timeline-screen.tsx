@@ -498,7 +498,7 @@ const TagTimelineRoute = () => {
     return (
       <View className="flex-1 bg-background px-4 pt-8">
         <View>
-          <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+          <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
             <Text className="text-[13px] text-danger-foreground">
               {t('tagMissing')}
             </Text>
@@ -536,7 +536,7 @@ const TagTimelineRoute = () => {
           }
           ListHeaderComponent={
             errorMessage ? (
-              <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+              <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
                 <Text className="text-[13px] text-danger-foreground">
                   {errorMessage}
                 </Text>

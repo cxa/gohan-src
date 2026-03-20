@@ -310,7 +310,7 @@ const TimelineStatusCard = ({
             {photoUrl ? (
               <Pressable
                 onPress={() => onOpenPhoto(photoUrl)}
-                className="mt-3 overflow-hidden rounded-[16px]"
+                className="mt-3 overflow-hidden rounded-2xl"
                 accessibilityRole="button"
                 accessibilityLabel="Open photo"
               >
@@ -452,7 +452,7 @@ const TimelineStatusCard = ({
               <Pressable
                 onPress={() => setIsDeleteDialogOpen(false)}
                 disabled={isDeleting}
-                className={`flex-1 items-center justify-center rounded-[16px] bg-surface-secondary px-3 py-2 active:opacity-75 ${isDeleting ? 'opacity-50' : ''
+                className={`flex-1 items-center justify-center rounded-2xl bg-surface-secondary px-3 py-2 active:opacity-75 ${isDeleting ? 'opacity-50' : ''
                   }`}
                 accessibilityRole="button"
                 accessibilityLabel={t('messageDeleteCancel')}
@@ -464,7 +464,7 @@ const TimelineStatusCard = ({
               <Pressable
                 onPress={handleConfirmDelete}
                 disabled={isDeleting}
-                className={`flex-[2] items-center justify-center rounded-[16px] bg-danger-soft px-3 py-2 active:opacity-75 ${isDeleting ? 'opacity-70' : ''
+                className={`flex-[2] items-center justify-center rounded-2xl bg-danger-soft px-3 py-2 active:opacity-75 ${isDeleting ? 'opacity-70' : ''
                   }`}
                 accessibilityRole="button"
                 accessibilityLabel={

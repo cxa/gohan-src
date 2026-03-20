@@ -182,7 +182,7 @@ const ComposerModal = ({
               scrollEnabled={false}
             />
             {photoUri ? (
-              <View className="mb-4 overflow-hidden rounded-[16px]">
+              <View className="mb-4 overflow-hidden rounded-2xl">
                 <Image
                   source={{ uri: photoUri }}
                   className="h-[260px] w-full bg-surface-secondary"

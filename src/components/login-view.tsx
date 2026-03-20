@@ -121,7 +121,7 @@ const LoginView = () => {
         {/* Error Message */}
         {errorMessage ? (
           <View className="w-full max-w-[320px] pointer-events-auto mt-8">
-            <View className="rounded-[16px] bg-danger-soft px-4 py-3">
+            <View className="rounded-2xl bg-danger-soft px-4 py-3">
               <Text className="text-sm text-danger font-bold text-center tracking-wide">
                 ERROR: {errorMessage}
               </Text>

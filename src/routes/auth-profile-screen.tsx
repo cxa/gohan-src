@@ -715,7 +715,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   if (!user) {
     return (
       <View className="flex-1 bg-background px-4 pt-8">
-        <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+        <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
           <Text className="text-[13px] text-danger-foreground">
             {profileErrorMessage ?? t('profileLoadFailed')}
           </Text>
@@ -848,7 +848,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   if (!accessToken) {
     return (
       <View className="flex-1 bg-background px-6 pt-8">
-        <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+        <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
           <Text className="text-[13px] text-danger-foreground">
             {t('notLoggedIn')}
           </Text>
@@ -927,7 +927,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                     <Pressable
                       onPress={handleFollowToggle}
                       disabled={isFollowSubmitting || isBlocked}
-                      className={`flex-1 rounded-[16px] border px-3 py-2 ${isBlocked ? 'bg-surface-secondary' : 'bg-accent'
+                      className={`flex-1 rounded-2xl border px-3 py-2 ${isBlocked ? 'bg-surface-secondary' : 'bg-accent'
                         }`}
                       accessibilityRole="button"
                       accessibilityLabel={
@@ -953,7 +953,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                     <Pressable
                       onPress={handleBlockToggle}
                       disabled={isBlockSubmitting || isBlockChecking}
-                      className="flex-1 rounded-[16px] border bg-surface-secondary px-3 py-2"
+                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={
                         isBlocked
@@ -976,7 +976,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   <View className="mt-3 flex-row gap-3">
                     <Pressable
                       onPress={handleOpenMentionComposer}
-                      className="flex-1 rounded-[16px] border bg-surface-secondary px-3 py-2"
+                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionMention')}
                     >
@@ -987,7 +987,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
 
                     <Pressable
                       onPress={handleOpenDmComposer}
-                      className="flex-1 rounded-[16px] border bg-surface-secondary px-3 py-2"
+                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionMessage')}
                     >
@@ -1001,7 +1001,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             ) : null}
 
             {profileErrorMessage ? (
-              <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+              <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
                 <Text className="text-[13px] text-danger-foreground">
                   {profileErrorMessage}
                 </Text>
@@ -1042,7 +1042,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   ) : null}
 
                   {recentStatusesErrorMessage ? (
-                    <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+                    <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
                       <Text className="text-[13px] text-danger-foreground">
                         {recentStatusesErrorMessage}
                       </Text>
@@ -1139,7 +1139,7 @@ const ProfileRoute = () => {
   if (!routeUserId) {
     return (
       <View className="flex-1 bg-background px-4 pt-8">
-        <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+        <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
           <Text className="text-[13px] text-danger-foreground">
             Missing profile user id.
           </Text>

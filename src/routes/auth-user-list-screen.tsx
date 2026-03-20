@@ -174,7 +174,7 @@ const UserListRoute = () => {
           ListHeaderComponent={
             errorMessage ? (
               <View className="mb-4">
-                <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+                <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
                   <Text className="text-[13px] text-danger-foreground">
                     {errorMessage}
                   </Text>

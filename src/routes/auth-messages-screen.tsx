@@ -232,7 +232,7 @@ const MessageSkeletonCard = ({
   const dividerColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   return (
     <DropShadowBox containerClassName="w-full">
-      <View style={skeletonBgStyle} className="w-full overflow-hidden rounded-[16px] border border-border/40 px-4 pb-4 pt-5">
+      <View style={skeletonBgStyle} className="w-full overflow-hidden rounded-2xl border border-border/40 px-4 pb-4 pt-5">
         <View className="flex-row gap-3">
           <PostageStamp initial="" borderColor={dividerColor} />
           <View className="flex-1">
@@ -336,7 +336,7 @@ const MessageCard = ({
         disabled={!isPressable}
         style={cardBgStyle}
         accessibilityRole={isPressable ? 'button' : undefined}
-        className={`relative w-full overflow-hidden rounded-[16px] border border-border/40 px-4 pb-4 pt-5 ${isPressable
+        className={`relative w-full overflow-hidden rounded-2xl border border-border/40 px-4 pb-4 pt-5 ${isPressable
             ? 'active:translate-x-[-4px] active:translate-y-[4px]'
             : ''
           }`}
@@ -637,7 +637,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
           refreshControl={createRefreshControl()}
           ListHeaderComponent={
             errorMessage ? (
-              <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+              <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
                 <Text className="text-[13px] text-danger-foreground">
                   {errorMessage}
                 </Text>
@@ -722,7 +722,7 @@ const PrivateMessagesRoute = () => {
   if (!accessToken) {
     return (
       <View className="flex-1 bg-background px-6 pt-8">
-        <Surface className="rounded-[16px] bg-danger-soft px-4 py-3">
+        <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
           <Text className="text-[13px] text-danger-foreground">
             {t('notLoggedIn')}
           </Text>
