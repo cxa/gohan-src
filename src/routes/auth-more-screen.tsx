@@ -663,6 +663,7 @@ const MoreRouteContent = ({
       backgroundColor={pageBackgroundColor}
       backgroundImageUrl={profileThemePalette.backgroundImageUrl}
       isBackgroundImageTiled={profileThemePalette.isBackgroundImageTiled}
+      isDark={isDark}
     >
       <NativeEdgeScrollShadow
         className="flex-1"

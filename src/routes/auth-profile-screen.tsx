@@ -862,6 +862,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
         backgroundColor={pageBackgroundColor}
         backgroundImageUrl={profileThemePalette.backgroundImageUrl}
         isBackgroundImageTiled={profileThemePalette.isBackgroundImageTiled}
+        isDark={isDark}
       >
         <NativeEdgeScrollShadow className="flex-1" color={pageBackgroundColor}>
           <Animated.ScrollView
