@@ -1,7 +1,6 @@
 import React, { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
 import {
-  Alert,
   Image,
   NativeModules,
   Platform,
@@ -24,7 +23,7 @@ import {
 } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PressableFeedback, Select, Separator, Surface, Switch, useThemeColor } from 'heroui-native';
+import { Button, Dialog, PressableFeedback, Select, Separator, Surface, Switch, useThemeColor } from 'heroui-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight } from 'lucide-react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -288,6 +287,7 @@ const MoreRouteContent = ({
   const headerTitleVisible = useSharedValue(false);
   const [showHeaderTitle, setShowHeaderTitle] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const scrollRef =
     useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
   const insets = useSafeAreaInsets();
@@ -539,33 +539,18 @@ const MoreRouteContent = ({
     if (isSigningOut) {
       return;
     }
-    Alert.alert(
-      t('moreSignOutConfirmTitle'),
-      t('moreSignOutConfirmMessage'),
-      [
-        {
-          text: t('messageDeleteCancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('moreSignOut'),
-          style: 'destructive',
-          onPress: async () => {
-            setIsSigningOut(true);
-            try {
-              await saveAuthAccessToken(null);
-            } finally {
-              queryClient.clear();
-              setAuthAccessToken(null);
-              setIsSigningOut(false);
-            }
-          },
-        },
-      ],
-      {
-        cancelable: true,
-      },
-    );
+    setIsSignOutDialogOpen(true);
+  };
+  const handleConfirmSignOut = async () => {
+    setIsSignOutDialogOpen(false);
+    setIsSigningOut(true);
+    try {
+      await saveAuthAccessToken(null);
+    } finally {
+      queryClient.clear();
+      setAuthAccessToken(null);
+      setIsSigningOut(false);
+    }
   };
   const handleToggleFollowProfile = async (next: boolean) => {
     try {
@@ -971,6 +956,25 @@ const MoreRouteContent = ({
           </View>
         </Animated.ScrollView>
       </NativeEdgeScrollShadow>
+      <Dialog isOpen={isSignOutDialogOpen} onOpenChange={setIsSignOutDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay />
+          <Dialog.Content>
+            <View className="mb-5 gap-1.5">
+              <Dialog.Title>{t('moreSignOutConfirmTitle')}</Dialog.Title>
+              <Dialog.Description>{t('moreSignOutConfirmMessage')}</Dialog.Description>
+            </View>
+            <View className="flex-row justify-end gap-3">
+              <Button variant="ghost" size="sm" onPress={() => setIsSignOutDialogOpen(false)}>
+                {t('messageDeleteCancel')}
+              </Button>
+              <Button variant="danger" size="sm" onPress={handleConfirmSignOut}>
+                {t('moreSignOut')}
+              </Button>
+            </View>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
     </ProfilePageBackdrop>
   );
 };
