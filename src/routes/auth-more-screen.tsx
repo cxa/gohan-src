@@ -439,6 +439,7 @@ const MoreRouteContent = ({
   const displayName = user
     ? user.name || user.screen_name || displayNameFallback
     : displayNameFallback;
+  const handleName = user ? `@${user.screen_name || user.id}` : `@${userId}`;
   const location = user?.location || '';
   const joinedAt = user ? formatJoinedAt(user.created_at) : '';
   const profileUrl = user ? parseHtmlToText(user.url).trim() : '';
@@ -759,6 +760,12 @@ const MoreRouteContent = ({
                           >
                             {t('moreAccountLoading')}
                           </Text>
+                          <Text
+                            className="mt-1 text-[12px] text-muted"
+                            style={profileThemeStyles.mutedTextStyle}
+                          >
+                            {handleName}
+                          </Text>
                         </View>
                       </View>
                       {errorMessage ? (
@@ -773,7 +780,7 @@ const MoreRouteContent = ({
                     <ProfileSummaryCard
                       containerClassName="bg-accent/10 px-4 py-6"
                       avatar={accountAvatar}
-                      displayName={displayName}
+                      handleName={handleName}
                       location={location}
                       joinedAt={joinedAt}
                       profileUrl={profileUrl}

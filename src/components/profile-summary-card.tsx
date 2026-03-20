@@ -8,7 +8,7 @@ import { ShimmerBar } from '@/components/timeline-skeleton-card';
 
 type ProfileSummaryCardProps = {
   avatar: React.ReactNode;
-  displayName: string;
+  displayName?: string | null;
   handleName?: string | null;
   location?: string | null;
   joinedAt?: string | null;
@@ -67,12 +67,14 @@ const ProfileSummaryCard = ({
             </>
           ) : (
             <>
-              <Text
-                className="text-[22px] leading-[28px] text-foreground"
-                style={primaryTextStyle}
-              >
-                {displayName}
-              </Text>
+              {displayName ? (
+                <Text
+                  className="text-[22px] leading-[28px] text-foreground"
+                  style={primaryTextStyle}
+                >
+                  {displayName}
+                </Text>
+              ) : null}
               {handleName ? (
                 <Text className="text-[14px] text-muted" style={mutedTextStyle}>
                   {handleName}
