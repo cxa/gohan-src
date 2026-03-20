@@ -185,7 +185,7 @@ const PostageStamp = ({
         d={POSTAGE_STAMP_PATH}
         fill="none"
         stroke={borderColor}
-        strokeWidth="1"
+        strokeWidth="0.7"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -229,12 +229,12 @@ const MessageSkeletonCard = ({
       ? (isDark ? '#1E1E1E' : '#FFFFFF')
       : (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[shadowType],
   };
-  const [border, muted] = useThemeColor(['border', 'muted']);
+  const dividerColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   return (
     <DropShadowBox containerClassName="w-full">
       <View style={skeletonBgStyle} className="w-full overflow-hidden rounded-[16px] border border-border/40 px-4 pb-4 pt-5">
         <View className="flex-row gap-3">
-          <PostageStamp initial="" borderColor={isDark ? muted : border} />
+          <PostageStamp initial="" borderColor={dividerColor} />
           <View className="flex-1">
             <View className="absolute bottom-0 left-0 top-0 w-0.5 bg-danger/50" />
             <View className="pl-3 gap-2">
@@ -257,7 +257,7 @@ const MessageSkeletonCard = ({
                 style={SKELETON_TEXT_LINE_2_STYLE}
                 isActive={shimmerIndex === 2}
               />
-              <View className="mt-1 border-t border-dashed" style={{ borderColor: isDark ? muted : border }} />
+              <View className="mt-1 border-t border-dashed" style={{ borderColor: dividerColor }} />
               <ShimmerBar
                 className="h-2.5 w-16 bg-surface-secondary"
                 isActive={false}
@@ -297,7 +297,8 @@ const MessageCard = ({
       ? (isDark ? '#1E1E1E' : '#FFFFFF')
       : (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[shadowType],
   };
-  const [danger, muted, border] = useThemeColor(['danger', 'muted', 'border']);
+  const [danger, muted] = useThemeColor(['danger', 'muted']);
+  const dividerColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   const handleDelete = () => {
     if (!onDelete) {
       return;
@@ -355,7 +356,7 @@ const MessageCard = ({
           <PostageStamp
             avatarUrl={avatarUrl}
             initial={initial}
-            borderColor={isDark ? muted : border}
+            borderColor={dividerColor}
           />
 
           <View className="relative flex-1">
@@ -382,7 +383,7 @@ const MessageCard = ({
                 </Text>
               ) : null}
 
-              <View className="relative mt-3 border-t border-dashed" style={{ borderColor: isDark ? muted : border }}>
+              <View className="relative mt-3 border-t border-dashed" style={{ borderColor: dividerColor }}>
                 <View className="absolute left-[-15px] top-[-4px] h-2 w-2 rounded-full border bg-surface-secondary" />
               </View>
 

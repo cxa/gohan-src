@@ -17,6 +17,7 @@ type ProfileSummaryCardProps = {
   rightSlot?: React.ReactNode;
   footer?: React.ReactNode;
   skeleton?: boolean;
+  containerClassName?: string;
   panelStyle?: StyleProp<ViewStyle>;
   primaryTextStyle?: StyleProp<TextStyle>;
   mutedTextStyle?: StyleProp<TextStyle>;
@@ -36,6 +37,7 @@ const ProfileSummaryCard = ({
   rightSlot,
   footer,
   skeleton,
+  containerClassName,
   panelStyle,
   primaryTextStyle,
   mutedTextStyle,
@@ -47,7 +49,7 @@ const ProfileSummaryCard = ({
   const normalizedDescription = normalizeText(description);
 
   return (
-    <Surface className="bg-accent/10 px-5 py-6" style={panelStyle}>
+    <Surface className={containerClassName ?? 'bg-accent/10 px-5 py-6'} style={panelStyle}>
       <View className="flex-row items-start gap-5">
         {avatar}
         <View className="flex-1 gap-2">

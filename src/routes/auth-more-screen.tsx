@@ -94,7 +94,7 @@ import {
 const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
 const SECTION_GAP = 20;
-const AVATAR_SIZE = 80;
+const AVATAR_SIZE = 96;
 const IOS_TOP_CONTENT_OFFSET = 0.1;
 const IOS_TOP_CONTENT_EQUAL_STATUS_BAR_PADDING = 4;
 const IOS_TOP_CONTENT_LARGER_SAFE_AREA_PADDING = 0;
@@ -138,46 +138,50 @@ const resolveTopContentPadding = ({
   return safeAreaTop + extraPadding + IOS_TOP_CONTENT_OFFSET;
 };
 const POSTAGE_STAMP_PATH =
-  'M14 1v1.5c-.75 0-.75 1.5 0 1.5v1.25c-.75 0-.75 1.5 0 1.5v1.5c-.75 0-.75 1.5 0 1.5V11c-.75 0-.75 1.5 0 1.5V14h-1.5c0-.75-1.5-.75-1.5 0H9.75c0-.75-1.5-.75-1.5 0h-1.5c0-.75-1.5-.75-1.5 0H4c0-.75-1.5-.75-1.5 0H1v-1.5c.75 0 .75-1.5 0-1.5V9.75c.75 0 .75-1.5 0-1.5v-1.5c.75 0 .75-1.5 0-1.5V4c.75 0 .75-1.5 0-1.5V1h1.5c0 .75 1.5.75 1.5 0h1.25c0 .75 1.5.75 1.5 0h1.5c0 .75 1.5.75 1.5 0H11c0 .75 1.5.75 1.5 0z';
+  'M14 1' +
+  'v1.4 a.75.75 0 0 0 0 1.5 v1.4 a.75.75 0 0 0 0 1.5 v1.4 a.75.75 0 0 0 0 1.5 v1.4 a.75.75 0 0 0 0 1.5 v1.4' +
+  'h-1.4 a.75.75 0 0 0-1.5 0 h-1.4 a.75.75 0 0 0-1.5 0 h-1.4 a.75.75 0 0 0-1.5 0 h-1.4 a.75.75 0 0 0-1.5 0 h-1.4' +
+  'v-1.4 a.75.75 0 0 0 0-1.5 v-1.4 a.75.75 0 0 0 0-1.5 v-1.4 a.75.75 0 0 0 0-1.5 v-1.4 a.75.75 0 0 0 0-1.5 v-1.4' +
+  'h1.4 a.75.75 0 0 0 1.5 0 h1.4 a.75.75 0 0 0 1.5 0 h1.4 a.75.75 0 0 0 1.5 0 h1.4 a.75.75 0 0 0 1.5 0 h1.4z';
 
-// Wavy cancellation lines clustered in bottom-right; last wave bleeds past bottom border
+// Wavy cancellation lines clustered in bottom-right, clipped within stamp bounds (x≤12.8)
 const STAMP_WAVE_LINES: {
   d: string;
   opacity: number;
 }[] = [
     {
-      d: 'M7.5 9.5  C9 8.7   10.5 10.5 12 9.7  C13 9.2  14.2 9.6  16 9.3',
+      d: 'M7.5 9.5 C9 8.7 10.5 10.5 12 9.7 C12.5 9.4 12.8 9.5 12.8 9.5',
       opacity: 0.25,
     },
     {
-      d: 'M6.5 11.1 C8 10.3  9.5 12.1  11 11.3 C12.2 10.7 13.5 11.2 16 10.9',
+      d: 'M6.5 11.1 C8 10.3 9.5 12.1 11 11.3 C12 10.8 12.8 11.1 12.8 11.1',
       opacity: 0.5,
     },
     {
-      d: 'M6   12.7 C7.5 11.9 9 13.7  10.5 12.9 C11.8 12.3 13 12.8 16 12.5',
+      d: 'M6 12.7 C7.5 11.9 9 13.7 10.5 12.9 C11.5 12.4 12.8 12.7 12.8 12.7',
       opacity: 0.3,
     },
   ];
 
 // Sun mode: left hill taller (peak y=6.5), right hill shorter (peak y=9.5)
 const STAMP_HILL_SUN_PATH = 'M3 12.5 Q6 6.5 9.5 12.5';
-const STAMP_HILL2_SUN_PATH = 'M9.5 12.5 Q12 9.5 14 12.5';
+const STAMP_HILL2_SUN_PATH = 'M9.5 12.5 Q12 9.5 13 12.5';
 
 // Moon mode: left hill taller (peak y=6.5), right hill shorter (peak y=9.5)
 const STAMP_HILL_MOON_PATH = 'M3 12.5 Q6 6.5 9.5 12.5';
-const STAMP_HILL2_MOON_PATH = 'M9.5 12.5 Q12 9.5 14 12.5';
+const STAMP_HILL2_MOON_PATH = 'M9.5 12.5 Q12 9.5 13 12.5';
 
 // Moon crescent aligned left, centered higher around (4.5, 3.8)
 const STAMP_MOON_PATH = 'M6 2.8 A2.2 2.2 0 1 1 3.2 5.8 A1.5 1.5 0 0 0 6 2.8';
 const PostageStampIcon = ({ color, size }: { color: string; size: number }) => {
   const isDark = useColorScheme() === 'dark';
   return (
-    <Svg width={size} height={size} viewBox="-1.5 -1 21 19">
+    <Svg width={size} height={size} viewBox="0 0 15 15">
       <Path
         d={POSTAGE_STAMP_PATH}
         fill="none"
         stroke={color}
-        strokeWidth="1"
+        strokeWidth="0.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -678,7 +682,7 @@ const MoreRouteContent = ({
               <View style={{ gap: PROFILE_GROUP_GAP }}>
                 {showLoadingState ? (
                     <Surface
-                      className="bg-surface-secondary px-5 py-6"
+                      className="bg-surface-secondary px-4 py-6"
                       style={panelStyle.profile}
                     >
                       <View className="flex-row items-center gap-4">
@@ -718,6 +722,7 @@ const MoreRouteContent = ({
                     </Surface>
                   ) : (
                     <ProfileSummaryCard
+                      containerClassName="bg-accent/10 px-4 py-6"
                       avatar={accountAvatar}
                       displayName={displayName}
                       handleName={handleName}
@@ -781,12 +786,12 @@ const MoreRouteContent = ({
                 className="rounded-3xl overflow-hidden"
               >
                 <Surface
-                  className="bg-surface-secondary px-4 py-3.5"
+                  className="bg-surface-secondary"
                   style={panelStyle.messages}
                 >
                   <PressableFeedback.Highlight />
-                  <View className="flex-row items-center gap-3">
-                    <PostageStampIcon color={entryIconColor} size={28} />
+                  <View className="flex-row items-center gap-3 px-4 py-3.5">
+                    <PostageStampIcon color={entryIconColor} size={40} />
                     <View className="flex-1">
                       <Text
                         className="text-[15px] font-semibold text-foreground"
