@@ -5,6 +5,7 @@ import { post } from '@/auth/fanfou-client';
 import type { ComposerModalSubmitPayload } from '@/components/composer-modal';
 import type { FanfouStatus } from '@/types/fanfou';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 type ComposerMode = 'reply' | 'repost' | null;
 type ReplyTarget = {
   statusId: string;
@@ -28,6 +29,7 @@ const useTimelineStatusInteractions = ({
 }: UseTimelineStatusInteractionsParams) => {
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
+  const [photoViewerOriginRect, setPhotoViewerOriginRect] = useState<PhotoViewerOriginRect | null>(null);
   const [composeMode, setComposeMode] = useState<ComposerMode>(null);
   const [composeReplyTarget, setComposeReplyTarget] =
     useState<ReplyTarget | null>(null);
@@ -37,14 +39,16 @@ const useTimelineStatusInteractions = ({
     () => new Set(),
   );
   const statusUpdateMutation = useStatusUpdateMutation();
-  const handlePhotoPress = (photoUrl: string) => {
+  const handlePhotoPress = (photoUrl: string, originRect: PhotoViewerOriginRect | null) => {
     Image.prefetch(photoUrl).catch(() => undefined);
+    setPhotoViewerOriginRect(originRect);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
   const handleClosePhotoViewer = () => {
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
+    setPhotoViewerOriginRect(null);
   };
   const setBookmarkPending = (statusId: string, pending: boolean) => {
     setPendingBookmarkIds(previous => {
@@ -209,6 +213,7 @@ const useTimelineStatusInteractions = ({
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
+    photoViewerOriginRect,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,

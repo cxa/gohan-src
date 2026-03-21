@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text as RNText, useColorScheme, View } from 'react-native';
 import { MessageCircle, Repeat2, Trash2 } from 'lucide-react-native';
 import { Dialog, useThemeColor } from 'heroui-native';
 import { useTranslation } from 'react-i18next';
 import type { FanfouStatus } from '@/types/fanfou';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import { Text } from '@/components/app-text';
 import { CARD_BG_LIGHT, CARD_BG_DARK, type DropShadowBoxType } from '@/components/drop-shadow-box';
 import FavoriteHeartIcon from '@/components/favorite-heart-icon';
@@ -52,7 +53,7 @@ type TimelineStatusCardProps = {
   shadowType?: DropShadowBoxType;
   isBookmarkPending: boolean;
   activeTag?: string;
-  onOpenPhoto: (photoUrl: string) => void;
+  onOpenPhoto: (photoUrl: string, originRect: PhotoViewerOriginRect | null) => void;
   onPressStatus: (statusId: string, shadowType: DropShadowBoxType) => void;
   onPressProfile: (userId: string) => void;
   onPressMention: (userId: string) => void;
@@ -130,6 +131,8 @@ const TimelineStatusCard = ({
     : (effectiveIsDark ? CARD_BG_DARK : CARD_BG_LIGHT)[shadowType];
   const [danger] = useThemeColor(['danger']);
   const fontFamily = useAppFontFamily();
+  const photoRef = useRef<View>(null);
+  const [photoAspectRatio, setPhotoAspectRatio] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [footerWidth, setFooterWidth] = React.useState(0);
@@ -309,18 +312,38 @@ const TimelineStatusCard = ({
             </Text>
             {photoUrl ? (
               <Pressable
-                onPress={() => onOpenPhoto(photoUrl)}
+                ref={photoRef}
+                onPress={() => {
+                  if (photoRef.current) {
+                    photoRef.current.measureInWindow((x, y, width, height) => {
+                      onOpenPhoto(photoUrl, { x, y, width, height, borderRadius: 16 });
+                    });
+                  } else {
+                    onOpenPhoto(photoUrl, null);
+                  }
+                }}
                 className="mt-3 overflow-hidden rounded-2xl"
                 accessibilityRole="button"
                 accessibilityLabel="Open photo"
               >
-                <View className="h-[220px] w-full">
+                <View
+                  className="w-full bg-surface-secondary"
+                  style={
+                    photoAspectRatio
+                      ? { aspectRatio: Math.min(Math.max(photoAspectRatio, 0.5), 2) }
+                      : styles.photoPlaceholder
+                  }
+                >
                   <Image
-                    source={{
-                      uri: photoUrl,
-                    }}
-                    className="h-full w-full bg-surface-secondary"
+                    source={{ uri: photoUrl }}
+                    className="h-full w-full"
                     resizeMode="cover"
+                    onLoad={event => {
+                      const { width, height } = event.nativeEvent.source;
+                      if (width > 0 && height > 0) {
+                        setPhotoAspectRatio(width / height);
+                      }
+                    }}
                   />
                 </View>
               </Pressable>
@@ -489,6 +512,9 @@ const TimelineStatusCard = ({
 const styles = StyleSheet.create({
   card: {
     borderCurve: 'continuous',
+  },
+  photoPlaceholder: {
+    height: 220,
   },
 });
 export default TimelineStatusCard;

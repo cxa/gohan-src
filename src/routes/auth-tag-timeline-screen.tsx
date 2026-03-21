@@ -38,6 +38,7 @@ import ComposerModal, {
 import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
@@ -141,6 +142,7 @@ const TagTimelineRoute = () => {
   );
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
+  const [photoViewerOriginRect, setPhotoViewerOriginRect] = useState<PhotoViewerOriginRect | null>(null);
   const listRef = useRef<FlatList<FanfouStatus>>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasReachedTimelineEnd, setHasReachedTimelineEnd] = useState(false);
@@ -197,14 +199,16 @@ const TagTimelineRoute = () => {
       },
     });
   };
-  const handlePhotoPress = (photoUrl: string) => {
+  const handlePhotoPress = (photoUrl: string, originRect?: PhotoViewerOriginRect | null) => {
     Image.prefetch(photoUrl).catch(() => undefined);
+    setPhotoViewerOriginRect(originRect ?? null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
   const handleClosePhotoViewer = () => {
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
+    setPhotoViewerOriginRect(null);
   };
   const {
     data: queryItems,
@@ -570,6 +574,7 @@ const TagTimelineRoute = () => {
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
           onClose={handleClosePhotoViewer}
+          originRect={photoViewerOriginRect}
         />
       </NativeEdgeScrollShadow>
 

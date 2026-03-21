@@ -63,7 +63,8 @@ import { useStatusUpdateMutation } from '@/query/post-mutations';
 import type { FanfouStatus } from '@/types/fanfou';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
 import { Text } from '@/components/app-text';
-import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { openPhotoViewer } from '@/components/photo-viewer-store';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 type TimelineComposerMode = 'reply' | 'repost' | null;
 type ReplyTarget = {
@@ -132,8 +133,6 @@ const AuthHomeRoute = () => {
   const [pendingBookmarkIds, setPendingBookmarkIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
-  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const listRef = useRef<FlatList<FanfouStatus>>(null);
   const [composeMode, setComposeMode] = useState<TimelineComposerMode>(null);
   const [composeReplyTarget, setComposeReplyTarget] =
@@ -260,14 +259,9 @@ const AuthHomeRoute = () => {
       },
     });
   };
-  const handlePhotoPress = (photoUrl: string) => {
+  const handlePhotoPress = (photoUrl: string, originRect?: PhotoViewerOriginRect | null) => {
     Image.prefetch(photoUrl).catch(() => undefined);
-    setPhotoViewerUrl(photoUrl);
-    setPhotoViewerVisible(true);
-  };
-  const handleClosePhotoViewer = () => {
-    setPhotoViewerVisible(false);
-    setPhotoViewerUrl(null);
+    openPhotoViewer(photoUrl, originRect);
   };
   const {
     data: initialItems = [],
@@ -681,11 +675,6 @@ const AuthHomeRoute = () => {
               onDelete={handleDeleteStatus}
             />
           )}
-        />
-        <PhotoViewerModal
-          visible={photoViewerVisible}
-          photoUrl={photoViewerUrl}
-          onClose={handleClosePhotoViewer}
         />
       </NativeEdgeScrollShadow>
       <NeobrutalRefreshIndicator

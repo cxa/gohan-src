@@ -131,6 +131,7 @@ const FavoritesRoute = () => {
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
+    photoViewerOriginRect,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,
@@ -309,6 +310,7 @@ const FavoritesRoute = () => {
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
           onClose={handleClosePhotoViewer}
+          originRect={photoViewerOriginRect}
         />
       </NativeEdgeScrollShadow>
 

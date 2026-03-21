@@ -130,6 +130,7 @@ const PhotosRouteContent = ({
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
+    photoViewerOriginRect,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,
@@ -323,6 +324,7 @@ const PhotosRouteContent = ({
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
           onClose={handleClosePhotoViewer}
+          originRect={photoViewerOriginRect}
         />
       </NativeEdgeScrollShadow>
 

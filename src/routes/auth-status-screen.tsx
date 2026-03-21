@@ -41,6 +41,7 @@ import {
 } from '@/components/drop-shadow-box';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import {
   AUTH_PROFILE_ROUTE,
@@ -169,6 +170,7 @@ const StatusDetailRoute = () => {
   });
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
+  const [photoViewerOriginRect, setPhotoViewerOriginRect] = useState<PhotoViewerOriginRect | null>(null);
   const [composeMode, setComposeMode] = useState<ComposerMode>(null);
   const [composeReplyTarget, setComposeReplyTarget] =
     useState<ReplyTarget | null>(null);
@@ -334,14 +336,16 @@ const StatusDetailRoute = () => {
       },
     });
   };
-  const handlePhotoPress = (photoUrl: string) => {
+  const handlePhotoPress = (photoUrl: string, originRect?: PhotoViewerOriginRect | null) => {
     Image.prefetch(photoUrl).catch(() => undefined);
+    setPhotoViewerOriginRect(originRect ?? null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
   const handleClosePhotoViewer = () => {
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
+    setPhotoViewerOriginRect(null);
   };
   const setBookmarkPending = (statusId: string, pending: boolean) => {
     setPendingBookmarkIds(previous => {
@@ -655,6 +659,7 @@ const StatusDetailRoute = () => {
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
           onClose={handleClosePhotoViewer}
+          originRect={photoViewerOriginRect}
         />
       </NativeEdgeScrollShadow>
 

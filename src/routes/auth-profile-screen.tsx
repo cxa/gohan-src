@@ -46,6 +46,7 @@ import NativeEdgeScrollShadow, {
   resolveNativeEdgeScrollShadowSize,
 } from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import ProfilePageBackdrop from '@/components/profile-page-backdrop';
 import ProfileStatRow, {
   type ProfileStatItem,
@@ -159,6 +160,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   });
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
+  const [photoViewerOriginRect, setPhotoViewerOriginRect] = useState<PhotoViewerOriginRect | null>(null);
   const [isFollowSubmitting, setIsFollowSubmitting] = useState(false);
   const [isBlockSubmitting, setIsBlockSubmitting] = useState(false);
   const [composeMode, setComposeMode] = useState<ComposerMode>(null);
@@ -328,14 +330,16 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       backCount: user?.photo_count,
     });
   };
-  const handlePhotoPress = (photoUrl: string) => {
+  const handlePhotoPress = (photoUrl: string, originRect?: PhotoViewerOriginRect | null) => {
     Image.prefetch(photoUrl).catch(() => undefined);
+    setPhotoViewerOriginRect(originRect ?? null);
     setPhotoViewerUrl(photoUrl);
     setPhotoViewerVisible(true);
   };
   const handleClosePhotoViewer = () => {
     setPhotoViewerVisible(false);
     setPhotoViewerUrl(null);
+    setPhotoViewerOriginRect(null);
   };
   const handleRefresh = async () => {
     await Promise.all([refetchUser(), refetchRecentStatuses(), refetchBlock()]);
@@ -1086,6 +1090,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             visible={photoViewerVisible}
             photoUrl={photoViewerUrl}
             onClose={handleClosePhotoViewer}
+            originRect={photoViewerOriginRect}
           />
         </NativeEdgeScrollShadow>
       </ProfilePageBackdrop>

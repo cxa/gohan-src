@@ -58,7 +58,8 @@ import {
   AUTH_TAG_TIMELINE_ROUTE,
 } from '@/navigation/route-names';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
-import PhotoViewerModal from '@/components/photo-viewer-modal';
+import { openPhotoViewer } from '@/components/photo-viewer-store';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import type { FanfouStatus } from '@/types/fanfou';
 import { Text } from '@/components/app-text';
@@ -120,8 +121,6 @@ const MentionsRoute = () => {
   const [pendingBookmarkIds, setPendingBookmarkIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
-  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const listRef = useRef<FlatList<FanfouStatus>>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasReachedTimelineEnd, setHasReachedTimelineEnd] = useState(false);
@@ -243,14 +242,9 @@ const MentionsRoute = () => {
       },
     });
   };
-  const handlePhotoPress = (photoUrl: string) => {
+  const handlePhotoPress = (photoUrl: string, originRect?: PhotoViewerOriginRect | null) => {
     Image.prefetch(photoUrl).catch(() => undefined);
-    setPhotoViewerUrl(photoUrl);
-    setPhotoViewerVisible(true);
-  };
-  const handleClosePhotoViewer = () => {
-    setPhotoViewerVisible(false);
-    setPhotoViewerUrl(null);
+    openPhotoViewer(photoUrl, originRect);
   };
   const {
     data: queryItems,
@@ -602,11 +596,6 @@ const MentionsRoute = () => {
               onDelete={handleDeleteStatus}
             />
           )}
-        />
-        <PhotoViewerModal
-          visible={photoViewerVisible}
-          photoUrl={photoViewerUrl}
-          onClose={handleClosePhotoViewer}
         />
       </NativeEdgeScrollShadow>
       <NeobrutalRefreshIndicator

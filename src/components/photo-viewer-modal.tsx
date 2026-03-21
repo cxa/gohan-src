@@ -16,6 +16,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDecay,
+  withDelay,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
@@ -25,10 +26,13 @@ import { Text } from '@/components/app-text';
 import { useThemeColor } from 'heroui-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setPhotoViewerLayerMode } from '@/navigation/photo-viewer-layer-state';
+import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 type PhotoViewerModalProps = {
   visible: boolean;
   photoUrl: string | null;
   onClose: () => void;
+  originRect?: PhotoViewerOriginRect | null;
+  useModal?: boolean;
 };
 type ImageSize = {
   width: number;
@@ -56,6 +60,17 @@ const CLOSE_TIMING = {
   duration: 220,
   easing: Easing.out(Easing.quad),
 } as const;
+// Backdrop fades in faster than the image so scroll shadows are covered instantly.
+const BACKDROP_OPEN_TIMING = {
+  duration: 100,
+  easing: Easing.out(Easing.quad),
+} as const;
+// Backdrop stays opaque for most of the fly-back, then fades quickly at the end.
+const BACKDROP_CLOSE_DELAY = CLOSE_TIMING.duration - 80;
+const BACKDROP_CLOSE_TIMING = {
+  duration: 80,
+  easing: Easing.out(Easing.quad),
+} as const;
 const LOADING_FALLBACK_MS = 8000;
 const clamp = (value: number, min: number, max: number) => {
   'worklet';
@@ -65,6 +80,8 @@ const PhotoViewerModal = ({
   visible,
   photoUrl,
   onClose,
+  originRect,
+  useModal = true,
 }: PhotoViewerModalProps) => {
   const { t } = useTranslation();
   const [accentForeground] = useThemeColor(['accent-foreground']);
@@ -99,6 +116,17 @@ const PhotoViewerModal = ({
   const presentationScale = useSharedValue(1);
   const contentOpacity = useSharedValue(1);
   const isDismissing = useSharedValue(false);
+  // Shared element transition values
+  const sharedTransX = useSharedValue(0);
+  const sharedTransY = useSharedValue(0);
+  const sharedScale = useSharedValue(1);
+  const originX = useSharedValue(0);
+  const originY = useSharedValue(0);
+  const originW = useSharedValue(0);
+  const originH = useSharedValue(0);
+  const originBR = useSharedValue(0);
+  const sharedBorderRadius = useSharedValue(0);
+  const hasOriginRect = useSharedValue(false);
   useEffect(() => {
     baseWidth.value = baseImageSize.width;
     baseHeight.value = baseImageSize.height;
@@ -127,12 +155,40 @@ const PhotoViewerModal = ({
     startTranslateX.value = 0;
     startTranslateY.value = 0;
     isDismissing.value = false;
-    presentationScale.value = 0.92;
-    contentOpacity.value = 0;
-    backdropOpacity.value = 0;
-    presentationScale.value = withTiming(1, OPEN_TIMING);
-    contentOpacity.value = withTiming(1, OPEN_TIMING);
-    backdropOpacity.value = withTiming(1, OPEN_TIMING);
+    if (originRect) {
+      hasOriginRect.value = true;
+      originX.value = originRect.x;
+      originY.value = originRect.y;
+      originW.value = originRect.width;
+      originH.value = originRect.height;
+      originBR.value = originRect.borderRadius ?? 0;
+      const thumbCenterX = originRect.x + originRect.width / 2;
+      const thumbCenterY = originRect.y + originRect.height / 2;
+      sharedTransX.value = thumbCenterX - viewportWidth / 2;
+      sharedTransY.value = thumbCenterY - viewportHeight / 2;
+      sharedScale.value = originRect.width / viewportWidth;
+      sharedBorderRadius.value = originRect.borderRadius ?? 0;
+      presentationScale.value = 1;
+      contentOpacity.value = 1;
+      backdropOpacity.value = 0;
+      sharedTransX.value = withTiming(0, OPEN_TIMING);
+      sharedTransY.value = withTiming(0, OPEN_TIMING);
+      sharedScale.value = withTiming(1, OPEN_TIMING);
+      sharedBorderRadius.value = withTiming(0, OPEN_TIMING);
+      backdropOpacity.value = withTiming(1, BACKDROP_OPEN_TIMING);
+    } else {
+      hasOriginRect.value = false;
+      sharedTransX.value = 0;
+      sharedTransY.value = 0;
+      sharedScale.value = 1;
+      sharedBorderRadius.value = 0;
+      presentationScale.value = 0.92;
+      contentOpacity.value = 0;
+      backdropOpacity.value = 0;
+      presentationScale.value = withTiming(1, OPEN_TIMING);
+      contentOpacity.value = withTiming(1, OPEN_TIMING);
+      backdropOpacity.value = withTiming(1, BACKDROP_OPEN_TIMING);
+    }
     loadingFallbackRef.current = setTimeout(() => {
       setIsImageLoading(false);
       loadingFallbackRef.current = null;
@@ -172,15 +228,28 @@ const PhotoViewerModal = ({
   }, [
     backdropOpacity,
     contentOpacity,
+    hasOriginRect,
     isDismissing,
+    originBR,
+    originH,
+    originRect,
+    originW,
+    originX,
+    originY,
+    sharedBorderRadius,
     photoUrl,
     presentationScale,
     scale,
+    sharedScale,
+    sharedTransX,
+    sharedTransY,
     startScale,
     startTranslateX,
     startTranslateY,
     translateX,
     translateY,
+    viewportHeight,
+    viewportWidth,
     visible,
   ]);
   useEffect(() => {
@@ -222,13 +291,39 @@ const PhotoViewerModal = ({
       return;
     }
     isDismissing.value = true;
-    contentOpacity.value = withTiming(0, CLOSE_TIMING);
-    presentationScale.value = withTiming(0.88, CLOSE_TIMING);
-    backdropOpacity.value = withTiming(0, CLOSE_TIMING, finished => {
-      if (finished) {
-        scheduleOnRN(onClose);
-      }
-    });
+    if (hasOriginRect.value) {
+      const thumbCenterX = originX.value + originW.value / 2;
+      const thumbCenterY = originY.value + originH.value / 2;
+      const targetX = thumbCenterX - viewportWidth / 2;
+      const targetY = thumbCenterY - viewportHeight / 2;
+      const targetScale = originW.value / viewportWidth;
+      // Transfer any pan offset into the shared transition system to avoid jump
+      sharedTransX.value = sharedTransX.value + translateX.value;
+      sharedTransY.value = sharedTransY.value + translateY.value;
+      translateX.value = 0;
+      translateY.value = 0;
+      scale.value = 1;
+      sharedTransX.value = withTiming(targetX, CLOSE_TIMING);
+      sharedTransY.value = withTiming(targetY, CLOSE_TIMING);
+      sharedScale.value = withTiming(targetScale, CLOSE_TIMING);
+      sharedBorderRadius.value = originBR.value;
+      backdropOpacity.value = withDelay(
+        BACKDROP_CLOSE_DELAY,
+        withTiming(0, BACKDROP_CLOSE_TIMING, finished => {
+          if (finished) {
+            scheduleOnRN(onClose);
+          }
+        }),
+      );
+    } else {
+      contentOpacity.value = withTiming(0, CLOSE_TIMING);
+      presentationScale.value = withTiming(0.88, CLOSE_TIMING);
+      backdropOpacity.value = withTiming(0, CLOSE_TIMING, finished => {
+        if (finished) {
+          scheduleOnRN(onClose);
+        }
+      });
+    }
   };
   useEffect(() => {
     if (!visible) {
@@ -322,14 +417,10 @@ const PhotoViewerModal = ({
         backdropOpacity.value = 1;
         return;
       }
-      const verticalDrag =
-        event.translationY > 0
-          ? event.translationY
-          : event.translationY * 0.18;
       translateX.value = event.translationX * 0.16;
-      translateY.value = verticalDrag;
+      translateY.value = event.translationY;
       backdropOpacity.value = interpolate(
-        Math.abs(verticalDrag),
+        Math.abs(event.translationY),
         [0, 220],
         [1, 0.3],
         Extrapolation.CLAMP,
@@ -393,9 +484,9 @@ const PhotoViewerModal = ({
         return;
       }
       const shouldClose =
-        translateY.value > DISMISS_DISTANCE ||
-        event.velocityY > DISMISS_VELOCITY ||
-        (translateY.value > 56 && event.velocityY > 420);
+        Math.abs(translateY.value) > DISMISS_DISTANCE ||
+        Math.abs(event.velocityY) > DISMISS_VELOCITY ||
+        (Math.abs(translateY.value) > 56 && Math.abs(event.velocityY) > 420);
       if (shouldClose) {
         startCloseTransition();
         return;
@@ -448,7 +539,11 @@ const PhotoViewerModal = ({
   }));
   const presentationStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
-    transform: [{ scale: presentationScale.value }],
+    transform: [
+      { translateX: sharedTransX.value },
+      { translateY: sharedTransY.value },
+      { scale: presentationScale.value * sharedScale.value },
+    ],
   }));
   const imageAnimatedStyle = useAnimatedStyle(() => ({
     width: baseWidth.value,
@@ -456,6 +551,10 @@ const PhotoViewerModal = ({
   }));
   const closeControlStyle = useAnimatedStyle(() => ({
     opacity: isDismissing.value ? 0 : 1,
+  }));
+  const imageRadiusStyle = useAnimatedStyle(() => ({
+    borderRadius: sharedBorderRadius.value,
+    overflow: 'hidden',
   }));
   const imageTransformStyle = useAnimatedStyle(() => {
     const dismissScale =
@@ -478,28 +577,21 @@ const PhotoViewerModal = ({
   if (!photoUrl || !visible) {
     return null;
   }
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      onRequestClose={() => scheduleOnUI(startCloseTransition)}
-    >
-      <View className="flex-1">
-        <GestureDetector gesture={gesture}>
-          <View className="absolute inset-0">
-            <Animated.View
-              className="absolute inset-0 bg-foreground/70 dark:bg-background/85"
-              style={backdropStyle}
-            />
-            <View
-              className="flex-1 items-center justify-center"
-              pointerEvents="box-none"
-            >
-              <Animated.View style={presentationStyle}>
-                <Animated.View style={imageTransformStyle}>
+  const content = (
+    <View className="flex-1">
+      <GestureDetector gesture={gesture}>
+        <View className="absolute inset-0">
+          <Animated.View
+            className="absolute inset-0 bg-foreground dark:bg-background"
+            style={backdropStyle}
+          />
+          <View
+            className="flex-1 items-center justify-center"
+            pointerEvents="box-none"
+          >
+            <Animated.View style={presentationStyle}>
+              <Animated.View style={imageTransformStyle}>
+                <Animated.View style={[imageAnimatedStyle, imageRadiusStyle]}>
                   <Animated.Image
                     source={{ uri: photoUrl }}
                     style={imageAnimatedStyle}
@@ -510,41 +602,68 @@ const PhotoViewerModal = ({
                   />
                 </Animated.View>
               </Animated.View>
-            </View>
+            </Animated.View>
+          </View>
+        </View>
+      </GestureDetector>
+      {isImageLoading ? (
+        <View
+          className="absolute inset-0 items-center justify-center"
+          pointerEvents="none"
+        >
+          <NeobrutalActivityIndicator size="small" color={accentForeground} />
+        </View>
+      ) : null}
+      <Animated.View
+        className="absolute right-4"
+        style={[{ top: Math.max(insets.top + 8, 16) }, closeControlStyle]}
+      >
+        <GestureDetector gesture={closeTapGesture}>
+          <View
+            className="rounded-3xl border border-border/50 bg-background/70 px-3 py-2"
+            style={styles.closeButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('photoViewerCloseA11y')}
+          >
+            <Text allowFontScaling className="text-foreground">
+              {t('photoViewerClose')}
+            </Text>
           </View>
         </GestureDetector>
-        {isImageLoading ? (
-          <View
-            className="absolute inset-0 items-center justify-center"
-            pointerEvents="none"
-          >
-            <NeobrutalActivityIndicator size="small" color={accentForeground} />
-          </View>
-        ) : null}
-        <Animated.View
-          className="absolute right-4"
-          style={[{ top: Math.max(insets.top + 8, 16) }, closeControlStyle]}
-        >
-          <GestureDetector gesture={closeTapGesture}>
-            <View
-              className="rounded-3xl border border-border/50 bg-background/70 px-3 py-2"
-              style={styles.closeButton}
-              accessibilityRole="button"
-              accessibilityLabel={t('photoViewerCloseA11y')}
-            >
-              <Text allowFontScaling className="text-foreground">
-                {t('photoViewerClose')}
-              </Text>
-            </View>
-          </GestureDetector>
-        </Animated.View>
-      </View>
-    </Modal>
+      </Animated.View>
+    </View>
+  );
+  if (useModal) {
+    return (
+      <Modal
+        visible={visible}
+        transparent
+        animationType="none"
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
+        onRequestClose={() => scheduleOnUI(startCloseTransition)}
+      >
+        {content}
+      </Modal>
+    );
+  }
+  return (
+    <View style={styles.overlay} pointerEvents="box-none">
+      {content}
+    </View>
   );
 };
 const styles = StyleSheet.create({
   closeButton: {
     borderCurve: 'continuous',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 200,
   },
 });
 export default PhotoViewerModal;

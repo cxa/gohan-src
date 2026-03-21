@@ -134,6 +134,7 @@ const MyTimelineRouteContent = ({
     pendingBookmarkIds,
     photoViewerUrl,
     photoViewerVisible,
+    photoViewerOriginRect,
     handlePhotoPress,
     handleClosePhotoViewer,
     handleOpenReplyComposer,
@@ -304,6 +305,7 @@ const MyTimelineRouteContent = ({
           visible={photoViewerVisible}
           photoUrl={photoViewerUrl}
           onClose={handleClosePhotoViewer}
+          originRect={photoViewerOriginRect}
         />
       </NativeEdgeScrollShadow>
       <NeobrutalRefreshIndicator
