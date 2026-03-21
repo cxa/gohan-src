@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+  Easing,
+} from 'react-native-reanimated';
 import { Surface } from 'heroui-native';
-import { useTranslation } from 'react-i18next';
+import { Info } from 'lucide-react-native';
 import { Text } from '@/components/app-text';
 
 type ErrorBannerProps = {
@@ -9,32 +18,50 @@ type ErrorBannerProps = {
   technicalDetail?: string | null;
 };
 
+const TIMING = { duration: 220, easing: Easing.out(Easing.cubic) };
+const FADE_IN = FadeIn.duration(220).easing(Easing.out(Easing.cubic));
+const FADE_OUT = FadeOut.duration(160).easing(Easing.in(Easing.cubic));
+
 const ErrorBanner = ({ message, technicalDetail }: ErrorBannerProps) => {
-  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
+  const progress = useSharedValue(0);
+
+  const handleToggle = () => {
+    const next = !expanded;
+    setExpanded(next);
+    progress.value = withTiming(next ? 1 : 0, TIMING);
+  };
+
+  const iconStyle = useAnimatedStyle(() => ({
+    opacity: expanded ? withTiming(0.7, TIMING) : withTiming(0.35, TIMING),
+  }));
 
   return (
-    <Surface className="rounded-2xl bg-danger-soft px-4 py-3 gap-1">
-      <Text className="text-[13px] text-danger-foreground">{message}</Text>
-      {technicalDetail ? (
-        <>
-          <Pressable
-            onPress={() => setExpanded(v => !v)}
-            hitSlop={8}
-            className="self-start active:opacity-60"
-          >
-            <Text className="text-[11px] text-danger-foreground/60 underline">
-              {expanded ? t('errorHideDetails') : t('errorTechnicalDetails')}
-            </Text>
-          </Pressable>
-          {expanded && (
-            <Text className="text-[11px] text-danger-foreground/60 font-mono leading-relaxed">
+    <Animated.View layout={LinearTransition.duration(220).easing(Easing.out(Easing.cubic))}>
+      <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
+        <View className="flex-row items-start gap-2">
+          <Text className="flex-1 text-[13px] text-danger">{message}</Text>
+          {technicalDetail ? (
+            <Pressable
+              onPress={handleToggle}
+              hitSlop={10}
+              className="active:opacity-60 mt-0.5"
+            >
+              <Animated.View style={iconStyle}>
+                <Info size={14} className="color-danger" />
+              </Animated.View>
+            </Pressable>
+          ) : null}
+        </View>
+        {expanded && (
+          <Animated.View entering={FADE_IN} exiting={FADE_OUT} className="mt-2">
+            <Text className="text-[11px] text-danger/60 font-mono leading-relaxed">
               {technicalDetail}
             </Text>
-          )}
-        </>
-      ) : null}
-    </Surface>
+          </Animated.View>
+        )}
+      </Surface>
+    </Animated.View>
   );
 };
 

@@ -11,9 +11,6 @@ type BaseTranslations = {
   loginErrorTimeout: string;
   loginErrorCancelled: string;
   loginErrorNetwork: string;
-  errorTechnicalDetails: string;
-  errorHideDetails: string;
-
   // Tab labels
   tabHome: string;
   tabMentions: string;
@@ -243,8 +240,6 @@ const enUS: BaseTranslations = {
   loginErrorTimeout: 'Sign in timed out. Please try again.',
   loginErrorCancelled: 'Sign in was cancelled.',
   loginErrorNetwork: 'Unable to connect. Check your network and try again.',
-  errorTechnicalDetails: 'Technical details',
-  errorHideDetails: 'Hide details',
 
   // Tab labels
   tabHome: 'Home',
@@ -478,8 +473,6 @@ const zhCN: BaseTranslations = {
   loginErrorTimeout: '登录超时，请重试。',
   loginErrorCancelled: '登录已取消。',
   loginErrorNetwork: '无法连接，请检查网络后重试。',
-  errorTechnicalDetails: '技术详情',
-  errorHideDetails: '收起详情',
 
   // Tab labels
   tabHome: '首页',

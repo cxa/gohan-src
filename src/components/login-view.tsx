@@ -125,7 +125,7 @@ const LoginView = () => {
       className="flex-1"
       style={[containerStyle, { backgroundColor: background }]}
     >
-      <View className="flex-1 items-center justify-center px-6 -mt-20 z-10 w-full pointer-events-none">
+      <View className="flex-1 items-center justify-center px-6 -mt-20 z-10 w-full pointer-events-box-none">
         {/* Main Title — font glyphs as SVG paths */}
         <View className="w-full max-w-[320px] pointer-events-auto items-center">
           <Svg
