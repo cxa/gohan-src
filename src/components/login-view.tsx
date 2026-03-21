@@ -147,8 +147,8 @@ const LoginView = () => {
                 hitSlop={10}
                 className="active:opacity-70"
               >
-                <View className="pb-1">
-                  <Text className="text-foreground text-sm font-black tracking-widest uppercase underline">
+                <View className="border-b border-foreground">
+                  <Text className="text-foreground text-sm font-black tracking-widest uppercase">
                     {t('loginCancel')}
                   </Text>
                 </View>
