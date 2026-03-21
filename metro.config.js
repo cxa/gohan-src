@@ -30,4 +30,8 @@ const mergedConfig = mergeConfig(getDefaultConfig(projectRoot), config);
 module.exports = withUniwindConfig(mergedConfig, {
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
+  // Align 1rem with UIKit's default body text size (17pt) so that
+  // text-base matches UIKit Body and the full type scale mirrors
+  // iOS Dynamic Type conventions.
+  polyfills: { rem: 17 },
 });
