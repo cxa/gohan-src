@@ -16,12 +16,13 @@ import ComposerModal, {
 } from '@/components/composer-modal';
 import LoginView from '@/components/login-view';
 import Animated, {
+  Easing,
   FadeInRight,
   FadeOutRight,
   LinearTransition,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { AUTH_TAB_ROUTE } from '@/navigation/route-names';
 import { isNativeScrollEdgeEffectAvailable } from '@/navigation/native-scroll-edge';
@@ -40,16 +41,17 @@ import PhotoViewerModal from '@/components/photo-viewer-modal';
 import { closePhotoViewer, usePhotoViewerStore } from '@/components/photo-viewer-store';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
 const Tab = createBottomTabNavigator<AuthTabParamList>();
+const TAB_SCALE_TIMING = {
+  duration: 300,
+  easing: Easing.out(Easing.quad),
+};
 const TabScaleWrapper = ({ children }: { children: React.ReactNode }) => {
-  const scale = useSharedValue(1);
+  const scale = useSharedValue(0.99);
   useFocusEffect(() => {
-    scale.value = 0.99;
-    scale.value = withSpring(1, {
-      stiffness: 100,
-      damping: 20,
-      mass: 1.5,
-      overshootClamping: true,
-    });
+    scale.value = withTiming(1, TAB_SCALE_TIMING);
+    return () => {
+      scale.value = 0.99;
+    };
   });
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -365,9 +367,11 @@ const AuthIndexRoute = () => {
   }
   return (
     <>
+      <View style={[StyleSheet.absoluteFill, { backgroundColor }]} />
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
+          animation: 'none',
           sceneStyle: {
             backgroundColor,
           },
