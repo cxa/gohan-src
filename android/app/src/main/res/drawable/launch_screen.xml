@@ -1,3 +1,11 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/launch_background" />
+    <item
+        android:gravity="bottom|start"
+        android:width="420dp"
+        android:height="420dp">
+        <bitmap
+            android:src="@drawable/splash_botanical"
+            android:gravity="fill" />
+    </item>
 </layer-list>
