@@ -71,8 +71,8 @@
 
     @variant dark {
         /* Theme Colors (Dark Mode) */
-        --accent: oklch(63% 0.18 25);
-        /* Coral */
+        --accent: oklch(65% 0.195 254);
+        /* Blue — slightly lighter for dark mode */
         --accent-foreground: oklch(99% 0 0);
         --background: oklch(12% 0.02 60);
         /* Deep warm brown-dark */
