@@ -26,8 +26,8 @@
 
     @variant light {
         /* Theme Colors (Light Mode) */
-        --accent: oklch(63% 0.18 25);
-        /* Coral #F47060 — primary CTA */
+        --accent: oklch(62% 0.195 254);
+        /* Blue — @handles, links, primary CTA */
         --accent-foreground: oklch(99% 0 0);
         --background: #FFFFFF;
         /* Pure white */
@@ -43,8 +43,7 @@
         --focus: oklch(63% 0.18 25);
         --foreground: oklch(14% 0.03 60);
         /* Dark brown #1A1208 */
-        --link: oklch(52% 0.18 254);
-        /* Blue — @handles, links */
+
         --muted: oklch(52% 0.03 60);
         /* Warm muted brown */
         --overlay: oklch(100% 0 0);
@@ -88,8 +87,7 @@
         --field-placeholder: oklch(65% 0.02 60);
         --focus: oklch(63% 0.18 25);
         --foreground: oklch(96% 0.02 75);
-        --link: oklch(65% 0.18 254);
-        /* Blue — @handles, links (lighter for dark mode) */
+
         --muted: oklch(65% 0.02 60);
         --overlay: oklch(20% 0.02 60);
         --overlay-foreground: oklch(96% 0.02 75);
