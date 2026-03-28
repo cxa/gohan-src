@@ -261,7 +261,7 @@ const TimelineStatusCard = ({
                     return (
                       <Text
                         key={`${statusId}-${segmentIndex}`}
-                        className="text-accent"
+                        className="text-link"
                         onPress={event => {
                           event.stopPropagation();
                           onPressMention(segment.screenName);
@@ -296,7 +296,7 @@ const TimelineStatusCard = ({
                     return (
                       <Text
                         key={`${statusId}-${segmentIndex}`}
-                        className="text-accent underline"
+                        className="text-link underline"
                         onPress={event => {
                           event.stopPropagation();
                           openLink(segment.href);
