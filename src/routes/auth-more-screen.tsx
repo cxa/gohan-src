@@ -86,6 +86,12 @@ import {
   useAppThemePreference,
 } from '@/settings/app-theme-preference';
 import {
+  APP_APPEARANCE_OPTIONS,
+  setAppAppearancePreference,
+  type AppAppearanceOption,
+  useAppAppearancePreference,
+} from '@/settings/app-appearance-preference';
+import {
   setAppProfileThemePreference,
   useAppProfileThemePreference,
 } from '@/settings/app-profile-theme-preference';
@@ -309,6 +315,7 @@ const MoreRouteContent = ({
   const appFontSizePreference = useAppFontSizePreference();
   const appLanguagePreference = useAppLanguagePreference();
   const appThemePreference = useAppThemePreference();
+  const appAppearancePreference = useAppAppearancePreference();
   const appUiStylePreference = useAppUiStylePreference();
   const isFocused = useIsFocused();
   const scrollY = useSharedValue(0);
@@ -660,6 +667,20 @@ const MoreRouteContent = ({
       );
     }
   };
+  const handleSelectAppearancePreference = async (next: AppAppearanceOption) => {
+    if (appAppearancePreference === next) {
+      return;
+    }
+    try {
+      await setAppAppearancePreference(next);
+    } catch (updateError) {
+      showVariantToast(
+        'danger',
+        t('moreFontUpdateFailed'),
+        getErrorMessage(updateError, t('moreFontUpdateFailedMessage')),
+      );
+    }
+  };
   const handleSelectUiStylePreference = async (next: AppUiStyleOption) => {
     if (appUiStylePreference === next) {
       return;
@@ -689,6 +710,15 @@ const MoreRouteContent = ({
         ? t('moreLanguageSystemDefault')
         : APP_LANGUAGE_OPTIONS.find(o => o.value === appLanguagePreference)
             ?.nativeLabel ?? appLanguagePreference,
+  };
+  const appearanceLabels = {
+    auto: t('moreAppearanceAuto'),
+    light: t('moreAppearanceLight'),
+    dark: t('moreAppearanceDark'),
+  } as const;
+  const appearanceSelectValue = {
+    value: appAppearancePreference,
+    label: appearanceLabels[appAppearancePreference],
   };
   const themeSelectValue = {
     value: appThemePreference,
@@ -952,6 +982,37 @@ const MoreRouteContent = ({
                               key={option.value}
                               value={option.value}
                               label={option.value === 'system' ? t('moreLanguageSystemDefault') : option.nativeLabel}
+                            />
+                          ))}
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select>
+                    <Separator />
+                    <Select
+                      value={appearanceSelectValue}
+                      onValueChange={opt =>
+                        opt &&
+                        handleSelectAppearancePreference(opt.value as AppAppearanceOption)
+                      }
+                    >
+                      <Select.Trigger variant="unstyled" className="flex-row items-center gap-3 px-4 py-3.5 active:opacity-70">
+                        <Text
+                          className="flex-1 text-[15px] font-semibold text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                        >
+                          {t('moreAppearance')}
+                        </Text>
+                        <Text className="text-[13px] text-muted">{appearanceSelectValue.label}</Text>
+                        <ChevronDown size={13} color={muted} />
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Overlay />
+                        <Select.Content presentation="popover" placement="top" width="trigger" className="rounded-3xl">
+                          {APP_APPEARANCE_OPTIONS.map(option => (
+                            <Select.Item
+                              key={option.value}
+                              value={option.value}
+                              label={appearanceLabels[option.value]}
                             />
                           ))}
                         </Select.Content>

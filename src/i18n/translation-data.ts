@@ -188,6 +188,10 @@ type BaseTranslations = {
   moreFontSizeXL: string;
   moreLanguage: string;
   moreLanguageSystemDefault: string;
+  moreAppearance: string;
+  moreAppearanceAuto: string;
+  moreAppearanceLight: string;
+  moreAppearanceDark: string;
   moreTheme: string;
   moreThemeColorful: string;
   moreThemePlain: string;
@@ -420,6 +424,10 @@ const enUS: BaseTranslations = {
   moreFontSizeXL: 'Huge',
   moreLanguage: 'Language',
   moreLanguageSystemDefault: 'System Default',
+  moreAppearance: 'Appearance',
+  moreAppearanceAuto: 'Auto',
+  moreAppearanceLight: 'Light',
+  moreAppearanceDark: 'Dark',
   moreTheme: 'Theme',
   moreThemeColorful: 'Colorful',
   moreThemePlain: 'Plain',
@@ -652,6 +660,10 @@ const zhCN: BaseTranslations = {
   moreFontSizeXL: '特大',
   moreLanguage: '语言',
   moreLanguageSystemDefault: '跟随系统',
+  moreAppearance: '外观',
+  moreAppearanceAuto: '跟随系统',
+  moreAppearanceLight: '浅色',
+  moreAppearanceDark: '深色',
   moreTheme: '主题',
   moreThemeColorful: '多彩',
   moreThemePlain: '纯色',
