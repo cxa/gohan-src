@@ -21,11 +21,11 @@ export const APP_FONT_SIZE_OPTIONS = [
 ] as const;
 
 export const APP_FONT_SIZE_SCALE: Record<AppFontSizeOption, number> = {
-  [APP_FONT_SIZE_OPTION.XS]: 0.85,
-  [APP_FONT_SIZE_OPTION.SM]: 0.925,
-  [APP_FONT_SIZE_OPTION.MD]: 1.0,
-  [APP_FONT_SIZE_OPTION.LG]: 1.075,
-  [APP_FONT_SIZE_OPTION.XL]: 1.15,
+  [APP_FONT_SIZE_OPTION.XS]: 0.875,
+  [APP_FONT_SIZE_OPTION.SM]: 0.95,
+  [APP_FONT_SIZE_OPTION.MD]: 1.1,
+  [APP_FONT_SIZE_OPTION.LG]: 1.175,
+  [APP_FONT_SIZE_OPTION.XL]: 1.25,
 };
 
 const SERVICE = 'app.font-size-preference';
