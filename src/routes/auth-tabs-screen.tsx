@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   BottomTabBarProps,
   createBottomTabNavigator,
@@ -278,13 +278,21 @@ const AuthTabBar = ({
     </View>
   );
 };
-const MoreStackRoute = () => {
+const MoreHeaderTitle = () => {
   const [foreground] = useThemeColor(['foreground']);
   const headerFontFamily = useAppFontFamily();
   const headerSystemFontOverride = useSystemFontFamilyOverride();
   const resolvedHeaderFontFamily = headerFontFamily ?? headerSystemFontOverride;
   const auth = useAuthSession();
   const screenName = auth.accessToken?.screenName ?? '';
+  return (
+    <Text style={[styles.headerTitle, { fontFamily: resolvedHeaderFontFamily, color: foreground }]}>
+      {screenName}
+    </Text>
+  );
+};
+const MoreStackRoute = () => {
+  const [foreground] = useThemeColor(['foreground']);
 
   return (
     <MoreStack.Navigator
@@ -298,19 +306,12 @@ const MoreStackRoute = () => {
         scrollEdgeEffects: isNativeScrollEdgeEffectAvailable
           ? { top: 'automatic' }
           : undefined,
-        headerTitleStyle: {
-          fontFamily: resolvedHeaderFontFamily,
-          fontSize: HEADER_TITLE_FONT_SIZE,
-          color: foreground,
-        },
       }}
     >
       <MoreStack.Screen
         name="MoreRoot"
         component={MoreRoute}
-        options={{
-          title: screenName,
-        }}
+        options={{ headerTitle: MoreHeaderTitle }}
       />
     </MoreStack.Navigator>
   );
@@ -415,5 +416,9 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     zIndex: 100,
     elevation: 100,
+  },
+  headerTitle: {
+    fontSize: HEADER_TITLE_FONT_SIZE,
+    fontWeight: '600',
   },
 });
