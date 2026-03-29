@@ -278,21 +278,17 @@ const AuthTabBar = ({
     </View>
   );
 };
-const MoreHeaderTitle = () => {
+type MoreHeaderTitleProps = { fontFamily: string | undefined; color: string; children: string };
+const MoreHeaderTitle = ({ fontFamily, color, children }: MoreHeaderTitleProps) => (
+  <Text style={[styles.headerTitle, { fontFamily, color }]}>{children}</Text>
+);
+const MoreStackRoute = () => {
   const [foreground] = useThemeColor(['foreground']);
   const headerFontFamily = useAppFontFamily();
   const headerSystemFontOverride = useSystemFontFamilyOverride();
   const resolvedHeaderFontFamily = headerFontFamily ?? headerSystemFontOverride;
   const auth = useAuthSession();
   const screenName = auth.accessToken?.screenName ?? '';
-  return (
-    <Text style={[styles.headerTitle, { fontFamily: resolvedHeaderFontFamily, color: foreground }]}>
-      {screenName}
-    </Text>
-  );
-};
-const MoreStackRoute = () => {
-  const [foreground] = useThemeColor(['foreground']);
 
   return (
     <MoreStack.Navigator
@@ -311,7 +307,14 @@ const MoreStackRoute = () => {
       <MoreStack.Screen
         name="MoreRoot"
         component={MoreRoute}
-        options={{ headerTitle: MoreHeaderTitle }}
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components
+          headerTitle: () => (
+            <MoreHeaderTitle fontFamily={resolvedHeaderFontFamily} color={foreground}>
+              {screenName}
+            </MoreHeaderTitle>
+          ),
+        }}
       />
     </MoreStack.Navigator>
   );
