@@ -5,7 +5,7 @@ import {
   BottomTabBarProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
-import { useFocusEffect } from '@react-navigation/native';
+
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from 'heroui-native';
@@ -16,13 +16,9 @@ import ComposerModal, {
 } from '@/components/composer-modal';
 import LoginView from '@/components/login-view';
 import Animated, {
-  Easing,
   FadeInRight,
   FadeOutRight,
   LinearTransition,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
 import { AUTH_TAB_ROUTE } from '@/navigation/route-names';
 import { isNativeScrollEdgeEffectAvailable } from '@/navigation/native-scroll-edge';
@@ -30,6 +26,8 @@ import {
   TAB_BAR_BUTTON_HEIGHT,
   TAB_BAR_MIN_BOTTOM_GAP,
 } from '@/navigation/tab-bar-layout';
+import { useReadableContentInsets } from '@/navigation/readable-content-guide';
+import { getMoreBackgroundColor } from '@/routes/more-background-store';
 import type { AuthTabParamList } from '@/navigation/types';
 import AuthHomeRoute from '@/routes/auth-home-screen';
 import { useAppFontFamily } from '@/settings/app-font-preference';
@@ -41,25 +39,11 @@ import PhotoViewerModal from '@/components/photo-viewer-modal';
 import { closePhotoViewer, usePhotoViewerStore } from '@/components/photo-viewer-store';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
 const Tab = createBottomTabNavigator<AuthTabParamList>();
-const TAB_SCALE_TIMING = {
-  duration: 300,
-  easing: Easing.out(Easing.quad),
-};
-const TabScaleWrapper = ({ children }: { children: React.ReactNode }) => {
-  const scale = useSharedValue(0.99);
-  useFocusEffect(() => {
-    scale.value = withTiming(1, TAB_SCALE_TIMING);
-    return () => {
-      scale.value = 0.99;
-    };
-  });
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+const TabScaleWrapper = ({ children, backgroundColor }: { children: React.ReactNode; backgroundColor: string }) => {
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+    <View style={[styles.fill, { backgroundColor }]}>
       {children}
-    </Animated.View>
+    </View>
   );
 };
 type MoreTabStackParamList = {
@@ -134,6 +118,7 @@ const AuthTabBar = ({
 }: AuthTabBarProps) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const readableInsets = useReadableContentInsets();
   const [accent, muted, accentForeground, background] = useThemeColor([
     'accent',
     'muted',
@@ -254,11 +239,12 @@ const AuthTabBar = ({
   };
   return (
     <View
-      className="absolute left-0 right-0 flex-row justify-between pointer-events-box-none items-center px-4"
+      className="absolute left-0 right-0 flex-row justify-between pointer-events-box-none items-center"
       style={[
         styles.tabBarContainer,
         {
           bottom: Math.max(insets.bottom, TAB_BAR_MIN_BOTTOM_GAP),
+          paddingHorizontal: Math.max(16, readableInsets.left),
         },
       ]}
       pointerEvents="box-none"
@@ -289,34 +275,37 @@ const MoreStackRoute = () => {
   const resolvedHeaderFontFamily = headerFontFamily ?? headerSystemFontOverride;
   const auth = useAuthSession();
   const screenName = auth.accessToken?.screenName ?? '';
+  const moreBackground = getMoreBackgroundColor();
 
   return (
-    <MoreStack.Navigator
-      screenOptions={{
-        headerShown: true,
-        headerLargeTitle: false,
-        headerTransparent: true,
-        headerTintColor: foreground,
-        headerBackButtonDisplayMode: 'minimal',
-        headerShadowVisible: false,
-        scrollEdgeEffects: isNativeScrollEdgeEffectAvailable
-          ? { top: 'automatic' }
-          : undefined,
-      }}
-    >
-      <MoreStack.Screen
-        name="MoreRoot"
-        component={MoreRoute}
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          headerTitle: () => (
-            <MoreHeaderTitle fontFamily={resolvedHeaderFontFamily} color={foreground}>
-              {screenName}
-            </MoreHeaderTitle>
-          ),
+    <View style={[styles.fill, { backgroundColor: moreBackground }]}>
+      <MoreStack.Navigator
+        screenOptions={{
+          headerShown: true,
+          headerLargeTitle: false,
+          headerTransparent: true,
+          headerTintColor: foreground,
+          headerBackButtonDisplayMode: 'minimal',
+          headerShadowVisible: false,
+          scrollEdgeEffects: isNativeScrollEdgeEffectAvailable
+            ? { top: 'automatic' }
+            : undefined,
         }}
-      />
-    </MoreStack.Navigator>
+      >
+        <MoreStack.Screen
+          name="MoreRoot"
+          component={MoreRoute}
+          options={{
+            // eslint-disable-next-line react/no-unstable-nested-components
+            headerTitle: () => (
+              <MoreHeaderTitle fontFamily={resolvedHeaderFontFamily} color={foreground}>
+                {screenName}
+              </MoreHeaderTitle>
+            ),
+          }}
+        />
+      </MoreStack.Navigator>
+    </View>
   );
 };
 const AuthIndexRoute = () => {
@@ -370,8 +359,7 @@ const AuthIndexRoute = () => {
     return <LoginView />;
   }
   return (
-    <>
-      <View style={[StyleSheet.absoluteFill, { backgroundColor }]} />
+    <View style={[styles.fill, { backgroundColor }]}>
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -383,17 +371,17 @@ const AuthIndexRoute = () => {
         tabBar={renderAuthTabBar}
       >
         <Tab.Screen name={AUTH_TAB_ROUTE.HOME}>
-          {() => <TabScaleWrapper><AuthHomeRoute /></TabScaleWrapper>}
+          {() => <TabScaleWrapper backgroundColor={backgroundColor}><AuthHomeRoute /></TabScaleWrapper>}
         </Tab.Screen>
         <Tab.Screen name={AUTH_TAB_ROUTE.MENTIONS}>
-          {() => <TabScaleWrapper><MentionsRoute /></TabScaleWrapper>}
+          {() => <TabScaleWrapper backgroundColor={backgroundColor}><MentionsRoute /></TabScaleWrapper>}
         </Tab.Screen>
         <Tab.Screen
           name={AUTH_TAB_ROUTE.COMPOSE}
           component={ComposeTabPlaceholder}
         />
         <Tab.Screen name={AUTH_TAB_ROUTE.MORE}>
-          {() => <TabScaleWrapper><MoreStackRoute /></TabScaleWrapper>}
+          {() => <TabScaleWrapper backgroundColor={getMoreBackgroundColor()}><MoreStackRoute /></TabScaleWrapper>}
         </Tab.Screen>
       </Tab.Navigator>
 
@@ -408,11 +396,14 @@ const AuthIndexRoute = () => {
         onCancel={handleCloseComposer}
         onSubmit={handleSubmitComposer}
       />
-    </>
+    </View>
   );
 };
 export default AuthIndexRoute;
 const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
   tabButton: {
     height: TAB_BAR_BUTTON_HEIGHT,
   },

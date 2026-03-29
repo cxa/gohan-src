@@ -150,7 +150,7 @@ const TagStackNavigator = () => {
 
 const AuthStackNavigator = () => {
   const headerFontFamily = useAppFontFamily();
-  const [foreground] = useThemeColor(['foreground']);
+  const [foreground, background] = useThemeColor(['foreground', 'background']);
 
   return (
     <AuthLayout>
@@ -167,7 +167,7 @@ const AuthStackNavigator = () => {
         <AuthStack.Screen
           name={AUTH_STACK_ROUTE.TABS}
           component={AuthHomeTabsRoute}
-          options={{ headerShown: false }}
+          options={{ headerShown: false, contentStyle: { backgroundColor: background } }}
         />
         <AuthStack.Screen
           name={AUTH_STACK_ROUTE.MY_TIMELINE}
