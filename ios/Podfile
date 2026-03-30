@@ -38,16 +38,14 @@ target 'gohan' do
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
       end
     end
-    # Fix missing MinimumOSVersion in prebuilt framework Info.plists (e.g. hermesvm.framework).
-    # Uses Xcodeproj's plist API (already loaded by CocoaPods) — no shell patching needed.
-    require 'xcodeproj'
+    # Fix missing/empty MinimumOSVersion in prebuilt framework Info.plists (e.g. hermesvm.framework).
+    # PlistBuddy handles both binary and XML plist formats and is the Apple-blessed tool for this.
     ios_target = min_ios_version_supported
     Dir.glob("#{installer.sandbox.root}/**/*.framework/Info.plist").each do |plist_path|
-      plist = Xcodeproj::Plist.read_from_path(plist_path)
-      next if plist.nil?
-      next if plist['MinimumOSVersion'].to_s != ''
-      plist['MinimumOSVersion'] = ios_target
-      Xcodeproj::Plist.write_to_path(plist, plist_path)
+      current = `/usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "#{plist_path}" 2>/dev/null`.strip
+      next unless current.empty?
+      system('/usr/libexec/PlistBuddy', '-c', "Add :MinimumOSVersion string #{ios_target}", plist_path,
+             out: File::NULL, err: File::NULL)
     end
   end
 end
