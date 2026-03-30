@@ -39,7 +39,9 @@ export const getContentBottomPadding = (
   bottomInset: number,
   hasTabBar: boolean,
 ): number =>
-  hasTabBar ? getTabBarOccludedHeight(bottomInset) : Math.max(bottomInset, 0);
+  hasTabBar
+    ? getTabBarOccludedHeight(bottomInset)
+    : Math.max(bottomInset, TAB_BAR_MIN_BOTTOM_GAP);
 
 /**
  * Scroll indicator bottom inset.
@@ -49,4 +51,5 @@ export const getContentBottomPadding = (
 export const getScrollIndicatorBottomInset = (
   bottomInset: number,
   hasTabBar: boolean,
-): number => (hasTabBar ? TAB_BAR_VISUAL_HEIGHT : Math.max(bottomInset, 0));
+): number =>
+  hasTabBar ? TAB_BAR_VISUAL_HEIGHT : Math.max(bottomInset, TAB_BAR_MIN_BOTTOM_GAP);
