@@ -1,11 +1,12 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
+import { Uniwind } from 'uniwind';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Image, StyleSheet } from 'react-native';
+import { Appearance, Image, StyleSheet } from 'react-native';
 import { captureScreen, releaseCapture } from 'react-native-view-shot';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -26,6 +27,10 @@ type RootLayoutProps = {
 
 const RootLayout = ({ children }: RootLayoutProps) => {
   const isDark = useEffectiveIsDark();
+  useLayoutEffect(() => {
+    Uniwind.setTheme(isDark ? 'dark' : 'light');
+    Appearance.setColorScheme('unspecified');
+  }, [isDark]);
   const [snapshotUri, setSnapshotUri] = useState<string | null>(null);
   const pendingUri = useRef<string | null>(null);
   const snapshotOpacity = useSharedValue(0);
