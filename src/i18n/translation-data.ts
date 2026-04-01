@@ -499,12 +499,12 @@ const zhCN: BaseTranslations = {
   composerWhatsNew: '吃了没？',
   composerReply: '回复',
   composerReplyTo: '回复 @{{name}}',
-  composerRepost: '转播',
-  composerRepostTo: '转播 @{{name}}',
+  composerRepost: '转发',
+  composerRepostTo: '转发 @{{name}}',
   composerReplyPlaceholder: '写下你的回复…',
   composerCommentPlaceholder: '添加评论（可选）…',
   composerSubmitReply: '回复',
-  composerSubmitRepost: '转播',
+  composerSubmitRepost: '转发',
   composerSubmitPost: '发布',
   composerSending: '发送中…',
   composerCancel: '取消',
@@ -517,11 +517,11 @@ const zhCN: BaseTranslations = {
   // Post/send results
   sentTitle: '已发送',
   replySent: '回复已发布。',
-  repostSent: '已转播。',
+  repostSent: '已转发。',
   postPendingReviewMessage:
     '你的饭否已发出。由于内容审查，可能需要 10 分钟或更久才会显示。',
   replyFailedTitle: '回复失败',
-  repostFailedTitle: '转播失败',
+  repostFailedTitle: '转发失败',
   postFailedTitle: '发布失败',
   retryMessage: '请重试。',
 
@@ -529,8 +529,8 @@ const zhCN: BaseTranslations = {
   cannotReplyTitle: '无法回复',
   replyMissingTarget: '缺少回复目标。',
   replyNeedsContent: '请输入文字或附上图片。',
-  cannotRepostTitle: '无法转播',
-  repostMissingTarget: '缺少转播目标。',
+  cannotRepostTitle: '无法转发',
+  repostMissingTarget: '缺少转发目标。',
 
   // Bookmark
   bookmarkFailedTitle: '收藏失败',
