@@ -11,6 +11,10 @@ type BaseTranslations = {
   loginErrorTimeout: string;
   loginErrorCancelled: string;
   loginErrorNetwork: string;
+  // Terms modal
+  termsTitle: string;
+  termsAgree: string;
+  termsDecline: string;
   // Tab labels
   tabHome: string;
   tabMentions: string;
@@ -247,6 +251,10 @@ const enUS: BaseTranslations = {
   loginErrorTimeout: 'Sign in timed out. Please try again.',
   loginErrorCancelled: 'Sign in was cancelled.',
   loginErrorNetwork: 'Unable to connect. Check your network and try again.',
+  // Terms modal
+  termsTitle: 'Terms of Use',
+  termsAgree: 'I Agree',
+  termsDecline: 'Decline',
 
   // Tab labels
   tabHome: 'Home',
@@ -487,6 +495,10 @@ const zhCN: BaseTranslations = {
   loginErrorTimeout: '登录超时，请重试。',
   loginErrorCancelled: '登录已取消。',
   loginErrorNetwork: '无法连接，请检查网络后重试。',
+  // Terms modal
+  termsTitle: '使用条款',
+  termsAgree: '同意',
+  termsDecline: '拒绝',
 
   // Tab labels
   tabHome: '首页',

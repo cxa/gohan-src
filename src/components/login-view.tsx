@@ -19,6 +19,7 @@ import {
 import { setAuthAccessToken } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
 import ErrorBanner from '@/components/error-banner';
+import TermsModal from '@/components/terms-modal';
 import { AUTH_STACK_ROUTE, ROOT_STACK_ROUTE } from '@/navigation/route-names';
 import type {
   LoginStackParamList,
@@ -34,6 +35,10 @@ import {
   LAUNCH_POEM_EN_PATH,
 } from '@/components/launch-content-paths';
 import { useEffectiveIsDark } from '@/settings/app-appearance-preference';
+import {
+  getHasAgreedToTermsSnapshot,
+  setAgreedToTerms,
+} from '@/settings/terms-agreement';
 
 const CALLBACK_URL = 'yifan://authorize_callback';
 
@@ -50,6 +55,7 @@ const LoginView = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [friendlyError, setFriendlyError] = useState<string | null>(null);
   const [technicalError, setTechnicalError] = useState<string | null>(null);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const signInAttemptIdRef = useRef(0);
 
   // Animation values
@@ -89,7 +95,7 @@ const LoginView = () => {
     setTechnicalError(null);
   };
 
-  const handleSignIn = async () => {
+  const doSignIn = async () => {
     if (isSigningIn) {
       return;
     }
@@ -150,6 +156,24 @@ const LoginView = () => {
     }
   };
 
+  const handleSignIn = () => {
+    if (!getHasAgreedToTermsSnapshot()) {
+      setIsTermsOpen(true);
+      return;
+    }
+    doSignIn().catch(() => undefined);
+  };
+
+  const handleAgreeToTerms = async () => {
+    await setAgreedToTerms();
+    setIsTermsOpen(false);
+    doSignIn().catch(() => undefined);
+  };
+
+  const handleDeclineTerms = () => {
+    setIsTermsOpen(false);
+  };
+
   const [background] = useThemeColor(['background']);
 
   const { width } = useWindowDimensions();
@@ -157,10 +181,15 @@ const LoginView = () => {
   const inkColor = isDark ? '#F5EED7' : '#2A3B4C';
 
   return (
-    <View 
-      className="flex-1 relative" 
+    <View
+      className="flex-1 relative"
       style={{ backgroundColor: background }}
     >
+      <TermsModal
+        isOpen={isTermsOpen}
+        onAgree={handleAgreeToTerms}
+        onDecline={handleDeclineTerms}
+      />
       <View 
         className="absolute bottom-0 left-0 right-0 top-0 overflow-hidden items-start justify-end pointer-events-none"
       >
