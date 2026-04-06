@@ -96,10 +96,10 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file(GOHAN_RELEASE_STORE_FILE)
-            storePassword GOHAN_RELEASE_STORE_PASSWORD
-            keyAlias GOHAN_RELEASE_KEY_ALIAS
-            keyPassword GOHAN_RELEASE_KEY_PASSWORD
+            storeFile file(YIFAN_RELEASE_STORE_FILE)
+            storePassword YIFAN_RELEASE_STORE_PASSWORD
+            keyAlias YIFAN_RELEASE_KEY_ALIAS
+            keyPassword YIFAN_RELEASE_KEY_PASSWORD
         }
     }
     buildTypes {

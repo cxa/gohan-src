@@ -27,7 +27,7 @@ jest.mock('react-native-inappbrowser-reborn', () => ({
 
 import { FanfouClient, getAccessToken } from 'rn-fanfou-client';
 
-const OAUTH_CALLBACK_URL = 'gohan://authorize_callback';
+const OAUTH_CALLBACK_URL = 'yifan://authorize_callback';
 
 describe('FanfouClient', () => {
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('FanfouClient', () => {
 
     expect(mockGetRequestToken).toHaveBeenCalledWith(OAUTH_CALLBACK_URL);
     expect(mockOpenAuth).toHaveBeenCalledWith(
-      'https://m.fanfou.com/oauth/authorize?oauth_token=rt&oauth_callback=gohan%3A%2F%2Fauthorize_callback',
+      'https://m.fanfou.com/oauth/authorize?oauth_token=rt&oauth_callback=yifan%3A%2F%2Fauthorize_callback',
       OAUTH_CALLBACK_URL,
       expect.any(Object),
     );

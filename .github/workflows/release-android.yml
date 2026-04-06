@@ -42,29 +42,29 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.GOHAN_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > android/app/gohan-release.keystore
+          echo "${{ secrets.YIFAN_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > android/app/yifan-release.keystore
 
       - name: Build release APK
         env:
-          GOHAN_RELEASE_STORE_FILE: gohan-release.keystore
-          GOHAN_RELEASE_STORE_PASSWORD: ${{ secrets.GOHAN_RELEASE_STORE_PASSWORD }}
-          GOHAN_RELEASE_KEY_ALIAS: ${{ secrets.GOHAN_RELEASE_KEY_ALIAS }}
-          GOHAN_RELEASE_KEY_PASSWORD: ${{ secrets.GOHAN_RELEASE_KEY_PASSWORD }}
+          YIFAN_RELEASE_STORE_FILE: yifan-release.keystore
+          YIFAN_RELEASE_STORE_PASSWORD: ${{ secrets.YIFAN_RELEASE_STORE_PASSWORD }}
+          YIFAN_RELEASE_KEY_ALIAS: ${{ secrets.YIFAN_RELEASE_KEY_ALIAS }}
+          YIFAN_RELEASE_KEY_PASSWORD: ${{ secrets.YIFAN_RELEASE_KEY_PASSWORD }}
         run: |
           cd android
           ./gradlew assembleRelease \
             -PreactNativeArchitectures=arm64-v8a \
-            -PGOHAN_RELEASE_STORE_FILE=$GOHAN_RELEASE_STORE_FILE \
-            -PGOHAN_RELEASE_STORE_PASSWORD=$GOHAN_RELEASE_STORE_PASSWORD \
-            -PGOHAN_RELEASE_KEY_ALIAS=$GOHAN_RELEASE_KEY_ALIAS \
-            -PGOHAN_RELEASE_KEY_PASSWORD=$GOHAN_RELEASE_KEY_PASSWORD
+            -PYIFAN_RELEASE_STORE_FILE=$YIFAN_RELEASE_STORE_FILE \
+            -PYIFAN_RELEASE_STORE_PASSWORD=$YIFAN_RELEASE_STORE_PASSWORD \
+            -PYIFAN_RELEASE_KEY_ALIAS=$YIFAN_RELEASE_KEY_ALIAS \
+            -PYIFAN_RELEASE_KEY_PASSWORD=$YIFAN_RELEASE_KEY_PASSWORD
 
       - name: Rename APK
         run: |
           VERSION=$(grep versionName android/app/build.gradle | grep -o '".*"' | tr -d '"')
           mv android/app/build/outputs/apk/release/app-release.apk \
-             android/app/build/outputs/apk/release/gohan-${VERSION}.apk
-          echo "APK_PATH=android/app/build/outputs/apk/release/gohan-${VERSION}.apk" >> $GITHUB_ENV
+             android/app/build/outputs/apk/release/yifan-${VERSION}.apk
+          echo "APK_PATH=android/app/build/outputs/apk/release/yifan-${VERSION}.apk" >> $GITHUB_ENV
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Create GitHub Release
