@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LayoutAnimation, Platform, Pressable, UIManager, View, useWindowDimensions, type DimensionValue } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, LayoutAnimation, Platform, Pressable, UIManager, View, useWindowDimensions, type DimensionValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -176,9 +176,6 @@ if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
 
-const animateStep = () =>
-  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
 const OnboardingScreen = () => {
   const [step, setStep] = useState<Step>(1);
   const { width, height } = useWindowDimensions();
@@ -192,26 +189,42 @@ const OnboardingScreen = () => {
   const isDark = useEffectiveIsDark();
   const [accent, appBg] = useThemeColor(['accent', 'background']);
 
+  // Footer fade animation — fade out, change step, fade in
+  const footerOpacity = useRef(new Animated.Value(1)).current;
+
   const goToApp = () =>
     navigation.reset({ index: 0, routes: [{ name: ROOT_STACK_ROUTE.AUTH }] });
 
+  const transitionTo = (next: Step) => {
+    Animated.timing(footerOpacity, {
+      toValue: 0,
+      duration: 100,
+      useNativeDriver: true,
+    }).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setStep(next);
+      Animated.timing(footerOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
   const handleNext = () => {
-    if (step === 1) { animateStep(); setStep(2); }
-    else if (step === 2) { animateStep(); setStep(3); }
+    if (step === 1) transitionTo(2);
+    else if (step === 2) transitionTo(3);
     else goToApp();
   };
 
-  const handlePrev = () => {
-    animateStep();
-    setStep((step - 1) as Step);
-  };
+  const handlePrev = () => transitionTo((step - 1) as Step);
 
   const handleSelect = (value: string) => {
     if (step === 1) {
       setAppAppearancePreference(
         value as (typeof APP_APPEARANCE_OPTION)[keyof typeof APP_APPEARANCE_OPTION],
       ).catch(() => {});
-    } else if (step === 2) {
+    } else if (step === 3) {
       setAppThemePreference(
         value as (typeof APP_THEME_OPTION)[keyof typeof APP_THEME_OPTION],
       ).catch(() => {});
@@ -234,8 +247,8 @@ const OnboardingScreen = () => {
     },
   ];
 
-  // Step 2: pick theme — preview both styles in chosen appearance
-  const step2Options = [
+  // Step 3: pick theme — preview both styles in chosen appearance
+  const step3Options = [
     {
       value: APP_THEME_OPTION.COLORFUL,
       label: t('onboardingOptionColorful'),
@@ -250,7 +263,7 @@ const OnboardingScreen = () => {
     },
   ];
 
-  const options = step === 1 ? step1Options : step2Options;
+  const options = step === 1 ? step1Options : step === 3 ? step3Options : [];
   const selectedValue = step === 1 ? appearance : theme;
 
   return (
@@ -273,7 +286,7 @@ const OnboardingScreen = () => {
 
       {/* Title */}
       <Text className="px-5 pb-4 text-[22px] font-bold text-foreground">
-        {step === 1 ? t('onboardingStepAppearance') : step === 2 ? t('onboardingStepTheme') : ''}
+        {step === 1 ? t('onboardingStepAppearance') : step === 3 ? t('onboardingStepTheme') : ''}
       </Text>
 
       {/* Option panels */}
@@ -295,7 +308,7 @@ const OnboardingScreen = () => {
       </View>
 
       {/* Footer: back (1/3) + next (2/3) */}
-      <View className="flex-row gap-3 px-5 pb-2 pt-4">
+      <Animated.View className="flex-row gap-3 px-5 pb-2 pt-4" style={[{ opacity: footerOpacity }]}>
         {step > 1 ? (
           <Pressable
             onPress={handlePrev}
@@ -316,7 +329,7 @@ const OnboardingScreen = () => {
             {step === TOTAL_STEPS ? t('onboardingDone') : t('onboardingNext')}
           </Text>
         </Pressable>
-      </View>
+      </Animated.View>
     </View>
   );
 };
