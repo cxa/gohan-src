@@ -20,100 +20,124 @@ import type { RootStackParamList } from '@/navigation/types';
 import { ROOT_STACK_ROUTE } from '@/navigation/route-names';
 
 // ---------------------------------------------------------------------------
-// Hardcoded mini-preview colors — bypass theme system so both panels can show
-// different modes simultaneously
+// Preview palette — mirrors timeline-skeleton-card.tsx exactly, no shimmer
 // ---------------------------------------------------------------------------
-const PREVIEW_LIGHT = {
-  bg: '#FFFFFF',
-  skeleton: '#D4C4A8',
-  plain: '#F7EFE0',
-  colorful: ['#FDDBD5', '#FDF3C8', '#E8D5F5', '#C8EDE8'] as const,
-  label: '#1A1208',
-};
-const PREVIEW_DARK = {
-  bg: '#0E0B07',
-  skeleton: '#3A3020',
-  plain: '#2A2520',
-  colorful: ['#3D2820', '#352E18', '#2D1E38', '#1A3530'] as const,
-  label: '#D4C4A8',
-};
+const CARD_BG_LIGHT = ['#FDDBD5', '#FDF3C8', '#E8D5F5', '#D0E8F5'] as const;
+const CARD_BG_DARK  = ['#3D2820', '#352E18', '#2D1E38', '#1A2E3D'] as const;
+const BAR_BG_LIGHT  = ['#F5C4B8', '#F5E298', '#CCBAEC', '#A8D0EC'] as const;
+const BAR_BG_DARK   = ['#5A3830', '#4A4020', '#402850', '#203A50'] as const;
 
-// Line width configs for each skeleton card (as DimensionValue percentages)
-const CARD_LINE_CONFIGS: readonly (readonly DimensionValue[])[] = [
-  ['85%', '70%'],
-  ['90%', '65%', '75%'],
-  ['80%', '60%'],
-  ['88%', '72%', '55%'],
+const LIST_BG_LIGHT   = '#F5EDE0';
+const LIST_BG_DARK    = '#0E0B07';
+const PLAIN_CARD_LIGHT = '#FFFFFF';
+const PLAIN_CARD_DARK  = '#1E1E1E';
+const PLAIN_BAR_LIGHT  = 'rgba(0,0,0,0.08)';
+const PLAIN_BAR_DARK   = 'rgba(255,255,255,0.12)';
+
+// One row of skeleton bars per card (line widths match the real skeleton card)
+const LINE_CONFIGS: readonly (readonly DimensionValue[])[] = [
+  ['75%', '90%'],
+  ['85%', '65%', '80%'],
+  ['90%', '70%'],
+  ['70%', '88%', '60%'],
 ];
 
 // ---------------------------------------------------------------------------
-// Mini skeleton card — uses className for static layout, inline array for colors
+// MiniSkeletonCard — mirrors TimelineSkeletonCard without shimmer animation
 // ---------------------------------------------------------------------------
-type MiniCardProps = {
+type MiniSkeletonCardProps = {
   cardBg: string;
-  skeletonColor: string;
+  barColor: string;
   lineWidths: readonly DimensionValue[];
+  isLast: boolean;
 };
-const MiniCard = ({ cardBg, skeletonColor, lineWidths }: MiniCardProps) => (
-  <View className="rounded-[10px] p-2 mb-[5px]" style={[{ backgroundColor: cardBg }]}>
-    <View className="flex-row items-center gap-[5px] mb-[5px]">
-      <View className="w-4 h-4 rounded-full" style={[{ backgroundColor: skeletonColor }]} />
-      <View className="w-[38%] h-[5px] rounded-[2.5px]" style={[{ backgroundColor: skeletonColor }]} />
+
+const MiniSkeletonCard = ({ cardBg, barColor, lineWidths, isLast }: MiniSkeletonCardProps) => {
+  const mb = isLast ? 0 : 6;
+  return (
+  <View
+    className="rounded-2xl px-3 py-3"
+    style={[{ backgroundColor: cardBg, marginBottom: mb }]}
+  >
+    <View className="flex-row gap-2">
+      {/* Avatar circle */}
+      <View className="h-8 w-8 rounded-full" style={[{ backgroundColor: barColor }]} />
+      {/* Text lines */}
+      <View className="flex-1 gap-[5px]">
+        {/* Name bar */}
+        <View className="h-[7px] w-14 rounded-full" style={[{ backgroundColor: barColor }]} />
+        {/* Content bars */}
+        {lineWidths.map((w, i) => {
+          const opacity = 0.7 - i * 0.15;
+          return (
+            <View
+              key={i}
+              className="h-[7px] rounded-full"
+              style={[{ width: w, backgroundColor: barColor, opacity }]}
+            />
+          );
+        })}
+      </View>
     </View>
-    {lineWidths.map((w, i) => {
-      const mb = i < lineWidths.length - 1 ? 3 : 0;
-      return (
-        <View
-          key={i}
-          className="h-1 rounded-sm"
-          style={[{ width: w, backgroundColor: skeletonColor, marginBottom: mb }]}
-        />
-      );
-    })}
   </View>
-);
+  );
+};
 
 // ---------------------------------------------------------------------------
-// Mini timeline — renders 4 skeleton cards with explicit per-card colors
+// MiniTimeline — 4 skeleton cards rendered for the given mode combination
 // ---------------------------------------------------------------------------
 type MiniTimelineProps = {
-  bg: string;
-  cardBgs: readonly string[];
-  skeletonColor: string;
+  previewIsDark: boolean;
+  previewIsColorful: boolean;
 };
-const MiniTimeline = ({ bg, cardBgs, skeletonColor }: MiniTimelineProps) => (
-  <View className="flex-1 p-2" style={[{ backgroundColor: bg }]}>
-    {cardBgs.map((cardBg, i) => (
-      <MiniCard
-        key={i}
-        cardBg={cardBg}
-        skeletonColor={skeletonColor}
-        lineWidths={CARD_LINE_CONFIGS[i % CARD_LINE_CONFIGS.length]}
-      />
-    ))}
-  </View>
-);
+
+const MiniTimeline = ({ previewIsDark, previewIsColorful }: MiniTimelineProps) => {
+  const listBg = previewIsDark ? LIST_BG_DARK : LIST_BG_LIGHT;
+  const plainCard = previewIsDark ? PLAIN_CARD_DARK : PLAIN_CARD_LIGHT;
+  const plainBar  = previewIsDark ? PLAIN_BAR_DARK  : PLAIN_BAR_LIGHT;
+
+  return (
+    <View className="flex-1 p-2" style={[{ backgroundColor: listBg }]}>
+      {LINE_CONFIGS.map((lineWidths, i) => {
+        const cardBg   = previewIsColorful ? (previewIsDark ? CARD_BG_DARK : CARD_BG_LIGHT)[i] : plainCard;
+        const barColor = previewIsColorful ? (previewIsDark ? BAR_BG_DARK  : BAR_BG_LIGHT )[i] : plainBar;
+        return (
+          <MiniSkeletonCard
+            key={i}
+            cardBg={cardBg}
+            barColor={barColor}
+            lineWidths={lineWidths}
+            isLast={i === LINE_CONFIGS.length - 1}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 // ---------------------------------------------------------------------------
-// Option panel — preview + label, highlighted border when selected
+// OptionPanel — preview + label, highlighted border when selected
 // ---------------------------------------------------------------------------
 type OptionPanelProps = {
   label: string;
-  preview: MiniTimelineProps;
-  labelColor: string;
+  previewIsDark: boolean;
+  previewIsColorful: boolean;
   isSelected: boolean;
   accentColor: string;
   onPress: () => void;
 };
+
 const OptionPanel = ({
   label,
-  preview,
-  labelColor,
+  previewIsDark,
+  previewIsColorful,
   isSelected,
   accentColor,
   onPress,
 }: OptionPanelProps) => {
   const borderColor = isSelected ? accentColor : 'transparent';
+  const labelBg    = previewIsDark ? LIST_BG_DARK  : LIST_BG_LIGHT;
+  const labelColor  = previewIsDark ? '#D4C4A8' : '#1A1208';
   return (
     <Pressable
       className="flex-1"
@@ -126,13 +150,10 @@ const OptionPanel = ({
         className="flex-1 rounded-2xl overflow-hidden border-[2.5px]"
         style={[{ borderColor }]}
       >
-        <MiniTimeline {...preview} />
+        <MiniTimeline previewIsDark={previewIsDark} previewIsColorful={previewIsColorful} />
         <View
-          className="py-[10px] items-center border-t"
-          style={[{
-            backgroundColor: preview.bg,
-            borderTopColor: `${preview.skeletonColor}50`,
-          }]}
+          className="py-[10px] items-center"
+          style={[{ backgroundColor: labelBg }]}
         >
           <Text className="text-[13px] font-semibold" style={[{ color: labelColor }]}>
             {label}
@@ -159,6 +180,7 @@ const OnboardingScreen = () => {
   const appearance = useAppAppearancePreference();
   const theme = useAppThemePreference();
   const isDark = useEffectiveIsDark();
+  const isColorful = theme === APP_THEME_OPTION.COLORFUL;
   const [accent] = useThemeColor(['accent']);
 
   const goToApp = () =>
@@ -166,68 +188,52 @@ const OnboardingScreen = () => {
 
   const handleNext = () => (step === 1 ? setStep(2) : goToApp());
 
-  const currentPalette = isDark ? PREVIEW_DARK : PREVIEW_LIGHT;
+  const handleSelect = (value: string) => {
+    if (step === 1) {
+      setAppThemePreference(
+        value as (typeof APP_THEME_OPTION)[keyof typeof APP_THEME_OPTION],
+      ).catch(() => {});
+    } else {
+      setAppAppearancePreference(
+        value as (typeof APP_APPEARANCE_OPTION)[keyof typeof APP_APPEARANCE_OPTION],
+      ).catch(() => {});
+    }
+  };
 
+  // Step 1: pick theme — preview both styles in current appearance
   const step1Options = [
-    {
-      value: APP_APPEARANCE_OPTION.LIGHT,
-      label: t('onboardingOptionLight'),
-      preview: {
-        bg: PREVIEW_LIGHT.bg,
-        cardBgs: [PREVIEW_LIGHT.plain, PREVIEW_LIGHT.plain, PREVIEW_LIGHT.plain, PREVIEW_LIGHT.plain],
-        skeletonColor: PREVIEW_LIGHT.skeleton,
-      },
-      labelColor: PREVIEW_LIGHT.label,
-    },
-    {
-      value: APP_APPEARANCE_OPTION.DARK,
-      label: t('onboardingOptionDark'),
-      preview: {
-        bg: PREVIEW_DARK.bg,
-        cardBgs: [PREVIEW_DARK.plain, PREVIEW_DARK.plain, PREVIEW_DARK.plain, PREVIEW_DARK.plain],
-        skeletonColor: PREVIEW_DARK.skeleton,
-      },
-      labelColor: PREVIEW_DARK.label,
-    },
-  ] as const;
-
-  const step2Options = [
     {
       value: APP_THEME_OPTION.COLORFUL,
       label: t('onboardingOptionColorful'),
-      preview: {
-        bg: currentPalette.bg,
-        cardBgs: currentPalette.colorful,
-        skeletonColor: currentPalette.skeleton,
-      },
-      labelColor: currentPalette.label,
+      previewIsDark: isDark,
+      previewIsColorful: true,
     },
     {
       value: APP_THEME_OPTION.PLAIN,
       label: t('onboardingOptionPlain'),
-      preview: {
-        bg: currentPalette.bg,
-        cardBgs: [currentPalette.plain, currentPalette.plain, currentPalette.plain, currentPalette.plain],
-        skeletonColor: currentPalette.skeleton,
-      },
-      labelColor: currentPalette.label,
+      previewIsDark: isDark,
+      previewIsColorful: false,
     },
-  ] as const;
+  ];
+
+  // Step 2: pick appearance — preview both modes in chosen theme
+  const step2Options = [
+    {
+      value: APP_APPEARANCE_OPTION.LIGHT,
+      label: t('onboardingOptionLight'),
+      previewIsDark: false,
+      previewIsColorful: isColorful,
+    },
+    {
+      value: APP_APPEARANCE_OPTION.DARK,
+      label: t('onboardingOptionDark'),
+      previewIsDark: true,
+      previewIsColorful: isColorful,
+    },
+  ];
 
   const options = step === 1 ? step1Options : step2Options;
-  const selectedValue = step === 1 ? appearance : theme;
-
-  const handleSelect = (value: string) => {
-    if (step === 1) {
-      setAppAppearancePreference(
-        value as (typeof APP_APPEARANCE_OPTION)[keyof typeof APP_APPEARANCE_OPTION],
-      ).catch(() => {});
-    } else {
-      setAppThemePreference(
-        value as (typeof APP_THEME_OPTION)[keyof typeof APP_THEME_OPTION],
-      ).catch(() => {});
-    }
-  };
+  const selectedValue = step === 1 ? theme : appearance;
 
   return (
     <View
@@ -249,7 +255,7 @@ const OnboardingScreen = () => {
 
       {/* Title */}
       <Text className="px-5 pb-4 text-[22px] font-bold text-foreground">
-        {step === 1 ? t('onboardingStepAppearance') : t('onboardingStepTheme')}
+        {step === 1 ? t('onboardingStepTheme') : t('onboardingStepAppearance')}
       </Text>
 
       {/* Option panels */}
@@ -260,8 +266,8 @@ const OnboardingScreen = () => {
           <OptionPanel
             key={option.value}
             label={option.label}
-            preview={option.preview}
-            labelColor={option.labelColor}
+            previewIsDark={option.previewIsDark}
+            previewIsColorful={option.previewIsColorful}
             isSelected={selectedValue === option.value}
             accentColor={accent}
             onPress={() => handleSelect(option.value)}
@@ -269,7 +275,7 @@ const OnboardingScreen = () => {
         ))}
       </View>
 
-      {/* Footer: next / done button */}
+      {/* Footer: next / done */}
       <View className="px-5 pb-2 pt-4">
         <Pressable
           onPress={handleNext}
