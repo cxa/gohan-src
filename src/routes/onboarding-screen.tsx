@@ -124,6 +124,7 @@ type OptionPanelProps = {
   previewIsColorful: boolean;
   isSelected: boolean;
   accentColor: string;
+  appBg: string;
   onPress: () => void;
 };
 
@@ -133,9 +134,10 @@ const OptionPanel = ({
   previewIsColorful,
   isSelected,
   accentColor,
+  appBg,
   onPress,
 }: OptionPanelProps) => {
-  const borderColor = isSelected ? accentColor : 'rgba(128,128,128,0.25)';
+  const borderColor = isSelected ? accentColor : appBg;
   const labelBg    = previewIsDark ? LIST_BG_DARK  : LIST_BG_LIGHT;
   const labelColor  = previewIsDark ? '#D4C4A8' : '#1A1208';
   return (
@@ -188,7 +190,7 @@ const OnboardingScreen = () => {
   const appearance = useAppAppearancePreference();
   const theme = useAppThemePreference();
   const isDark = useEffectiveIsDark();
-  const [accent] = useThemeColor(['accent']);
+  const [accent, appBg] = useThemeColor(['accent', 'background']);
 
   const goToApp = () =>
     navigation.reset({ index: 0, routes: [{ name: ROOT_STACK_ROUTE.AUTH }] });
@@ -286,6 +288,7 @@ const OnboardingScreen = () => {
             previewIsColorful={option.previewIsColorful}
             isSelected={selectedValue === option.value}
             accentColor={accent}
+            appBg={appBg}
             onPress={() => handleSelect(option.value)}
           />
         ))}
