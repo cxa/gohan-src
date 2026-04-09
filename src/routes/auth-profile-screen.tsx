@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
 import {
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -82,6 +83,7 @@ import {
   useStatusUpdateMutation,
 } from '@/query/post-mutations';
 import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
+import { openLink } from '@/utils/open-link';
 import type { FanfouStatus, FanfouUser } from '@/types/fanfou';
 import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
@@ -434,6 +436,23 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     } finally {
       setIsBlockSubmitting(false);
     }
+  };
+  const handleReport = () => {
+    if (!user) {
+      return;
+    }
+    Alert.alert(
+      t('profileReportConfirmTitle'),
+      t('profileReportConfirmMessage'),
+      [
+        { text: t('profileReportConfirmCancel'), style: 'cancel' },
+        {
+          text: t('profileReportConfirmOpen'),
+          style: 'destructive',
+          onPress: () => openLink(`https://fanfou.com/${user.id}`),
+        },
+      ],
+    );
   };
   const setBookmarkPending = (statusId: string, pending: boolean) => {
     setPendingBookmarkIds(previous => {
@@ -1113,6 +1132,52 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
               <View className="items-center py-3">
                 <NeobrutalActivityIndicator size="small" />
               </View>
+            ) : null}
+
+            {!isSelf && user ? (
+              <DropShadowBox
+                containerClassName="mt-4 pb-2"
+                shadowStyle={profilePanelShadowStyle}
+              >
+                <Surface
+                  className="bg-surface-secondary px-4 py-4"
+                  style={profileThemeStyles.panelStyle}
+                >
+                  <View className="flex-row gap-3">
+                    <Pressable
+                      onPress={handleBlockToggle}
+                      disabled={isBlockSubmitting || isBlockChecking}
+                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        isBlocked
+                          ? t('profileActionUnblock')
+                          : t('profileActionBlock')
+                      }
+                    >
+                      <Text className="text-[13px] text-center text-foreground">
+                        {isBlockChecking
+                          ? t('profileActionChecking')
+                          : isBlockSubmitting
+                            ? t('profileActionUpdating')
+                            : isBlocked
+                              ? t('profileActionUnblock')
+                              : t('profileActionBlock')}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={handleReport}
+                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
+                      accessibilityRole="button"
+                      accessibilityLabel={t('profileActionReport')}
+                    >
+                      <Text className="text-[13px] text-center text-foreground">
+                        {t('profileActionReport')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </Surface>
+              </DropShadowBox>
             ) : null}
           </Animated.ScrollView>
           <PhotoViewerModal

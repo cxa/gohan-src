@@ -165,6 +165,11 @@ type BaseTranslations = {
   profileSendFailedMessage: string;
   profileNeedsContent: string;
   cannotSendTitle: string;
+  profileActionReport: string;
+  profileReportConfirmTitle: string;
+  profileReportConfirmMessage: string;
+  profileReportConfirmCancel: string;
+  profileReportConfirmOpen: string;
 
   // Messages screen
   messagesTitle: string;
@@ -426,6 +431,11 @@ const enUS: BaseTranslations = {
   profileSendFailedMessage: 'Failed to send message.',
   profileNeedsContent: 'Please enter some text.',
   cannotSendTitle: 'Cannot Send',
+  profileActionReport: 'Report',
+  profileReportConfirmTitle: 'Report User',
+  profileReportConfirmMessage: "This will open Fanfou's website where you can submit a report.",
+  profileReportConfirmCancel: 'Cancel',
+  profileReportConfirmOpen: 'Open Fanfou',
 
   // Messages screen
   messagesTitle: 'Messages',
@@ -683,6 +693,11 @@ const zhCN: BaseTranslations = {
   profileSendFailedMessage: '无法发送消息。',
   profileNeedsContent: '请先输入文字。',
   cannotSendTitle: '无法发送',
+  profileActionReport: '投诉',
+  profileReportConfirmTitle: '投诉用户',
+  profileReportConfirmMessage: '将打开饭否网站，您可以在那里提交投诉。',
+  profileReportConfirmCancel: '取消',
+  profileReportConfirmOpen: '打开饭否',
 
   // Messages screen
   messagesTitle: '私信',
