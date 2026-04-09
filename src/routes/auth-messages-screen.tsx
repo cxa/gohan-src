@@ -703,7 +703,7 @@ const PrivateMessagesContent = ({ userId }: PrivateMessagesContentProps) => {
       <Dialog isOpen={deleteTarget !== null} onOpenChange={open => { if (!open) setDeleteTarget(null); }}>
         <Dialog.Portal>
           <Dialog.Overlay className="bg-black/80" />
-          <Dialog.Content>
+          <Dialog.Content className="w-[92%] max-w-[360px] self-center">
             <View className="mb-5 gap-1.5">
               <Dialog.Title>{t('messageDeleteTitle')}</Dialog.Title>
               <Dialog.Description>

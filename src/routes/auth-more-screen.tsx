@@ -1169,7 +1169,7 @@ const MoreRouteContent = ({
       <Dialog isOpen={isSignOutDialogOpen} onOpenChange={setIsSignOutDialogOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="bg-black/80" />
-          <Dialog.Content>
+          <Dialog.Content className="w-[92%] max-w-[360px] self-center">
             <View className="mb-5 gap-1.5">
               <Dialog.Title>{t('moreSignOutConfirmTitle')}</Dialog.Title>
               <Dialog.Description>{t('moreSignOutConfirmMessage')}</Dialog.Description>
