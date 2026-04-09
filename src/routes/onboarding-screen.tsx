@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, View, useWindowDimensions, type DimensionValue } from 'react-native';
+import { LayoutAnimation, Platform, Pressable, UIManager, View, useWindowDimensions, type DimensionValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -56,7 +56,7 @@ const MiniSkeletonCard = ({ cardBg, barColor, lineWidths, isLast }: MiniSkeleton
   const mb = isLast ? 0 : 6;
   return (
   <View
-    className="rounded-2xl px-3 py-3"
+    className="rounded-3xl px-4 py-4"
     style={[{ backgroundColor: cardBg, marginBottom: mb }]}
   >
     <View className="flex-row gap-2">
@@ -97,7 +97,7 @@ const MiniTimeline = ({ previewIsDark, previewIsColorful }: MiniTimelineProps) =
   const plainBar  = previewIsDark ? PLAIN_BAR_DARK  : PLAIN_BAR_LIGHT;
 
   return (
-    <View className="flex-1 p-2" style={[{ backgroundColor: listBg }]}>
+    <View className="flex-1 p-3" style={[{ backgroundColor: listBg }]}>
       {LINE_CONFIGS.map((lineWidths, i) => {
         const cardBg   = previewIsColorful ? (previewIsDark ? CARD_BG_DARK : CARD_BG_LIGHT)[i] : plainCard;
         const barColor = previewIsColorful ? (previewIsDark ? BAR_BG_DARK  : BAR_BG_LIGHT )[i] : plainBar;
@@ -147,7 +147,7 @@ const OptionPanel = ({
       accessibilityLabel={label}
     >
       <View
-        className="flex-1 rounded-2xl overflow-hidden border-[2.5px]"
+        className="flex-1 rounded-3xl overflow-hidden border-[2.5px]"
         style={[{ borderColor }]}
       >
         <MiniTimeline previewIsDark={previewIsDark} previewIsColorful={previewIsColorful} />
@@ -170,6 +170,13 @@ const OptionPanel = ({
 type Step = 1 | 2 | 3;
 const TOTAL_STEPS = 3;
 
+if (Platform.OS === 'android') {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
+
+const animateStep = () =>
+  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
 const OnboardingScreen = () => {
   const [step, setStep] = useState<Step>(1);
   const { width, height } = useWindowDimensions();
@@ -187,9 +194,14 @@ const OnboardingScreen = () => {
     navigation.reset({ index: 0, routes: [{ name: ROOT_STACK_ROUTE.AUTH }] });
 
   const handleNext = () => {
-    if (step === 1) setStep(2);
-    else if (step === 2) setStep(3);
+    if (step === 1) { animateStep(); setStep(2); }
+    else if (step === 2) { animateStep(); setStep(3); }
     else goToApp();
+  };
+
+  const handlePrev = () => {
+    animateStep();
+    setStep((step - 1) as Step);
   };
 
   const handleSelect = (value: string) => {
@@ -283,7 +295,7 @@ const OnboardingScreen = () => {
       <View className="flex-row gap-3 px-5 pb-2 pt-4">
         {step > 1 ? (
           <Pressable
-            onPress={() => setStep((step - 1) as Step)}
+            onPress={handlePrev}
             className="flex-[1] items-center rounded-full border border-muted py-4"
             accessibilityRole="button"
           >
