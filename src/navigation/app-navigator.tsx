@@ -38,6 +38,7 @@ import AuthStatusRoute from '@/routes/auth-status-screen';
 import AuthTagRoute from '@/routes/auth-tag-timeline-screen';
 import AuthUserListRoute from '@/routes/auth-user-list-screen';
 import LoginRoute from '@/routes/login-screen';
+import OnboardingRoute from '@/routes/onboarding-screen';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -230,6 +231,11 @@ const AppNavigator = () => (
         name={ROOT_STACK_ROUTE.LOGIN}
         component={LoginStackNavigator}
         options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name={ROOT_STACK_ROUTE.ONBOARDING}
+        component={OnboardingRoute}
+        options={{ headerShown: false, animation: 'fade' }}
       />
     </RootStack.Navigator>
   </NavigationContainer>

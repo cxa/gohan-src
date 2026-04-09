@@ -1,6 +1,7 @@
 export const ROOT_STACK_ROUTE = {
   AUTH: 'Auth',
   LOGIN: 'Login',
+  ONBOARDING: 'Onboarding',
 } as const;
 
 export const AUTH_STACK_ROUTE = {

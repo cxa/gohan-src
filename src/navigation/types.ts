@@ -61,6 +61,7 @@ export type RootStackParamList = {
   [ROOT_STACK_ROUTE.LOGIN]:
     | NavigatorScreenParams<LoginStackParamList>
     | undefined;
+  [ROOT_STACK_ROUTE.ONBOARDING]: undefined;
 };
 
 export type AuthTabParamList = {

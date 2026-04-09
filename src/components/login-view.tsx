@@ -20,7 +20,7 @@ import { setAuthAccessToken } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
 import ErrorBanner from '@/components/error-banner';
 import TermsModal from '@/components/terms-modal';
-import { AUTH_STACK_ROUTE, ROOT_STACK_ROUTE } from '@/navigation/route-names';
+import { ROOT_STACK_ROUTE } from '@/navigation/route-names';
 import type {
   LoginStackParamList,
   RootStackParamList,
@@ -121,14 +121,7 @@ const LoginView = () => {
       if (rootNavigation) {
         rootNavigation.reset({
           index: 0,
-          routes: [
-            {
-              name: ROOT_STACK_ROUTE.AUTH,
-              params: {
-                screen: AUTH_STACK_ROUTE.TABS,
-              },
-            },
-          ],
+          routes: [{ name: ROOT_STACK_ROUTE.ONBOARDING }],
         });
       }
     } catch (error) {

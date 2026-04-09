@@ -3,6 +3,17 @@ export type LocaleKey = 'en-US' | 'zh-CN';
 export const SUPPORTED_LOCALES: ReadonlyArray<LocaleKey> = ['en-US', 'zh-CN'];
 
 type BaseTranslations = {
+  // Onboarding screen
+  onboardingSkip: string;
+  onboardingNext: string;
+  onboardingDone: string;
+  onboardingStepAppearance: string;
+  onboardingStepTheme: string;
+  onboardingOptionLight: string;
+  onboardingOptionDark: string;
+  onboardingOptionColorful: string;
+  onboardingOptionPlain: string;
+
   // Login screen
   loginButton: string;
   loginLoading: string;
@@ -260,6 +271,17 @@ type BaseTranslations = {
 };
 
 const enUS: BaseTranslations = {
+  // Onboarding screen
+  onboardingSkip: 'Skip',
+  onboardingNext: 'Next',
+  onboardingDone: 'Done',
+  onboardingStepAppearance: 'Choose a color mode',
+  onboardingStepTheme: 'Choose a style',
+  onboardingOptionLight: 'Light',
+  onboardingOptionDark: 'Dark',
+  onboardingOptionColorful: 'Colorful',
+  onboardingOptionPlain: 'Plain',
+
   // Login screen
   loginButton: 'Sign In',
   loginLoading: 'Signing in…',
@@ -527,6 +549,17 @@ const enUS: BaseTranslations = {
 };
 
 const zhCN: BaseTranslations = {
+  // Onboarding screen
+  onboardingSkip: '跳过',
+  onboardingNext: '下一步',
+  onboardingDone: '完成',
+  onboardingStepAppearance: '选择色彩模式',
+  onboardingStepTheme: '选择风格',
+  onboardingOptionLight: '浅色',
+  onboardingOptionDark: '深色',
+  onboardingOptionColorful: '多彩',
+  onboardingOptionPlain: '纯色',
+
   // Login screen
   loginButton: '登录',
   loginLoading: '登录中…',
