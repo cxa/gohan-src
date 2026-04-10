@@ -268,6 +268,14 @@ type BaseTranslations = {
   photoViewerClose: string;
   photoViewerCloseA11y: string;
 
+  // App update
+  updateAvailableTitle: string;
+  updateAvailableDescription: string;
+  updateLater: string;
+  updateInstall: string;
+  updateDownloading: string;
+  updateDownloadError: string;
+
   // Common
   notLoggedIn: string;
   operationFailed: string;
@@ -550,6 +558,14 @@ const enUS: BaseTranslations = {
   photoViewerClose: 'Close',
   photoViewerCloseA11y: 'Close photo viewer',
 
+  // App update
+  updateAvailableTitle: 'Update Available',
+  updateAvailableDescription: 'Version {{version}} is ready. Update now for the latest fixes and features.',
+  updateLater: 'Later',
+  updateInstall: 'Download & Install',
+  updateDownloading: 'Downloading… {{percent}}%',
+  updateDownloadError: 'Download failed. Please try again.',
+
   // Common
   notLoggedIn: 'No logged-in user found.',
   operationFailed: 'Operation Failed',
@@ -826,6 +842,14 @@ const zhCN: BaseTranslations = {
   // Photo viewer
   photoViewerClose: '关闭',
   photoViewerCloseA11y: '关闭图片查看器',
+
+  // App update
+  updateAvailableTitle: '发现新版本',
+  updateAvailableDescription: '版本 {{version}} 已发布，立即更新以获取最新修复和功能。',
+  updateLater: '稍后',
+  updateInstall: '下载安装',
+  updateDownloading: '下载中… {{percent}}%',
+  updateDownloadError: '下载失败，请重试。',
 
   // Common
   notLoggedIn: '未找到登录用户。',

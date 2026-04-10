@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { HeroUINativeProvider } from 'heroui-native';
 import ToastManagerSync from '@/components/toast-manager-sync';
+import AppUpdateDialog from '@/components/app-update-dialog';
 import QueryProvider from '@/query/query-provider';
 import { useEffectiveIsDark } from '@/settings/app-appearance-preference';
 import {
@@ -96,6 +97,7 @@ const RootLayout = ({ children }: RootLayoutProps) => {
             config={{ devInfo: { stylingPrinciples: false } }}
           >
             <ToastManagerSync />
+            <AppUpdateDialog />
             <QueryProvider>{children}</QueryProvider>
           </HeroUINativeProvider>
           {snapshotUri && (
