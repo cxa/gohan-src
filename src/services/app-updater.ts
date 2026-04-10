@@ -23,6 +23,18 @@ function isNewer(latest: string, current: string): boolean {
   return false;
 }
 
+// Allows the manual "Check for Updates" button in settings to open AppUpdateDialog.
+type UpdateFoundListener = (info: UpdateInfo) => void;
+let updateFoundListener: UpdateFoundListener | null = null;
+
+export const setUpdateFoundListener = (fn: UpdateFoundListener | null) => {
+  updateFoundListener = fn;
+};
+
+export const notifyUpdateFound = (info: UpdateInfo) => {
+  updateFoundListener?.(info);
+};
+
 export async function checkForUpdate(): Promise<UpdateInfo | null> {
   if (Platform.OS !== 'android') return null;
 

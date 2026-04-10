@@ -211,6 +211,9 @@ type BaseTranslations = {
   // More screen
   morePrivateMessages: string;
   morePrivateMessagesHelper: string;
+  moreCheckUpdate: string;
+  moreCheckUpdateChecking: string;
+  moreCheckUpdateUpToDate: string;
   moreSignOut: string;
   moreSigningOut: string;
   moreSignOutConfirmTitle: string;
@@ -501,6 +504,9 @@ const enUS: BaseTranslations = {
   // More screen
   morePrivateMessages: 'Messages',
   morePrivateMessagesHelper: 'Inbox & Outbox',
+  moreCheckUpdate: 'Check for Updates',
+  moreCheckUpdateChecking: 'Checking…',
+  moreCheckUpdateUpToDate: 'Already up to date',
   moreSignOut: 'Sign Out',
   moreSigningOut: 'Signing out…',
   moreSignOutConfirmTitle: 'Sign Out',
@@ -787,6 +793,9 @@ const zhCN: BaseTranslations = {
   // More screen
   morePrivateMessages: '私信',
   morePrivateMessagesHelper: '收件箱与发件箱',
+  moreCheckUpdate: '检查更新',
+  moreCheckUpdateChecking: '检查中…',
+  moreCheckUpdateUpToDate: '已是最新版本',
   moreSignOut: '退出登录',
   moreSigningOut: '正在退出…',
   moreSignOutConfirmTitle: '退出登录',

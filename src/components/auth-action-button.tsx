@@ -4,7 +4,7 @@ import { Pressable, View } from 'react-native';
 import { Text } from '@/components/app-text';
 import { $ } from '@cxa/twx';
 
-type AuthActionVariant = 'primary' | 'danger';
+type AuthActionVariant = 'primary' | 'secondary' | 'danger';
 
 type AuthActionButtonProps = {
   label: string;
@@ -16,11 +16,13 @@ type AuthActionButtonProps = {
 
 const backgroundClassMap: Record<AuthActionVariant, string> = {
   primary: 'bg-accent',
+  secondary: 'bg-accent/15',
   danger: 'bg-danger',
 };
 
 const labelClassMap: Record<AuthActionVariant, string> = {
   primary: 'text-accent-foreground',
+  secondary: 'text-accent',
   danger: 'text-danger-foreground',
 };
 

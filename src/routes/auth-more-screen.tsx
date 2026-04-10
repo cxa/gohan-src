@@ -31,6 +31,7 @@ import ErrorBanner from '@/components/error-banner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Leaf } from 'lucide-react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { checkForUpdate, notifyUpdateFound } from '@/services/app-updater';
 import { setAuthAccessToken, useAuthSession } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
 import AuthActionButton from '@/components/auth-action-button';
@@ -327,6 +328,7 @@ const MoreRouteContent = ({
   const headerTitleVisible = useSharedValue(false);
   const [showHeaderTitle, setShowHeaderTitle] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [isPostcardExpanded, setIsPostcardExpanded] = useState(false);
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const scrollRef =
@@ -595,6 +597,23 @@ const MoreRouteContent = ({
       onPress: handleOpenPhotos,
     },
   ];
+  const handleCheckUpdate = async () => {
+    if (isCheckingUpdate) return;
+    setIsCheckingUpdate(true);
+    try {
+      const info = await checkForUpdate();
+      if (info) {
+        notifyUpdateFound(info);
+      } else {
+        showVariantToast('default', t('moreCheckUpdateUpToDate'));
+      }
+    } catch {
+      showVariantToast('danger', t('updateDownloadError'));
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
+
   const handleSignOut = () => {
     if (isSigningOut) {
       return;
@@ -1108,7 +1127,18 @@ const MoreRouteContent = ({
                     {t('moreFollowProfileHint')}
                   </Text>
               </Surface>
-              <View className="mt-8">
+              {Platform.OS === 'android' && (
+                <View className="mt-12">
+                  <AuthActionButton
+                    label={t('moreCheckUpdate')}
+                    loadingLabel={t('moreCheckUpdateChecking')}
+                    variant="secondary"
+                    onPress={handleCheckUpdate}
+                    isLoading={isCheckingUpdate}
+                  />
+                </View>
+              )}
+              <View className="mt-3">
                 <AuthActionButton
                   label={t('moreSignOut')}
                   loadingLabel={t('moreSigningOut')}

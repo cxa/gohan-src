@@ -3,7 +3,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { Dialog } from 'heroui-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/app-text';
-import { checkForUpdate, downloadAndInstall, type UpdateInfo } from '@/services/app-updater';
+import { checkForUpdate, downloadAndInstall, setUpdateFoundListener, type UpdateInfo } from '@/services/app-updater';
 
 const AppUpdateDialog = () => {
   const { t } = useTranslation();
@@ -15,16 +15,17 @@ const AppUpdateDialog = () => {
   const checked = useRef(false);
 
   useEffect(() => {
-    if (Platform.OS !== 'android' || checked.current) return;
-    checked.current = true;
-    checkForUpdate()
-      .then(info => {
-        if (info) {
-          setUpdateInfo(info);
-          setIsOpen(true);
-        }
-      })
-      .catch(() => {});
+    if (Platform.OS !== 'android') return;
+    // Auto-check on launch (once)
+    if (!checked.current) {
+      checked.current = true;
+      checkForUpdate()
+        .then(info => { if (info) { setUpdateInfo(info); setIsOpen(true); } })
+        .catch(() => {});
+    }
+    // Manual trigger from settings "Check for Updates"
+    setUpdateFoundListener(info => { setUpdateInfo(info); setIsOpen(true); });
+    return () => setUpdateFoundListener(null);
   }, []);
 
   const handleInstall = () => {
