@@ -15,6 +15,7 @@ type BaseTranslations = {
   onboardingOptionDark: string;
   onboardingOptionColorful: string;
   onboardingOptionPlain: string;
+  onboardingOptionSystem: string;
   onboardingOptionSoft: string;
   onboardingOptionSharp: string;
 
@@ -291,6 +292,7 @@ const enUS: BaseTranslations = {
   onboardingStepAppearance: 'Appearance',
   onboardingStepTheme: 'Theme',
   onboardingStepUiStyle: 'Style',
+  onboardingOptionSystem: 'Follow System',
   onboardingOptionLight: 'Light',
   onboardingOptionDark: 'Dark',
   onboardingOptionColorful: 'Colorful',
@@ -514,7 +516,7 @@ const enUS: BaseTranslations = {
   moreLanguage: 'Language',
   moreLanguageSystemDefault: 'System Default',
   moreAppearance: 'Appearance',
-  moreAppearanceAuto: 'Auto',
+  moreAppearanceAuto: 'Follow System',
   moreAppearanceLight: 'Light',
   moreAppearanceDark: 'Dark',
   moreTheme: 'Theme',
@@ -581,6 +583,7 @@ const zhCN: BaseTranslations = {
   onboardingStepAppearance: '外观',
   onboardingStepTheme: '主题',
   onboardingStepUiStyle: '风格',
+  onboardingOptionSystem: '跟随系统',
   onboardingOptionLight: '浅色',
   onboardingOptionDark: '深色',
   onboardingOptionColorful: '多彩',

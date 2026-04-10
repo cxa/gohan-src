@@ -113,6 +113,13 @@ export const useEffectiveIsDark = (): boolean =>
     getIsDarkSnapshot,
   );
 
+export const useSystemIsDark = (): boolean =>
+  useSyncExternalStore(
+    subscribeToAppAppearancePreference,
+    () => systemColorScheme === 'dark',
+    () => systemColorScheme === 'dark',
+  );
+
 export const setAppAppearancePreference = async (
   next: AppAppearanceOption,
 ) => {

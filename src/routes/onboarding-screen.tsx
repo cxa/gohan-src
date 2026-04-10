@@ -18,6 +18,7 @@ import {
   useAppAppearancePreference,
   setAppAppearancePreference,
   useEffectiveIsDark,
+  useSystemIsDark,
 } from '@/settings/app-appearance-preference';
 import {
   APP_THEME_OPTION,
@@ -217,6 +218,7 @@ const OnboardingScreen = () => {
   const theme      = useAppThemePreference();
   const uiStyle    = useAppUiStylePreference();
   const isDark     = useEffectiveIsDark();
+  const systemIsDark = useSystemIsDark();
   const isColorful = theme === APP_THEME_OPTION.COLORFUL;
   const [accent, appBg] = useThemeColor(['accent', 'background']);
 
@@ -297,8 +299,10 @@ const OnboardingScreen = () => {
     }
   };
 
-  // Step 1: appearance — preview both light/dark with colorful cards
+  // Step 1: appearance — preview system/light/dark with colorful cards
   const step1Options = [
+    { value: APP_APPEARANCE_OPTION.AUTO,  label: t('onboardingOptionSystem'),
+      previewIsDark: systemIsDark, previewIsColorful: true, previewIsSharp: false },
     { value: APP_APPEARANCE_OPTION.LIGHT, label: t('onboardingOptionLight'),
       previewIsDark: false, previewIsColorful: true,  previewIsSharp: false },
     { value: APP_APPEARANCE_OPTION.DARK,  label: t('onboardingOptionDark'),
