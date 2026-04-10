@@ -42,7 +42,7 @@ target 'yifan' do
     # directly in the Pods directory, before Xcode embeds and signs them.
     # A post-build Run Script approach would modify already-signed frameworks and break codesign.
     min_os = min_ios_version_supported.to_s
-    Dir.glob(File.join(installer.sandbox.root, '**/Frameworks/**/*.framework/Info.plist')) do |plist|
+    Dir.glob(File.join(installer.sandbox.root, '**/*.framework/Info.plist')) do |plist|
       existing = `/usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "#{plist}" 2>/dev/null`.strip
       if existing.empty?
         system("/usr/libexec/PlistBuddy -c 'Add :MinimumOSVersion string #{min_os}' '#{plist}'")
