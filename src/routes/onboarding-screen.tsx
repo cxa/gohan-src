@@ -52,6 +52,9 @@ const LINE_CONFIGS: readonly (readonly DimensionValue[])[] = [
   ['85%', '65%', '80%'],
   ['90%', '70%'],
   ['70%', '88%', '60%'],
+  ['80%', '55%'],
+  ['65%', '82%', '70%'],
+  ['88%', '72%'],
 ];
 
 // ---------------------------------------------------------------------------
@@ -66,25 +69,25 @@ type MiniSkeletonCardProps = {
 };
 
 const MiniSkeletonCard = ({ cardBg, barColor, lineWidths, isLast, isSharp }: MiniSkeletonCardProps) => {
-  const mb = isLast ? 0 : 6;
-  const radius = isSharp ? 'rounded-none' : 'rounded-3xl';
-  const barRadius = isSharp ? 'rounded-none' : 'rounded-full';
+  const mb = isLast ? 0 : 10;
+  const cardRadius = isSharp ? 0 : 24;
+  const barRadius  = isSharp ? 0 : 9999;
   return (
     <View
-      className={`${radius} px-4 py-4`}
-      style={[{ backgroundColor: cardBg, marginBottom: mb }]}
+      className="px-4 py-4"
+      style={[{ backgroundColor: cardBg, marginBottom: mb, borderRadius: cardRadius }]}
     >
       <View className="flex-row gap-2">
         <View className="h-8 w-8 rounded-full" style={[{ backgroundColor: barColor }]} />
         <View className="flex-1 gap-[5px]">
-          <View className={`h-[7px] w-14 ${barRadius}`} style={[{ backgroundColor: barColor }]} />
+          <View className="h-[7px] w-14" style={[{ borderRadius: barRadius, backgroundColor: barColor }]} />
           {lineWidths.map((w, i) => {
             const opacity = 0.7 - i * 0.15;
             return (
               <View
                 key={i}
-                className={`h-[7px] ${barRadius}`}
-                style={[{ width: w, backgroundColor: barColor, opacity }]}
+                className="h-[7px]"
+                style={[{ width: w, borderRadius: barRadius, backgroundColor: barColor, opacity }]}
               />
             );
           })}
@@ -111,8 +114,9 @@ const MiniTimeline = ({ previewIsDark, previewIsColorful, previewIsSharp }: Mini
   return (
     <View className="flex-1 p-3" style={[{ backgroundColor: listBg }]}>
       {LINE_CONFIGS.map((lineWidths, i) => {
-        const cardBg   = previewIsColorful ? (previewIsDark ? CARD_BG_DARK : CARD_BG_LIGHT)[i] : plainCard;
-        const barColor = previewIsColorful ? (previewIsDark ? BAR_BG_DARK  : BAR_BG_LIGHT )[i] : plainBar;
+        const ci       = i % CARD_BG_LIGHT.length;
+        const cardBg   = previewIsColorful ? (previewIsDark ? CARD_BG_DARK : CARD_BG_LIGHT)[ci] : plainCard;
+        const barColor = previewIsColorful ? (previewIsDark ? BAR_BG_DARK  : BAR_BG_LIGHT )[ci] : plainBar;
         return (
           <MiniSkeletonCard
             key={i}
