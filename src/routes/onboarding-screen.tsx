@@ -13,7 +13,7 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useThemeColor } from 'heroui-native';
 import { Text } from '@/components/app-text';
-import Svg, { Defs, ClipPath, Polygon, Rect, Circle, G, Line } from 'react-native-svg';
+import Svg, { Defs, ClipPath, Polygon, Rect, Circle, G } from 'react-native-svg';
 import {
   APP_APPEARANCE_OPTION,
   useAppAppearancePreference,
@@ -220,12 +220,6 @@ const SystemSplitPreview = () => {
             })}
           </G>
 
-          {/* Dividing line */}
-          <Line
-            x1={topX} y1={0} x2={botX} y2={h}
-            stroke="rgba(128,128,128,0.4)"
-            strokeWidth={1.5}
-          />
         </Svg>
       )}
     </View>
