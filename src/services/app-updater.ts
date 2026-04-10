@@ -12,11 +12,15 @@ export type UpdateInfo = {
 };
 
 function isNewer(latest: string, current: string): boolean {
-  const [lMaj = '0', lMin = '0'] = latest.split('.');
-  const [cMaj = '0', cMin = '0'] = current.split('.');
-  const majorDiff = parseInt(lMaj, 10) - parseInt(cMaj, 10);
-  if (majorDiff !== 0) return majorDiff > 0;
-  return parseInt(lMin, 10) > parseInt(cMin, 10);
+  const lParts = latest.split('.').map(p => parseInt(p, 10));
+  const cParts = current.split('.').map(p => parseInt(p, 10));
+  const len = Math.max(lParts.length, cParts.length);
+  for (let i = 0; i < len; i++) {
+    const l = lParts[i] ?? 0;
+    const c = cParts[i] ?? 0;
+    if (l !== c) return l > c;
+  }
+  return false;
 }
 
 export async function checkForUpdate(): Promise<UpdateInfo | null> {
