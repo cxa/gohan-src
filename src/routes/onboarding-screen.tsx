@@ -174,6 +174,7 @@ const SystemSplitPreview = () => {
   return (
     <View
       className="flex-1"
+      style={[{ backgroundColor: LIST_BG_LIGHT }]}
       onLayout={e => {
         setW(e.nativeEvent.layout.width);
         setH(e.nativeEvent.layout.height);
