@@ -1128,7 +1128,7 @@ const MoreRouteContent = ({
                   </Text>
               </Surface>
               {Platform.OS === 'android' && (
-                <View className="mt-12">
+                <View className="mt-8">
                   <AuthActionButton
                     label={t('moreCheckUpdate')}
                     loadingLabel={t('moreCheckUpdateChecking')}
@@ -1138,7 +1138,7 @@ const MoreRouteContent = ({
                   />
                 </View>
               )}
-              <View className="mt-3">
+              <View className={Platform.OS === 'android' ? 'mt-3' : 'mt-8'}>
                 <AuthActionButton
                   label={t('moreSignOut')}
                   loadingLabel={t('moreSigningOut')}
