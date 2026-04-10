@@ -13,12 +13,12 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useThemeColor } from 'heroui-native';
 import { Text } from '@/components/app-text';
+import Svg, { Defs, ClipPath, Polygon, Rect, Circle, G, Line } from 'react-native-svg';
 import {
   APP_APPEARANCE_OPTION,
   useAppAppearancePreference,
   setAppAppearancePreference,
   useEffectiveIsDark,
-  useSystemIsDark,
 } from '@/settings/app-appearance-preference';
 import {
   APP_THEME_OPTION,
@@ -134,6 +134,105 @@ const MiniTimeline = ({ previewIsDark, previewIsColorful, previewIsSharp }: Mini
 };
 
 // ---------------------------------------------------------------------------
+// SystemSplitPreview — diagonal light/dark split for Follow System option
+// ---------------------------------------------------------------------------
+const renderSvgCard = (
+  x: number, y: number, w: number, h: number,
+  bg: string, bar: string,
+) => {
+  const avR = Math.min(h * 0.28, 7);
+  const avCX = 10 + avR;
+  const avCY = h / 2;
+  const bX = avCX + avR + 5;
+  const bH = Math.max(3, Math.floor(h * 0.12));
+  const bMaxW = w - bX - 8;
+  return (
+    <G transform={`translate(${x} ${y})`}>
+      <Rect width={w} height={h} rx={8} fill={bg} />
+      <Circle cx={avCX} cy={avCY} r={avR} fill={bar} />
+      <G transform={`translate(${bX} ${avCY - bH - 2})`}>
+        <Rect width={bMaxW * 0.5} height={bH} rx={2} fill={bar} />
+      </G>
+      <G transform={`translate(${bX} ${avCY + 2})`}>
+        <Rect width={bMaxW * 0.75} height={bH} rx={2} fill={bar} opacity={0.7} />
+      </G>
+    </G>
+  );
+};
+
+const SystemSplitPreview = () => {
+  const [w, setW] = useState(0);
+  const [h, setH] = useState(0);
+
+  const pad = 8;
+  const gap = 6;
+  const count = 3;
+  const cardH = h > 0 ? (h - pad * 2 - gap * (count - 1)) / count : 0;
+  const topX  = w * 0.60; // diagonal x at top
+  const botX  = w * 0.40; // diagonal x at bottom
+
+  return (
+    <View
+      className="flex-1"
+      onLayout={e => {
+        setW(e.nativeEvent.layout.width);
+        setH(e.nativeEvent.layout.height);
+      }}
+    >
+      {w > 0 && h > 0 && (
+        <Svg width={w} height={h}>
+          <Defs>
+            <ClipPath id="ob-light">
+              <Polygon points={`0,0 ${topX},0 ${botX},${h} 0,${h}`} />
+            </ClipPath>
+            <ClipPath id="ob-dark">
+              <Polygon points={`${topX},0 ${w},0 ${w},${h} ${botX},${h}`} />
+            </ClipPath>
+          </Defs>
+
+          {/* Backgrounds */}
+          <Polygon points={`0,0 ${topX},0 ${botX},${h} 0,${h}`} fill={LIST_BG_LIGHT} />
+          <Polygon points={`${topX},0 ${w},0 ${w},${h} ${botX},${h}`} fill={LIST_BG_DARK} />
+
+          {/* Light-side cards */}
+          <G clipPath="url(#ob-light)">
+            {Array.from({ length: count }).map((_, i) => {
+              const ci = i % CARD_BG_LIGHT.length;
+              return (
+                <G key={i}>
+                  {renderSvgCard(pad, pad + i * (cardH + gap), w - pad * 2, cardH,
+                    CARD_BG_LIGHT[ci], BAR_BG_LIGHT[ci])}
+                </G>
+              );
+            })}
+          </G>
+
+          {/* Dark-side cards */}
+          <G clipPath="url(#ob-dark)">
+            {Array.from({ length: count }).map((_, i) => {
+              const ci = i % CARD_BG_DARK.length;
+              return (
+                <G key={i}>
+                  {renderSvgCard(pad, pad + i * (cardH + gap), w - pad * 2, cardH,
+                    CARD_BG_DARK[ci], BAR_BG_DARK[ci])}
+                </G>
+              );
+            })}
+          </G>
+
+          {/* Dividing line */}
+          <Line
+            x1={topX} y1={0} x2={botX} y2={h}
+            stroke="rgba(128,128,128,0.4)"
+            strokeWidth={1.5}
+          />
+        </Svg>
+      )}
+    </View>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // OptionPanel
 // ---------------------------------------------------------------------------
 type OptionPanelProps = {
@@ -145,6 +244,7 @@ type OptionPanelProps = {
   accentColor: string;
   appBg: string;
   onPress: () => void;
+  customPreview?: React.ReactNode;
 };
 
 const OptionPanel = ({
@@ -156,6 +256,7 @@ const OptionPanel = ({
   accentColor,
   appBg,
   onPress,
+  customPreview,
 }: OptionPanelProps) => {
   const borderColor = isSelected ? accentColor : appBg;
   const labelBg    = previewIsDark ? LIST_BG_DARK  : LIST_BG_LIGHT;
@@ -172,11 +273,13 @@ const OptionPanel = ({
         className="flex-1 rounded-3xl overflow-hidden border-[2.5px]"
         style={[{ borderColor }]}
       >
-        <MiniTimeline
-          previewIsDark={previewIsDark}
-          previewIsColorful={previewIsColorful}
-          previewIsSharp={previewIsSharp}
-        />
+        {customPreview ?? (
+          <MiniTimeline
+            previewIsDark={previewIsDark}
+            previewIsColorful={previewIsColorful}
+            previewIsSharp={previewIsSharp}
+          />
+        )}
         <View
           className="py-[10px] items-center"
           style={[{ backgroundColor: labelBg }]}
@@ -218,7 +321,6 @@ const OnboardingScreen = () => {
   const theme      = useAppThemePreference();
   const uiStyle    = useAppUiStylePreference();
   const isDark     = useEffectiveIsDark();
-  const systemIsDark = useSystemIsDark();
   const isColorful = theme === APP_THEME_OPTION.COLORFUL;
   const [accent, appBg] = useThemeColor(['accent', 'background']);
 
@@ -299,10 +401,11 @@ const OnboardingScreen = () => {
     }
   };
 
-  // Step 1: appearance — preview system/light/dark with colorful cards
+  // Step 1: appearance — AUTO uses diagonal split preview; Light/Dark use MiniTimeline
   const step1Options = [
     { value: APP_APPEARANCE_OPTION.AUTO,  label: t('onboardingOptionSystem'),
-      previewIsDark: systemIsDark, previewIsColorful: true, previewIsSharp: false },
+      previewIsDark: false, previewIsColorful: true, previewIsSharp: false,
+      customPreview: <SystemSplitPreview /> },
     { value: APP_APPEARANCE_OPTION.LIGHT, label: t('onboardingOptionLight'),
       previewIsDark: false, previewIsColorful: true,  previewIsSharp: false },
     { value: APP_APPEARANCE_OPTION.DARK,  label: t('onboardingOptionDark'),
@@ -373,6 +476,7 @@ const OnboardingScreen = () => {
               accentColor={accent}
               appBg={appBg}
               onPress={() => handleSelect(option.value)}
+              customPreview={'customPreview' in option ? option.customPreview : undefined}
             />
           ))}
         </View>
