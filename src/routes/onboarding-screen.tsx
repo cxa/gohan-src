@@ -322,8 +322,10 @@ const OnboardingScreen = () => {
   const uiStyle    = useAppUiStylePreference();
   const isDark     = useEffectiveIsDark();
   const isColorful = theme === APP_THEME_OPTION.COLORFUL;
-  const [accent] = useThemeColor(['accent']);
-  const unselectedBorder = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+  const [accent, appBg] = useThemeColor(['accent', 'background']);
+  // Dark mode: subtle white frame so light-bg panels don't float on dark screen
+  // Light mode: match background so border is invisible — content shape speaks for itself
+  const unselectedBorder = isDark ? 'rgba(255,255,255,0.12)' : appBg;
 
   // Content: tab-bar-style horizontal slide + fade (native driver)
   const slideX   = useRef(new Animated.Value(0)).current;
