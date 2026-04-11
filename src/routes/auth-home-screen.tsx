@@ -71,7 +71,7 @@ const normalizeTimelineItems = (value: unknown): FanfouStatus[] =>
   Array.isArray(value) ? (value as FanfouStatus[]) : [];
 const getStatusId = (status: FanfouStatus): string => status.id;
 const TIMELINE_SCROLL_SHADOW_SIZE = 100;
-const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 32 } as const;
+const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 32, zIndex: 20 } as const;
 const HOME_TOP_BUTTONS_STYLE = { flexDirection: 'row', gap: 20 } as const;
 const HOME_TITLE_HEIGHT = 44; // matches titleContainerStyle animation start value
 const HOME_ICON_SIZE = 22;

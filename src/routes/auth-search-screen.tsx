@@ -208,7 +208,7 @@ const SearchRoute = () => {
 
   const listContentContainerStyle = {
     ...timelineListSettings.contentContainerStyle,
-    paddingTop: Platform.OS === 'android' ? TIMELINE_SPACING : 0,
+    paddingTop: results.length > 0 ? TIMELINE_SPACING : 0,
     flexGrow: 1,
   };
 
@@ -248,7 +248,7 @@ const SearchRoute = () => {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-      <NativeEdgeScrollShadow style={styles.flex} color={background}>
+      <NativeEdgeScrollShadow style={styles.flex} color={background} visibility="bottom">
         <Animated.FlatList
           style={styles.flex}
           data={results}
@@ -257,6 +257,7 @@ const SearchRoute = () => {
           scrollEventThrottle={timelineListSettings.scrollEventThrottle}
           scrollIndicatorInsets={timelineListSettings.scrollIndicatorInsets}
           contentContainerStyle={listContentContainerStyle}
+          contentInsetAdjustmentBehavior="never"
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           ListFooterComponent={
