@@ -68,9 +68,7 @@ const resolveLocale = (): LocaleKey => {
 };
 
 i18n.use(initReactI18next).init({
-  compatibilityJSON: 'v3',
   fallbackLng: DEFAULT_LOCALE,
-  initImmediate: false,
   interpolation: {
     escapeValue: false,
   },
