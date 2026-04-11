@@ -58,7 +58,7 @@ import {
   AUTH_STATUS_ROUTE,
   AUTH_TAG_TIMELINE_ROUTE,
 } from '@/navigation/route-names';
-import { Search, Shuffle } from 'lucide-react-native';
+import { Globe, Search } from 'lucide-react-native';
 
 import type { FanfouStatus } from '@/types/fanfou';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
@@ -71,8 +71,8 @@ const normalizeTimelineItems = (value: unknown): FanfouStatus[] =>
   Array.isArray(value) ? (value as FanfouStatus[]) : [];
 const getStatusId = (status: FanfouStatus): string => status.id;
 const TIMELINE_SCROLL_SHADOW_SIZE = 100;
-const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 16 } as const;
-const HOME_TOP_BUTTONS_STYLE = { flexDirection: 'row', gap: 16 } as const;
+const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 24 } as const;
+const HOME_TOP_BUTTONS_STYLE = { flexDirection: 'row', gap: 20 } as const;
 const TimelineItemSeparator = () => (
   <View style={getTimelineItemSeparatorStyle()} />
 );
@@ -537,7 +537,7 @@ const AuthHomeRoute = () => {
         style={[PUBLIC_TIMELINE_BUTTON_POSITION, HOME_TOP_BUTTONS_STYLE, { top: insets.top + 8 }]}
       >
         <Pressable onPress={handleOpenPublicTimeline} hitSlop={12}>
-          <Shuffle size={18} color={muted} strokeWidth={1.5} />
+          <Globe size={18} color={muted} strokeWidth={1.5} />
         </Pressable>
         <Pressable onPress={handleOpenSearch} hitSlop={12}>
           <Search size={18} color={muted} strokeWidth={1.5} />
