@@ -37,6 +37,7 @@ import AuthProfileRoute from '@/routes/auth-profile-screen';
 import AuthStatusRoute from '@/routes/auth-status-screen';
 import AuthTagRoute from '@/routes/auth-tag-timeline-screen';
 import AuthPublicTimelineRoute from '@/routes/auth-public-timeline-screen';
+import AuthSearchRoute from '@/routes/auth-search-screen';
 import AuthUserListRoute from '@/routes/auth-user-list-screen';
 import LoginRoute from '@/routes/login-screen';
 import OnboardingRoute from '@/routes/onboarding-screen';
@@ -219,6 +220,11 @@ const AuthStackNavigator = () => {
         <AuthStack.Screen
           name={AUTH_STACK_ROUTE.PUBLIC_TIMELINE}
           component={AuthPublicTimelineRoute}
+        />
+        <AuthStack.Screen
+          name={AUTH_STACK_ROUTE.SEARCH}
+          component={AuthSearchRoute}
+          options={{ headerShown: false, animation: 'fade' }}
         />
       </AuthStack.Navigator>
     </AuthLayout>

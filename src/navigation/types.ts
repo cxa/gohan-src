@@ -49,6 +49,7 @@ export type AuthStackParamList = {
   [AUTH_STACK_ROUTE.STATUS]: NavigatorScreenParams<AuthStatusStackParamList>;
   [AUTH_STACK_ROUTE.TAG_TIMELINE]: NavigatorScreenParams<AuthTagStackParamList>;
   [AUTH_STACK_ROUTE.PUBLIC_TIMELINE]: undefined;
+  [AUTH_STACK_ROUTE.SEARCH]: undefined;
 };
 
 export type LoginStackParamList = {

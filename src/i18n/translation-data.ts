@@ -130,6 +130,12 @@ type BaseTranslations = {
   statusMissingId: string;
   conversationLoading: string;
 
+  // Search screen
+  searchPlaceholder: string;
+  searchCancel: string;
+  searchHint: string;
+  searchEmpty: string;
+
   // Public timeline screen
   publicTimelineTitle: string;
   publicTimelineEmpty: string;
@@ -429,6 +435,12 @@ const enUS: BaseTranslations = {
   statusMissingId: 'Missing post ID.',
   conversationLoading: 'Loading conversation…',
 
+  // Search screen
+  searchPlaceholder: 'Search posts…',
+  searchCancel: 'Cancel',
+  searchHint: 'Type to search posts.',
+  searchEmpty: 'No results found.',
+
   // Public timeline screen
   publicTimelineTitle: 'Just Browsing',
   publicTimelineEmpty: 'No posts found.',
@@ -725,6 +737,12 @@ const zhCN: BaseTranslations = {
   conversationLoadFailed: '加载对话失败。',
   statusMissingId: '缺少动态 ID。',
   conversationLoading: '加载对话中…',
+
+  // Search screen
+  searchPlaceholder: '搜索消息…',
+  searchCancel: '取消',
+  searchHint: '输入关键词搜索消息。',
+  searchEmpty: '没有找到相关内容。',
 
   // Public timeline screen
   publicTimelineTitle: '随便看看',

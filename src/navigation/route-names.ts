@@ -16,6 +16,7 @@ export const AUTH_STACK_ROUTE = {
   STATUS: 'Status',
   TAG_TIMELINE: 'TagTimeline',
   PUBLIC_TIMELINE: 'PublicTimeline',
+  SEARCH: 'Search',
 } as const;
 
 export const AUTH_MESSAGES_ROUTE = {

@@ -58,7 +58,7 @@ import {
   AUTH_STATUS_ROUTE,
   AUTH_TAG_TIMELINE_ROUTE,
 } from '@/navigation/route-names';
-import { Shuffle } from 'lucide-react-native';
+import { Search, Shuffle } from 'lucide-react-native';
 
 import type { FanfouStatus } from '@/types/fanfou';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
@@ -72,6 +72,7 @@ const normalizeTimelineItems = (value: unknown): FanfouStatus[] =>
 const getStatusId = (status: FanfouStatus): string => status.id;
 const TIMELINE_SCROLL_SHADOW_SIZE = 100;
 const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 16 } as const;
+const HOME_TOP_BUTTONS_STYLE = { flexDirection: 'row', gap: 16 } as const;
 const TimelineItemSeparator = () => (
   <View style={getTimelineItemSeparatorStyle()} />
 );
@@ -269,6 +270,12 @@ const AuthHomeRoute = () => {
       navigation.getParent<NavigationProp<AuthStackParamList>>();
     if (!parentNavigation) return;
     parentNavigation.navigate(AUTH_STACK_ROUTE.PUBLIC_TIMELINE);
+  };
+  const handleOpenSearch = () => {
+    const parentNavigation =
+      navigation.getParent<NavigationProp<AuthStackParamList>>();
+    if (!parentNavigation) return;
+    parentNavigation.navigate(AUTH_STACK_ROUTE.SEARCH);
   };
   const {
     data: initialItems = [],
@@ -526,13 +533,16 @@ const AuthHomeRoute = () => {
         onCancel={handleCloseComposer}
         onSubmit={handleSendComposer}
       />
-      <Pressable
-        onPress={handleOpenPublicTimeline}
-        style={[PUBLIC_TIMELINE_BUTTON_POSITION, { top: insets.top + 8 }]}
-        hitSlop={12}
+      <View
+        style={[PUBLIC_TIMELINE_BUTTON_POSITION, HOME_TOP_BUTTONS_STYLE, { top: insets.top + 8 }]}
       >
-        <Shuffle size={18} color={muted} strokeWidth={1.5} />
-      </Pressable>
+        <Pressable onPress={handleOpenPublicTimeline} hitSlop={12}>
+          <Shuffle size={18} color={muted} strokeWidth={1.5} />
+        </Pressable>
+        <Pressable onPress={handleOpenSearch} hitSlop={12}>
+          <Search size={18} color={muted} strokeWidth={1.5} />
+        </Pressable>
+      </View>
     </View>
   );
 };
