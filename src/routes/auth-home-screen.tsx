@@ -71,8 +71,10 @@ const normalizeTimelineItems = (value: unknown): FanfouStatus[] =>
   Array.isArray(value) ? (value as FanfouStatus[]) : [];
 const getStatusId = (status: FanfouStatus): string => status.id;
 const TIMELINE_SCROLL_SHADOW_SIZE = 100;
-const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 24 } as const;
+const PUBLIC_TIMELINE_BUTTON_POSITION = { position: 'absolute', right: 32 } as const;
 const HOME_TOP_BUTTONS_STYLE = { flexDirection: 'row', gap: 20 } as const;
+const HOME_TITLE_HEIGHT = 44; // matches titleContainerStyle animation start value
+const HOME_ICON_SIZE = 22;
 const TimelineItemSeparator = () => (
   <View style={getTimelineItemSeparatorStyle()} />
 );
@@ -534,13 +536,13 @@ const AuthHomeRoute = () => {
         onSubmit={handleSendComposer}
       />
       <View
-        style={[PUBLIC_TIMELINE_BUTTON_POSITION, HOME_TOP_BUTTONS_STYLE, { top: insets.top + 8 }]}
+        style={[PUBLIC_TIMELINE_BUTTON_POSITION, HOME_TOP_BUTTONS_STYLE, { top: insets.top + HOME_TITLE_HEIGHT - HOME_ICON_SIZE }]}
       >
         <Pressable onPress={handleOpenPublicTimeline} hitSlop={12}>
-          <Globe size={18} color={muted} strokeWidth={1.5} />
+          <Globe size={HOME_ICON_SIZE} color={muted} strokeWidth={1.5} />
         </Pressable>
         <Pressable onPress={handleOpenSearch} hitSlop={12}>
-          <Search size={18} color={muted} strokeWidth={1.5} />
+          <Search size={HOME_ICON_SIZE} color={muted} strokeWidth={1.5} />
         </Pressable>
       </View>
     </View>
