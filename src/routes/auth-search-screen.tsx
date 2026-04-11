@@ -216,8 +216,8 @@ const SearchRoute = () => {
 
   return (
     <View className="flex-1 bg-background">
-      {/* Search bar */}
-      <View style={[styles.searchBar, { top: searchBarTop, height: searchBarHeight, backgroundColor: background }]}>
+      {/* Search bar — starts at top:0 so background covers safe area too */}
+      <View style={[styles.searchBar, { height: searchBarTop + searchBarHeight, paddingTop: searchBarTop, backgroundColor: background }]}>
         <View style={[styles.inputRow, { backgroundColor: `${muted}22` }]}>
           <Search size={14} color={muted} strokeWidth={2} />
           <TextInput
@@ -332,6 +332,7 @@ export default SearchRoute;
 const styles = StyleSheet.create({
   searchBar: {
     position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
     paddingHorizontal: 12,
