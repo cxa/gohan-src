@@ -229,6 +229,7 @@ const SearchRoute = () => {
               autoCorrect={false}
               autoCapitalize="none"
               clearButtonMode="while-editing"
+              keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
             />
           </View>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8} style={styles.cancelButton}>
