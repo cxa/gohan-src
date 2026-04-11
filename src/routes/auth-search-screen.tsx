@@ -29,6 +29,7 @@ import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-sha
 import NeobrutalActivityIndicator from '@/components/neobrutal-activity-indicator';
 import {
   TIMELINE_PAGE_SIZE,
+  TIMELINE_SPACING,
   useTimelineListSettings,
 } from '@/components/timeline-list-settings';
 import {
@@ -207,7 +208,7 @@ const SearchRoute = () => {
 
   const listContentContainerStyle = {
     ...timelineListSettings.contentContainerStyle,
-    paddingTop: 0,
+    paddingTop: Platform.OS === 'android' ? TIMELINE_SPACING : 0,
     flexGrow: 1,
   };
 
