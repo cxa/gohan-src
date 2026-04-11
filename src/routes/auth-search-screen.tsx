@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -23,7 +24,6 @@ import PhotoViewerModal from '@/components/photo-viewer-modal';
 import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
 import NeobrutalActivityIndicator from '@/components/neobrutal-activity-indicator';
 import {
   TIMELINE_PAGE_SIZE,
@@ -201,6 +201,7 @@ const SearchRoute = () => {
     onScroll: () => {},
   });
 
+  const { height: windowHeight } = useWindowDimensions();
   const timelineListSettings = useTimelineListSettings(insets, { hasBottomTabBar: false });
 
   const searchBarHeight = 44;
@@ -267,17 +268,15 @@ const SearchRoute = () => {
             ) : null
           }
           ListEmptyComponent={
-            isLoading && query ? (
-              <View className="flex-1 items-center pt-16">
+            <View style={[styles.emptyContainer, { height: windowHeight - listPaddingTop }]}>
+              {isLoading && query ? (
                 <NeobrutalActivityIndicator size="small" />
-              </View>
-            ) : isEmpty ? (
-              <TimelineSkeletonCard message={t('searchEmpty')} />
-            ) : !query ? (
-              <View className="flex-1 items-center pt-16">
+              ) : isEmpty ? (
+                <Text className="text-[14px] text-muted">{t('searchEmpty')}</Text>
+              ) : !query ? (
                 <Text className="text-[14px] text-muted">{t('searchHint')}</Text>
-              </View>
-            ) : null
+              ) : null}
+            </View>
           }
           onEndReached={fetchMore}
           onEndReachedThreshold={0.4}
@@ -340,6 +339,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  emptyContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   inputRow: {
     flex: 1,
