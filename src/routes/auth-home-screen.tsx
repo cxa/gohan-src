@@ -165,6 +165,21 @@ const AuthHomeRoute = () => {
       }
     },
   });
+  const topButtonsStyle = useAnimatedStyle(() => {
+    const offset = interpolate(
+      scrollY.value,
+      [0, HOME_TITLE_HEIGHT],
+      [HOME_TITLE_HEIGHT - HOME_ICON_SIZE, 0],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 70],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    return { top: insets.top + offset, opacity };
+  });
   const titleContainerStyle = useAnimatedStyle(() => {
     const height = interpolate(
       scrollY.value,
@@ -535,8 +550,8 @@ const AuthHomeRoute = () => {
         onCancel={handleCloseComposer}
         onSubmit={handleSendComposer}
       />
-      <View
-        style={[PUBLIC_TIMELINE_BUTTON_POSITION, HOME_TOP_BUTTONS_STYLE, { top: insets.top + HOME_TITLE_HEIGHT - HOME_ICON_SIZE }]}
+      <Animated.View
+        style={[PUBLIC_TIMELINE_BUTTON_POSITION, HOME_TOP_BUTTONS_STYLE, topButtonsStyle]}
       >
         <Pressable onPress={handleOpenPublicTimeline} hitSlop={12}>
           <Globe size={HOME_ICON_SIZE} color={muted} strokeWidth={1.5} />
@@ -544,7 +559,7 @@ const AuthHomeRoute = () => {
         <Pressable onPress={handleOpenSearch} hitSlop={12}>
           <Search size={HOME_ICON_SIZE} color={muted} strokeWidth={1.5} />
         </Pressable>
-      </View>
+      </Animated.View>
     </View>
   );
 };
