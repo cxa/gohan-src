@@ -442,7 +442,7 @@ const enUS: BaseTranslations = {
   searchEmpty: 'No results found.',
 
   // Public timeline screen
-  publicTimelineTitle: 'Just Browsing',
+  publicTimelineTitle: 'Just Passing By',
   publicTimelineEmpty: 'No posts found.',
   publicTimelineLoadFailed: 'Failed to load public timeline.',
 
