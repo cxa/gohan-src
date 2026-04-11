@@ -1,12 +1,24 @@
 diff --git a/node_modules/@formatjs/intl-pluralrules/package.json b/node_modules/@formatjs/intl-pluralrules/package.json
 --- a/node_modules/@formatjs/intl-pluralrules/package.json
 +++ b/node_modules/@formatjs/intl-pluralrules/package.json
-@@ -11,7 +11,7 @@
+@@ -11,8 +11,11 @@
      "./polyfill.js": "./polyfill.js",
      "./polyfill-force.js": "./polyfill-force.js",
      "./should-polyfill.js": "./should-polyfill.js",
 -    "./locale-data/*": "./locale-data/*",
+-    "./locale-data": "./locale-data"
 +    "./locale-data/*": "./locale-data/*.js",
-     "./locale-data": "./locale-data"
++    "./locale-data": "./locale-data",
++    "./polyfill": "./polyfill.js",
++    "./polyfill-force": "./polyfill-force.js",
++    "./should-polyfill": "./should-polyfill.js"
    },
    "dependencies": {
+     "@formatjs/bigdecimal": "0.2.0",
+@@ -35,4 +38,4 @@
+     "rules"
+   ],
+   "repository": "formatjs/formatjs.git"
+-}
+\ No newline at end of file
++}
