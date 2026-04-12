@@ -1,6 +1,8 @@
 package im.cxa.fanatter
 
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -16,6 +18,9 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class MainActivity : ReactActivity() {
   private var isAppReady = false
@@ -31,7 +36,51 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
+  // Copy shared image URI to cache and return a yifan:// URL, or null if not a share intent.
+  @Suppress("DEPRECATION")
+  private fun resolveShareIntent(intent: Intent): String? {
+    if (intent.action != Intent.ACTION_SEND) return null
+    val mimeType = intent.type ?: return null
+    if (!mimeType.startsWith("image/")) return null
+    val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+    } else {
+      intent.getParcelableExtra(Intent.EXTRA_STREAM)
+    } ?: return null
+    return try {
+      val cacheFile = File(cacheDir, "share-image.jpg")
+      if (uri.scheme == "file") {
+        val srcPath = uri.path ?: return null
+        FileInputStream(srcPath).use { input ->
+          FileOutputStream(cacheFile).use { output -> input.copyTo(output) }
+        }
+      } else {
+        contentResolver.openInputStream(uri)?.use { input ->
+          FileOutputStream(cacheFile).use { output -> input.copyTo(output) }
+        }
+      }
+      "yifan://share-image?file=${Uri.encode(cacheFile.absolutePath)}"
+    } catch (_: Exception) {
+      null
+    }
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    val url = resolveShareIntent(intent)
+    if (url != null) {
+      val viewIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+      super.onNewIntent(viewIntent)
+    } else {
+      super.onNewIntent(intent)
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Convert cold-start share intent to a yifan:// deep link so Linking.getInitialURL() picks it up
+    intent?.let { resolveShareIntent(it) }?.let { url ->
+      intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    }
+
     val splashScreen = installSplashScreen()
     splashScreen.setKeepOnScreenCondition { !isAppReady }
     splashScreen.setOnExitAnimationListener { provider ->

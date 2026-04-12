@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
 import { executeComposerSend } from '@/utils/composer-send';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -39,6 +39,8 @@ import MoreRoute from '@/routes/auth-more-screen';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import { closePhotoViewer, usePhotoViewerStore } from '@/components/photo-viewer-store';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
+import { clearShareIntent, useShareIntentStore } from '@/stores/share-intent-store';
+import type { PickedImage } from '@/utils/pick-image-from-library';
 const Tab = createBottomTabNavigator<AuthTabParamList>();
 const TabScaleWrapper = ({ children, backgroundColor }: { children: React.ReactNode; backgroundColor: string }) => {
   return (
@@ -314,12 +316,23 @@ const AuthIndexRoute = () => {
   const auth = useAuthSession();
   const [backgroundColor] = useThemeColor(['background']);
   const [composeVisible, setComposeVisible] = useState(false);
+  const [composerInitialPhoto, setComposerInitialPhoto] = useState<PickedImage | null>(null);
+  const shareIntent = useShareIntentStore();
   const statusUpdateMutation = useStatusUpdateMutation();
+
+  useEffect(() => {
+    if (shareIntent.photo && auth.status === 'authenticated') {
+      setComposerInitialPhoto(shareIntent.photo);
+      setComposeVisible(true);
+      clearShareIntent();
+    }
+  }, [shareIntent.photo, auth.status]);
   const handleOpenComposer = () => {
     setComposeVisible(true);
   };
   const handleCloseComposer = () => {
     setComposeVisible(false);
+    setComposerInitialPhoto(null);
   };
   const handleSubmitComposer = ({
     text,
@@ -388,6 +401,7 @@ const AuthIndexRoute = () => {
         submitLabel={t('composerSubmitPost')}
         enablePhoto
         resetKey="root-compose"
+        initialPhoto={composerInitialPhoto}
         isSubmitting={false}
         onCancel={handleCloseComposer}
         onSubmit={handleSubmitComposer}

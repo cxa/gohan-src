@@ -41,6 +41,7 @@ import AuthSearchRoute from '@/routes/auth-search-screen';
 import AuthUserListRoute from '@/routes/auth-user-list-screen';
 import LoginRoute from '@/routes/login-screen';
 import OnboardingRoute from '@/routes/onboarding-screen';
+import { useShareIntent } from '@/hooks/use-share-intent';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -156,6 +157,7 @@ const TagStackNavigator = () => {
 const AuthStackNavigator = () => {
   const headerFontFamily = useAppFontFamily();
   const [foreground, background] = useThemeColor(['foreground', 'background']);
+  useShareIntent();
 
   return (
     <AuthLayout>

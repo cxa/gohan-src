@@ -31,6 +31,7 @@ type ComposerModalProps = {
   placeholder: string;
   submitLabel: string;
   initialText?: string;
+  initialPhoto?: PickedImage | null;
   resetKey?: string | null;
   enablePhoto?: boolean;
   isSubmitting?: boolean;
@@ -44,6 +45,7 @@ const ComposerModal = ({
   placeholder,
   submitLabel,
   initialText = '',
+  initialPhoto = null,
   resetKey = null,
   enablePhoto = false,
   isSubmitting: controlledIsSubmitting,
@@ -71,10 +73,10 @@ const ComposerModal = ({
       return;
     }
     setValue(initialText);
-    setPhoto(null);
+    setPhoto(initialPhoto ?? null);
     setIsPhotoPicking(false);
     setInternalIsSubmitting(false);
-  }, [initialText, resetKey, visible]);
+  }, [initialText, initialPhoto, resetKey, visible]);
 
   const handlePickPhoto = async () => {
     if (!enablePhoto || !canDismiss) {

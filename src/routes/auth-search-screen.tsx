@@ -5,7 +5,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -17,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react-native';
 import { useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
-import { Text } from '@/components/app-text';
+import { Text, TextInput } from '@/components/app-text';
 import ComposerModal from '@/components/composer-modal';
 import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
 import useTimelineStatusInteractions from '@/components/use-timeline-status-interactions';
@@ -40,7 +39,6 @@ import {
 } from '@/navigation/route-names';
 import type { AuthStackParamList } from '@/navigation/types';
 import type { FanfouStatus } from '@/types/fanfou';
-import { useAppFontFamily } from '@/settings/app-font-preference';
 import { useEffectiveIsDark } from '@/settings/app-appearance-preference';
 
 const SEARCH_COUNT = 20;
@@ -63,13 +61,12 @@ const SearchRoute = () => {
     'accent', 'background', 'muted', 'foreground',
   ]);
   const insets = useSafeAreaInsets();
-  const fontFamily = useAppFontFamily();
   const isDark = useEffectiveIsDark();
   const inputBackground = isDark
     ? 'rgba(118,118,128,0.24)'
     : 'rgba(118,118,128,0.12)';
 
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 50);
     return () => clearTimeout(timer);
@@ -223,7 +220,7 @@ const SearchRoute = () => {
             <Search size={16} color={muted} strokeWidth={2} style={styles.searchIcon} />
             <TextInput
               ref={inputRef}
-              style={[styles.input, { color: foreground, fontFamily: fontFamily ?? undefined }]}
+              style={[styles.input, { color: foreground }]}
               placeholder={t('searchPlaceholder')}
               placeholderTextColor={muted}
               value={inputText}
@@ -236,7 +233,7 @@ const SearchRoute = () => {
             />
           </View>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8} style={styles.cancelButton}>
-            <Text style={[styles.cancelText, { color: foreground, fontFamily: fontFamily ?? undefined }]}>
+            <Text style={[styles.cancelText, { color: foreground }]}>
               {t('searchCancel')}
             </Text>
           </Pressable>
@@ -351,7 +348,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 9999,
-    height: 36,
+    minHeight: 36,
+    paddingVertical: 6,
     paddingHorizontal: 10,
     gap: 6,
   },
@@ -361,7 +359,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    paddingVertical: 0,
   },
   cancelButton: {
     paddingVertical: 6,
