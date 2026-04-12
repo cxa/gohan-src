@@ -13,6 +13,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -91,6 +93,16 @@ jobs:
           mv android/app/build/outputs/apk/release/app-release.apk \
              yifan-${{ steps.versions.outputs.version }}.apk
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          node scripts/generate-changelog.js 2>/dev/null
+          CHANGELOG=$(cat .changelog/en.txt)
+          # Use GitHub Actions delimiter for multiline output
+          echo "body<<CHANGELOG_EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "CHANGELOG_EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -98,7 +110,7 @@ jobs:
           VERSION="${{ steps.versions.outputs.version }}"
           gh release create "v${VERSION}" \
             --title "${VERSION}" \
-            --generate-notes \
+            --notes "${{ steps.changelog.outputs.body }}" \
             manifest.json \
             "yifan-${VERSION}.apk" \
             "yifan-${VERSION}.android.jsbundle" \

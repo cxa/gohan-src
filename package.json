@@ -8,6 +8,8 @@
   ],
   "scripts": {
     "bump-version": "node scripts/bump-version.js",
+    "changelog": "node scripts/generate-changelog.js",
+    "release": "node scripts/release.js",
     "android": "react-native run-android",
     "env:generate": "node scripts/generate-env.js",
     "ios": "react-native run-ios --simulator YIFAN && react-native run-ios --simulator YIFAN_PAD",
