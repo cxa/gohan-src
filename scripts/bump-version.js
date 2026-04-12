@@ -71,6 +71,13 @@ function hasNativeChanges() {
   }
 }
 
+function getGitCommitCount() {
+  return parseInt(
+    execSync('git rev-list --count HEAD', { cwd: ROOT, encoding: 'utf8' }).trim(),
+    10,
+  );
+}
+
 const version = getNextVersion();
 const versionCode = versionToCode(version);
 const bumpNative = hasNativeChanges();
@@ -98,9 +105,14 @@ updateFile(path.join(ROOT, 'android/app/build.gradle'), c =>
     .replace(/versionName "[^"]+"/, `versionName "${version}"`),
 );
 
-// ios/yifan.xcodeproj/project.pbxproj (two occurrences: Debug + Release)
+// ios/yifan.xcodeproj/project.pbxproj
+// Update MARKETING_VERSION and CURRENT_PROJECT_VERSION for all targets
+const buildNumber = getGitCommitCount();
 updateFile(path.join(ROOT, 'ios/yifan.xcodeproj/project.pbxproj'), c =>
-  c.replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${version};`),
+  c
+    .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${version};`)
+    .replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${buildNumber};`),
 );
 
+console.log(`iOS build number: ${buildNumber}`);
 console.log('Done.');
