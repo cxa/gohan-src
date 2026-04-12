@@ -8,10 +8,10 @@ class ShareViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .clear
-    loadSharedImage()
+    loadSharedContent()
   }
 
-  private func loadSharedImage() {
+  private func loadSharedContent() {
     guard
       let item = extensionContext?.inputItems.first as? NSExtensionItem,
       let attachments = item.attachments,
@@ -21,6 +21,7 @@ class ShareViewController: UIViewController {
       return
     }
 
+    // Try image first
     let imageTypeIDs = [
       UTType.jpeg.identifier,
       UTType.png.identifier,
@@ -28,13 +29,29 @@ class ShareViewController: UIViewController {
       UTType.image.identifier,
     ]
 
-    guard let provider = attachments.first(where: { p in
+    if let provider = attachments.first(where: { p in
       imageTypeIDs.contains(where: { p.hasItemConformingToTypeIdentifier($0) })
-    }) else {
-      complete(success: false)
+    }) {
+      loadSharedImage(provider: provider, imageTypeIDs: imageTypeIDs)
       return
     }
 
+    // Try URL
+    if let provider = attachments.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }) {
+      loadSharedURL(provider: provider)
+      return
+    }
+
+    // Try plain text
+    if let provider = attachments.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }) {
+      loadSharedText(provider: provider)
+      return
+    }
+
+    complete(success: false)
+  }
+
+  private func loadSharedImage(provider: NSItemProvider, imageTypeIDs: [String]) {
     let typeID = imageTypeIDs.first { provider.hasItemConformingToTypeIdentifier($0) }
       ?? UTType.image.identifier
 
@@ -70,6 +87,62 @@ class ShareViewController: UIViewController {
     }
   }
 
+  private func loadSharedURL(provider: NSItemProvider) {
+    provider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] data, _ in
+      guard let self else { return }
+
+      var urlString: String?
+      if let url = data as? URL {
+        urlString = url.absoluteString
+      }
+
+      guard let text = urlString, !text.isEmpty else {
+        self.complete(success: false)
+        return
+      }
+
+      self.writeSharedText(text)
+    }
+  }
+
+  private func loadSharedText(provider: NSItemProvider) {
+    provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) { [weak self] data, _ in
+      guard let self else { return }
+
+      var text: String?
+      if let str = data as? String {
+        text = str
+      } else if let d = data as? Data {
+        text = String(data: d, encoding: .utf8)
+      }
+
+      guard let text, !text.isEmpty else {
+        self.complete(success: false)
+        return
+      }
+
+      self.writeSharedText(text)
+    }
+  }
+
+  private func writeSharedText(_ text: String) {
+    guard let container = FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: appGroupID)
+    else {
+      complete(success: false)
+      return
+    }
+
+    let timestamp = Int(Date().timeIntervalSince1970 * 1000)
+    let dest = container.appendingPathComponent("share-text-\(timestamp).txt")
+    do {
+      try text.write(to: dest, atomically: true, encoding: .utf8)
+      DispatchQueue.main.async { self.openMainAppAndComplete() }
+    } catch {
+      complete(success: false)
+    }
+  }
+
   private func openMainAppAndComplete() {
     guard let url = URL(string: appURLScheme) else {
       complete(success: true)
@@ -98,7 +171,7 @@ class ShareViewController: UIViewController {
     } else {
       extensionContext?.cancelRequest(withError: NSError(
         domain: "YifanShare", code: 0,
-        userInfo: [NSLocalizedDescriptionKey: "Failed to load image"]))
+        userInfo: [NSLocalizedDescriptionKey: "Failed to load shared content"]))
     }
   }
 }

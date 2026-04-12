@@ -36,11 +36,20 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-  // Copy shared image URI to cache and return a yifan:// URL, or null if not a share intent.
+  // Resolve a share intent to a yifan:// URL, or null if not a share intent.
   @Suppress("DEPRECATION")
   private fun resolveShareIntent(intent: Intent): String? {
     if (intent.action != Intent.ACTION_SEND) return null
     val mimeType = intent.type ?: return null
+
+    // Handle shared text
+    if (mimeType == "text/plain") {
+      val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return null
+      if (text.isBlank()) return null
+      return "yifan://share-text?text=${Uri.encode(text)}"
+    }
+
+    // Handle shared image
     if (!mimeType.startsWith("image/")) return null
     val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)

@@ -317,22 +317,29 @@ const AuthIndexRoute = () => {
   const [backgroundColor] = useThemeColor(['background']);
   const [composeVisible, setComposeVisible] = useState(false);
   const [composerInitialPhoto, setComposerInitialPhoto] = useState<PickedImage | null>(null);
+  const [composerInitialText, setComposerInitialText] = useState('');
   const shareIntent = useShareIntentStore();
   const statusUpdateMutation = useStatusUpdateMutation();
 
   useEffect(() => {
-    if (shareIntent.photo && auth.status === 'authenticated') {
+    if (auth.status !== 'authenticated') return;
+    if (shareIntent.photo) {
       setComposerInitialPhoto(shareIntent.photo);
       setComposeVisible(true);
       clearShareIntent();
+    } else if (shareIntent.text) {
+      setComposerInitialText(shareIntent.text);
+      setComposeVisible(true);
+      clearShareIntent();
     }
-  }, [shareIntent.photo, auth.status]);
+  }, [shareIntent.photo, shareIntent.text, auth.status]);
   const handleOpenComposer = () => {
     setComposeVisible(true);
   };
   const handleCloseComposer = () => {
     setComposeVisible(false);
     setComposerInitialPhoto(null);
+    setComposerInitialText('');
   };
   const handleSubmitComposer = ({
     text,
@@ -401,6 +408,7 @@ const AuthIndexRoute = () => {
         submitLabel={t('composerSubmitPost')}
         enablePhoto
         resetKey="root-compose"
+        initialText={composerInitialText}
         initialPhoto={composerInitialPhoto}
         isSubmitting={false}
         onCancel={handleCloseComposer}

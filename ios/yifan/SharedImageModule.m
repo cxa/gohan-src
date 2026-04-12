@@ -80,4 +80,50 @@ RCT_EXPORT_METHOD(readAndClearPending:(RCTPromiseResolveBlock)resolve
   resolve([data base64EncodedStringWithOptions:0]);
 }
 
+// Find the oldest pending share-text-*.txt in the App Group container,
+// read it as a string, delete it, and return the text.
+// Returns nil (resolves with NSNull) if no pending text exists.
+RCT_EXPORT_METHOD(readAndClearPendingText:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSURL *containerURL = [[NSFileManager defaultManager]
+    containerURLForSecurityApplicationGroupIdentifier:@"group.im.cxa.fanatter"];
+  if (!containerURL) {
+    resolve([NSNull null]);
+    return;
+  }
+
+  NSArray *contents = [[NSFileManager defaultManager]
+    contentsOfDirectoryAtURL:containerURL
+    includingPropertiesForKeys:@[NSURLCreationDateKey]
+    options:NSDirectoryEnumerationSkipsHiddenFiles
+    error:nil];
+
+  NSArray *shareFiles = [contents filteredArrayUsingPredicate:
+    [NSPredicate predicateWithBlock:^BOOL(NSURL *url, NSDictionary *bindings) {
+      return [url.lastPathComponent hasPrefix:@"share-text-"] &&
+             [url.pathExtension isEqualToString:@"txt"];
+    }]];
+
+  if (shareFiles.count == 0) {
+    resolve([NSNull null]);
+    return;
+  }
+
+  NSArray *sorted = [shareFiles sortedArrayUsingComparator:^NSComparisonResult(NSURL *a, NSURL *b) {
+    return [a.lastPathComponent compare:b.lastPathComponent];
+  }];
+
+  NSURL *fileURL = sorted.firstObject;
+  NSString *text = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
+  [[NSFileManager defaultManager] removeItemAtURL:fileURL error:nil];
+
+  if (!text || text.length == 0) {
+    resolve([NSNull null]);
+    return;
+  }
+
+  resolve(text);
+}
+
 @end
