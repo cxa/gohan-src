@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - uses: actions/checkout@v5
 
@@ -95,13 +92,14 @@ jobs:
              yifan-${{ steps.versions.outputs.version }}.apk
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.versions.outputs.version }}
-          name: ${{ steps.versions.outputs.version }}
-          generate_release_notes: true
-          files: |
-            manifest.json
-            yifan-${{ steps.versions.outputs.version }}.apk
-            yifan-${{ steps.versions.outputs.version }}.android.jsbundle
-            yifan-${{ steps.versions.outputs.version }}.ios.jsbundle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.versions.outputs.version }}"
+          gh release create "v${VERSION}" \
+            --title "${VERSION}" \
+            --generate-notes \
+            manifest.json \
+            "yifan-${VERSION}.apk" \
+            "yifan-${VERSION}.android.jsbundle" \
+            "yifan-${VERSION}.ios.jsbundle"
