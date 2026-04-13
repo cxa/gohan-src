@@ -230,13 +230,14 @@ export const parseHtmlToSegments = (value: unknown): HtmlTextSegment[] => {
           }
         }
       }
+      const displayName = linkText || screenName;
       const mentionText = sanitizedText.startsWith('@')
         ? sanitizedText
-        : `@${screenName}`;
+        : `@${displayName}`;
       segments.push({
         type: 'mention',
         text: mentionText,
-        screenName,
+        screenName: displayName,
         url: normalizedHref ?? href,
       });
     } else if (tag) {

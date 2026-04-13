@@ -75,3 +75,9 @@ See AGENTS.md §"Design System" for full rules. Summary:
 - No drop shadows — separation via cream bg vs. colored card fills
 - Typography: bold/heavy display font (`font-weight: 800`) for titles; warm and playful tone
 - Icons: illustrated/kawaii style for categories, minimal line icons for nav tabs
+
+---
+
+## Workflow
+
+- **After each code change**, run `/codex:review` to get an independent second opinion before moving on.
