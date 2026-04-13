@@ -78,6 +78,19 @@ See AGENTS.md §"Design System" for full rules. Summary:
 
 ---
 
+## Releasing
+
+**Always use `node scripts/release.js`** to release. Never manually run bump-version + tag + push. The script handles the full flow:
+
+1. `bump-version.js` — version + nativeVersion auto-detection
+2. `generate-changelog.js` — changelog from previous tag
+3. Write `RELEASE_NOTES.md` — edit before confirming
+4. Commit, tag, push
+
+The GitHub Release workflow reads `RELEASE_NOTES.md` for release notes.
+
+---
+
 ## Workflow
 
 - **After each code change**, run `/codex:review` to get an independent second opinion before moving on.
