@@ -38,8 +38,10 @@ import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
 import useTimelineStatusInteractions from '@/components/use-timeline-status-interactions';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
+import { AtSign } from 'lucide-react-native';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
+import { useUserFilterEffect } from '@/query/status-query-invalidation';
 import TimelineTitleHeader from '@/components/timeline-title-header';
 import { isHydratingTimeline } from '@/components/timeline-hydration';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
@@ -105,6 +107,7 @@ const MentionsRoute = () => {
     TIMELINE_TOP_CONTENT_GAP -
     getTabBarOccludedHeight(insets.bottom);
   const [timelineItems, setTimelineItems] = useState<FanfouStatus[]>([]);
+  useUserFilterEffect(setTimelineItems);
   const listRef = useRef<FlatList<FanfouStatus>>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasReachedTimelineEnd, setHasReachedTimelineEnd] = useState(false);
@@ -389,7 +392,7 @@ const MentionsRoute = () => {
                   availableHeight={skeletonAvailableHeight}
                 />
               ) : (
-                <TimelineSkeletonCard message={t('mentionsEmpty')} />
+                <TimelineEmptyPlaceholder icon={AtSign} message={t('mentionsEmpty')} />
               )}
             </Animated.View>
           }

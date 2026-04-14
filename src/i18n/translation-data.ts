@@ -171,12 +171,14 @@ type BaseTranslations = {
   recentActivity: string;
   recentActivityEmpty: string;
   protectedAccountNotice: string;
+  blockedAccountNotice: string;
   profileLoadFailed: string;
   profileActionMention: string;
   profileActionMessage: string;
   profileActionFollow: string;
   profileActionUnfollow: string;
   profileActionBlock: string;
+  profileActionBlocked: string;
   profileActionUnblock: string;
   profileActionChecking: string;
   profileActionUpdating: string;
@@ -342,7 +344,7 @@ const enUS: BaseTranslations = {
     'This app has zero tolerance for objectionable content or abusive behavior. By using this app, you agree not to post, share, or promote content that is hateful, violent, threatening, sexually explicit, or otherwise harmful or illegal.',
   termsBlockingHeading: 'Blocking Users',
   termsBlockingBody:
-    '*Yifan* does not support blocking users directly. To block someone, please visit Fanfou at fanfou.com.',
+    'You can block abusive users directly from their profile in *Yifan*. Blocked users will be removed from your feed immediately.',
   termsReportingHeading: 'Reporting Content',
   termsReportingBody:
     "To report content that violates community standards, please use Fanfou's official reporting tools at fanfou.com.",
@@ -481,12 +483,15 @@ const enUS: BaseTranslations = {
   recentActivityEmpty: 'No recent activity.',
   protectedAccountNotice:
     'This account is protected. Follow to see recent activity.',
+  blockedAccountNotice:
+    'You have blocked this user.',
   profileLoadFailed: 'Failed to load profile.',
   profileActionMention: 'Mention',
   profileActionMessage: 'Message',
   profileActionFollow: 'Follow',
   profileActionUnfollow: 'Unfollow',
   profileActionBlock: 'Block',
+  profileActionBlocked: 'Blocked',
   profileActionUnblock: 'Unblock',
   profileActionChecking: 'Checking…',
   profileActionUpdating: 'Updating…',
@@ -651,7 +656,7 @@ const zhCN: BaseTranslations = {
   termsZeroToleranceBody:
     '本应用对不当内容及滥用行为零容忍。使用本应用即表示您同意不发布、分享或传播任何仇恨、暴力、威胁、色情或其他有害、违法的内容。',
   termsBlockingHeading: '屏蔽用户',
-  termsBlockingBody: '《一饭》暂不支持直接屏蔽用户，如需屏蔽，请前往饭否网站（fanfou.com）操作。',
+  termsBlockingBody: '你可以在用户资料页直接屏蔽滥用行为的用户，被屏蔽的用户将立即从你的信息流中移除。',
   termsReportingHeading: '举报内容',
   termsReportingBody: '如需举报违反社区准则的内容，请使用饭否官方举报工具（fanfou.com）。',
   termsAgeHeading: '年龄要求',
@@ -787,12 +792,14 @@ const zhCN: BaseTranslations = {
   recentActivity: '最近动态',
   recentActivityEmpty: '还没有最近动态。',
   protectedAccountNotice: '该账号已设置为保护，关注后可查看最近动态。',
+  blockedAccountNotice: '你已屏蔽该用户。',
   profileLoadFailed: '加载用户资料失败。',
   profileActionMention: '提及',
   profileActionMessage: '私信',
   profileActionFollow: '关注',
   profileActionUnfollow: '取消关注',
   profileActionBlock: '屏蔽',
+  profileActionBlocked: '已屏蔽',
   profileActionUnblock: '取消屏蔽',
   profileActionChecking: '检查中…',
   profileActionUpdating: '更新中…',

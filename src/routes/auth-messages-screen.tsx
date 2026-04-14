@@ -26,10 +26,11 @@ import {
   type NavigationProp,
 } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Dialog, Surface, Tabs, useThemeColor } from 'heroui-native';
+import { Button, Dialog, Tabs, useThemeColor } from 'heroui-native';
 import ErrorBanner from '@/components/error-banner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Inbox, Reply, Send, Trash2 } from 'lucide-react-native';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
 import Svg, { Path } from 'react-native-svg';
 import { useAuthSession } from '@/auth/auth-session';
 import ComposerModal, {
@@ -130,11 +131,7 @@ const normalizeDirectMessages = (value: unknown): FanfouDirectMessage[] => {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 const TimelineEmptyMessage = ({ message }: { message: string }) => (
-  <DropShadowBox>
-    <Surface className="bg-surface px-4 py-4">
-      <Text className="text-[13px] text-muted">{message}</Text>
-    </Surface>
-  </DropShadowBox>
+  <TimelineEmptyPlaceholder icon={Inbox} message={message} />
 );
 const MessageItemSeparator = () => <View className="h-4" />;
 const PostageStamp = ({

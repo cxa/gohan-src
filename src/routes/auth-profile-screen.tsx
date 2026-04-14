@@ -35,6 +35,12 @@ import ErrorBanner from '@/components/error-banner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthSession } from '@/auth/auth-session';
 import { get, post } from '@/auth/fanfou-client';
+import {
+  filterBlockedUserFromCaches,
+  filterUnfollowedUserFromHome,
+  refetchStatusRelatedQueries,
+  useUserFilterEffect,
+} from '@/query/status-query-invalidation';
 import { Text } from '@/components/app-text';
 import ComposerModal, {
   type ComposerModalSubmitPayload,
@@ -53,7 +59,8 @@ import ProfileStatRow, {
   type ProfileStatItem,
 } from '@/components/profile-stat-row';
 import ProfileSummaryCard from '@/components/profile-summary-card';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
+import { Clock } from 'lucide-react-native';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE } from '@/components/drop-shadow-box';
@@ -261,11 +268,12 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       const data = await getRecentStatusesByUserId(targetUserId);
       return normalizeTimelineItems(data);
     },
-    enabled: Boolean(accessToken) && Boolean(user) && !isProtectedTimeline,
+    enabled: Boolean(accessToken) && Boolean(user) && !isProtectedTimeline && !isBlocked,
   });
   const [recentStatusItems, setRecentStatusItems] = useState<FanfouStatus[]>(
     [],
   );
+  useUserFilterEffect(setRecentStatusItems);
   useEffect(() => {
     if (!recentStatuses) {
       return;
@@ -380,6 +388,10 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       updateUserCache({
         following: nextFollowing,
       });
+      if (!nextFollowing) {
+        filterUnfollowedUserFromHome(user.id);
+      }
+      refetchStatusRelatedQueries(queryClient);
       const name = user.screen_name ?? user.name ?? '';
       showVariantToast(
         'success',
@@ -417,7 +429,11 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
         updateUserCache({
           following: false,
         });
+        queryClient.setQueryData<FanfouStatus[]>(recentStatusesQueryKey, []);
+        setRecentStatusItems([]);
+        filterBlockedUserFromCaches(queryClient, user.id);
       }
+      refetchStatusRelatedQueries(queryClient);
       const name = user.screen_name ?? user.name ?? '';
       showVariantToast(
         'success',
@@ -931,22 +947,26 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
               </Surface>
             </DropShadowBox>
 
-            <ProfileStatRow
-              stats={statsPrimary}
-              panelStyle={profileThemeStyles.panelStyle}
-              shadowStyle={profilePanelShadowStyle}
-              valueTextStyle={profileThemeStyles.primaryTextStyle}
-              labelTextStyle={profileThemeStyles.primaryTextStyle}
-            />
-            <ProfileStatRow
-              stats={statsSecondary}
-              panelStyle={profileThemeStyles.panelStyle}
-              shadowStyle={profilePanelShadowStyle}
-              valueTextStyle={profileThemeStyles.primaryTextStyle}
-              labelTextStyle={profileThemeStyles.primaryTextStyle}
-            />
+            {!isBlocked ? (
+              <>
+                <ProfileStatRow
+                  stats={statsPrimary}
+                  panelStyle={profileThemeStyles.panelStyle}
+                  shadowStyle={profilePanelShadowStyle}
+                  valueTextStyle={profileThemeStyles.primaryTextStyle}
+                  labelTextStyle={profileThemeStyles.primaryTextStyle}
+                />
+                <ProfileStatRow
+                  stats={statsSecondary}
+                  panelStyle={profileThemeStyles.panelStyle}
+                  shadowStyle={profilePanelShadowStyle}
+                  valueTextStyle={profileThemeStyles.primaryTextStyle}
+                  labelTextStyle={profileThemeStyles.primaryTextStyle}
+                />
+              </>
+            ) : null}
 
-            {!isSelf ? (
+            {!isSelf && !isBlocked ? (
               <DropShadowBox
                 containerClassName="pb-2"
                 shadowStyle={profilePanelShadowStyle}
@@ -958,9 +978,8 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   <View className="flex-row gap-3">
                     <Pressable
                       onPress={handleFollowToggle}
-                      disabled={isFollowSubmitting || isBlocked}
-                      className={`flex-1 rounded-2xl border px-3 py-2 ${isBlocked ? 'bg-surface-secondary' : 'bg-accent'
-                        }`}
+                      disabled={isFollowSubmitting}
+                      className="flex-1 rounded-2xl border bg-accent px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={
                         isFollowing
@@ -968,39 +987,28 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                           : t('profileActionFollow')
                       }
                     >
-                      <Text
-                        className={`text-[13px] text-center ${isBlocked ? 'text-muted' : 'text-accent-foreground'
-                          }`}
-                      >
+                      <Text className="text-[13px] text-center text-accent-foreground">
                         {isFollowSubmitting
                           ? t('profileActionUpdating')
-                          : isBlocked
-                            ? t('profileActionBlock')
-                            : isFollowing
-                              ? t('profileActionUnfollow')
-                              : t('profileActionFollow')}
+                          : isFollowing
+                            ? t('profileActionUnfollow')
+                            : t('profileActionFollow')}
                       </Text>
                     </Pressable>
 
                     <Pressable
                       onPress={handleBlockToggle}
                       disabled={isBlockSubmitting || isBlockChecking}
-                      className={`flex-1 rounded-2xl border px-3 py-2 ${isBlocked ? 'bg-success' : 'bg-danger'}`}
+                      className="flex-1 rounded-2xl border bg-danger px-3 py-2"
                       accessibilityRole="button"
-                      accessibilityLabel={
-                        isBlocked
-                          ? t('profileActionUnblock')
-                          : t('profileActionBlock')
-                      }
+                      accessibilityLabel={t('profileActionBlock')}
                     >
                       <Text className="text-[13px] text-center text-white">
                         {isBlockChecking
                           ? t('profileActionChecking')
                           : isBlockSubmitting
                             ? t('profileActionUpdating')
-                            : isBlocked
-                              ? t('profileActionUnblock')
-                              : t('profileActionBlock')}
+                            : t('profileActionBlock')}
                       </Text>
                     </Pressable>
                   </View>
@@ -1036,7 +1044,26 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
               <ErrorBanner message={profileErrorMessage} technicalDetail={profileTechnicalError} />
             ) : null}
 
-            {isProtectedTimeline ? (
+            {isBlocked ? (
+              <View className="px-4 py-4">
+                <Text className="text-[14px] leading-6 text-foreground">
+                  {t('blockedAccountNotice')}
+                </Text>
+                <Pressable
+                  onPress={handleBlockToggle}
+                  disabled={isBlockSubmitting}
+                  className="mt-3 items-center rounded-2xl border bg-success px-4 py-2"
+                  accessibilityRole="button"
+                  accessibilityLabel={t('profileActionUnblock')}
+                >
+                  <Text className="text-[13px] font-semibold text-white">
+                    {isBlockSubmitting
+                      ? t('profileActionUpdating')
+                      : t('profileActionUnblock')}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : isProtectedTimeline ? (
               <DropShadowBox type="warning" containerClassName="pb-2">
                 <Surface
                   className={`bg-surface-secondary ${getDropShadowBorderClass(
@@ -1077,7 +1104,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                     !isHydratingRecentStatuses &&
                     recentStatusItems.length === 0 &&
                     !recentStatusesErrorMessage ? (
-                    <TimelineSkeletonCard message={t('recentActivityEmpty')} />
+                    <TimelineEmptyPlaceholder icon={Clock} message={t('recentActivityEmpty')} />
                   ) : null}
 
                   {recentStatusItems.length > 0 ? (

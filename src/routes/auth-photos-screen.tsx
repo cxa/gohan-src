@@ -30,7 +30,8 @@ import ErrorBanner from '@/components/error-banner';
 import ComposerModal from '@/components/composer-modal';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
+import { Camera } from 'lucide-react-native';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
@@ -292,7 +293,7 @@ const PhotosRouteContent = ({
               {isPending ? (
                 <TimelineSkeletonList keyPrefix="photo-skeleton" />
               ) : (
-                <TimelineSkeletonCard message={t('photosEmpty')} />
+                <TimelineEmptyPlaceholder icon={Camera} message={t('photosEmpty')} />
               )}
             </Animated.View>
           }

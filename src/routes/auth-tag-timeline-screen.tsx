@@ -39,8 +39,10 @@ import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-tra
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
+import { Hash } from 'lucide-react-native';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
+import { useUserFilterEffect } from '@/query/status-query-invalidation';
 import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
   TIMELINE_INITIAL_PAGE_SIZE,
@@ -124,6 +126,7 @@ const TagTimelineRoute = () => {
     title: routeTag ? screenTitle : t('tagTimelineFallbackTitle'),
   });
   const [timelineItems, setTimelineItems] = useState<FanfouStatus[]>([]);
+  useUserFilterEffect(setTimelineItems);
   const [photoViewerUrl, setPhotoViewerUrl] = useState<string | null>(null);
   const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const [photoViewerOriginRect, setPhotoViewerOriginRect] = useState<PhotoViewerOriginRect | null>(null);
@@ -360,7 +363,7 @@ const TagTimelineRoute = () => {
                   availableHeight={skeletonAvailableHeight}
                 />
               ) : (
-                <TimelineSkeletonCard message={t('tagTimelineEmpty')} />
+                <TimelineEmptyPlaceholder icon={Hash} message={t('tagTimelineEmpty')} />
               )}
             </Animated.View>
           }

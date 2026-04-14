@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { Users } from 'lucide-react-native';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
 import { useHeaderHeight } from '@react-navigation/elements';
 import NeobrutalActivityIndicator, {
   COMPACT_PULL_THRESHOLD,
@@ -25,7 +27,7 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Surface, useThemeColor } from 'heroui-native';
+import { useThemeColor } from 'heroui-native';
 import ErrorBanner from '@/components/error-banner';
 import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -263,15 +265,14 @@ const UserListRoute = () => {
                 ))}
               </View>
             ) : (
-              <DropShadowBox>
-                <Surface className="bg-surface-secondary px-4 py-4">
-                  <Text className="text-[13px] text-muted">
-                    {mode === 'following'
-                      ? t(isSelf ? 'followingEmpty' : 'followingEmptyOther')
-                      : t(isSelf ? 'followersEmpty' : 'followersEmptyOther')}
-                  </Text>
-                </Surface>
-              </DropShadowBox>
+              <TimelineEmptyPlaceholder
+                icon={Users}
+                message={
+                  mode === 'following'
+                    ? t(isSelf ? 'followingEmpty' : 'followingEmptyOther')
+                    : t(isSelf ? 'followersEmpty' : 'followersEmptyOther')
+                }
+              />
             )
           }
           ListFooterComponent={

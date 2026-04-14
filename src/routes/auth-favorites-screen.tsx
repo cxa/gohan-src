@@ -36,7 +36,8 @@ import ComposerModal from '@/components/composer-modal';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import { getTabBarOccludedHeight } from '@/navigation/tab-bar-layout';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
+import { Heart } from 'lucide-react-native';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
@@ -280,7 +281,7 @@ const FavoritesRoute = () => {
                   availableHeight={skeletonAvailableHeight}
                 />
               ) : (
-                <TimelineSkeletonCard message={t('favoritesEmpty')} />
+                <TimelineEmptyPlaceholder icon={Heart} message={t('favoritesEmpty')} />
               )}
             </Animated.View>
           }

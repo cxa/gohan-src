@@ -14,6 +14,8 @@ import { useThemeColor } from 'heroui-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react-native';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
+import { useUserFilterEffect } from '@/query/status-query-invalidation';
 import { useAuthSession } from '@/auth/auth-session';
 import { get } from '@/auth/fanfou-client';
 import { Text, TextInput } from '@/components/app-text';
@@ -75,6 +77,7 @@ const SearchRoute = () => {
   const [inputText, setInputText] = useState('');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FanfouStatus[]>([]);
+  useUserFilterEffect(setResults);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
 
@@ -274,9 +277,9 @@ const SearchRoute = () => {
               {isLoading && query ? (
                 <NeobrutalActivityIndicator size="small" />
               ) : isEmpty ? (
-                <Text className="text-[14px] text-muted">{t('searchEmpty')}</Text>
+                <TimelineEmptyPlaceholder icon={Search} message={t('searchEmpty')} />
               ) : !query ? (
-                <Text className="text-[14px] text-muted">{t('searchHint')}</Text>
+                <TimelineEmptyPlaceholder icon={Search} message={t('searchHint')} />
               ) : null}
             </View>
           }

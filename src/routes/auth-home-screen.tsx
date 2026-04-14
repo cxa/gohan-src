@@ -38,8 +38,9 @@ import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
 import useTimelineStatusInteractions from '@/components/use-timeline-status-interactions';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
 import TimelineStatusCard from '@/components/timeline-status-card';
-import TimelineSkeletonCard from '@/components/timeline-skeleton-card';
+import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
+import { useUserFilterEffect } from '@/query/status-query-invalidation';
 import TimelineTitleHeader from '@/components/timeline-title-header';
 import { isHydratingTimeline } from '@/components/timeline-hydration';
 import {
@@ -58,7 +59,7 @@ import {
   AUTH_STATUS_ROUTE,
   AUTH_TAG_TIMELINE_ROUTE,
 } from '@/navigation/route-names';
-import { Wind, Search } from 'lucide-react-native';
+import { Home, Wind, Search } from 'lucide-react-native';
 
 import type { FanfouStatus } from '@/types/fanfou';
 import { CARD_PASTEL_CYCLE, type DropShadowBoxType } from '@/components/drop-shadow-box';
@@ -291,6 +292,7 @@ const AuthHomeRoute = () => {
   };
   const {
     data: initialItems = [],
+    dataUpdatedAt,
     isLoading,
     error,
     refetch,
@@ -312,12 +314,13 @@ const AuthHomeRoute = () => {
   const errorMessage = error ? t('homeLoadFailed') : null;
   const technicalError = error instanceof Error ? error.message : null;
   useEffect(() => {
-    if (initialItems.length === 0 || timelineItems.length > 0) {
+    if (initialItems.length === 0) {
       return;
     }
     setTimelineItems(initialItems);
     setHasReachedTimelineEnd(false);
-  }, [initialItems, timelineItems.length]);
+  }, [dataUpdatedAt]);
+  useUserFilterEffect(setTimelineItems, 'home');
   const fetchLatest = async () => {
     if (!authUserId || isFetchingLatest || isLoading) {
       return;
@@ -497,7 +500,7 @@ const AuthHomeRoute = () => {
                   availableHeight={skeletonAvailableHeight}
                 />
               ) : (
-                <TimelineSkeletonCard message={t('homeEmpty')} />
+                <TimelineEmptyPlaceholder icon={Home} message={t('homeEmpty')} />
               )}
             </Animated.View>
           }
