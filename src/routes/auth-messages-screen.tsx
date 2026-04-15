@@ -360,7 +360,7 @@ const MessageCard = ({
               ) : null}
 
               <View className="relative mt-3 border-t border-dashed" style={{ borderColor: dividerColor }}>
-                <View className="absolute left-[-15px] top-[-4px] h-2 w-2 rounded-full border bg-surface-secondary" />
+                <View className="absolute left-[-15px] top-[-4px] size-2 rounded-full border bg-surface-secondary" />
               </View>
 
               <View className="mt-2 flex-row items-center justify-between">

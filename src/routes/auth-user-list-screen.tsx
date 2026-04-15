@@ -203,7 +203,7 @@ const UserListRoute = () => {
                   onPress={() => handleOpenProfile(item.id)}
                   style={[cardBgStyle, styles.card]}
                   accessibilityRole="button"
-                  className="flex-row gap-3 overflow-hidden rounded-3xl px-4 py-4 active:translate-x-[-4px] active:translate-y-[4px]"
+                  className="flex-row gap-3 overflow-hidden rounded-3xl p-4 active:translate-x-[-4px] active:translate-y-[4px]"
                 >
                   {avatarUrl ? (
                     <Image

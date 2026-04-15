@@ -33,7 +33,7 @@ const ProfileStatSkeletonCell = ({
   shadowStyle?: StyleProp<ViewStyle>;
 }) => (
   <DropShadowBox containerClassName="flex-1" shadowStyle={shadowStyle}>
-    <Surface className="bg-surface-secondary px-4 py-4" style={panelStyle}>
+    <Surface className="bg-surface-secondary p-4" style={panelStyle}>
       <ShimmerBar className="h-8 w-12 bg-surface-tertiary" isActive />
       <ShimmerBar
         className="mt-1 h-5 w-16 bg-surface-tertiary"
@@ -81,9 +81,9 @@ const ProfileStatRow = ({
             accessibilityRole={stat.onPress ? 'button' : undefined}
             className={stat.onPress ? 'active:opacity-75' : ''}
           >
-            <Surface className="bg-surface-secondary px-4 py-4" style={panelStyle}>
+            <Surface className="bg-surface-secondary p-4" style={panelStyle}>
               <Text
-                className="text-2xl text-foreground"
+                className="tabular-nums text-2xl text-foreground"
                 numberOfLines={1}
                 minimumFontScale={0.7}
                 allowFontScaling

@@ -60,9 +60,11 @@ const BORDER_CLASS_BY_TYPE: Record<DropShadowBoxType, string> = {
 export const getDropShadowBorderClass = (type: DropShadowBoxType) =>
   BORDER_CLASS_BY_TYPE[type];
 
+export const CARD_SHADOW_COLOR = '#1A1208';
+
 const CARD_SHADOW: ViewStyle = Platform.select({
   ios: {
-    shadowColor: '#1A1208',
+    shadowColor: CARD_SHADOW_COLOR,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,

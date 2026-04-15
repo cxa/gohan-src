@@ -118,7 +118,7 @@ const TimelineSkeletonCard = ({
       ) : (
         <View className="flex-row gap-3">
           <View
-            className="h-10 w-10 rounded-full"
+            className="size-10 rounded-full"
             style={{ backgroundColor: barColor ?? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') }}
           />
           <View className="flex-1 gap-2">

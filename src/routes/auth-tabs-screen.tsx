@@ -216,7 +216,7 @@ const AuthTabBar = ({
         >
           <Animated.View
             layout={springTransition}
-            className="items-center justify-center w-6 h-6"
+            className="items-center justify-center size-6"
           >
             {iconForRoute(route.name, iconColor)}
           </Animated.View>

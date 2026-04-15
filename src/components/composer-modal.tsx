@@ -186,7 +186,7 @@ const ComposerModal = ({
             {/* Quoted status preview */}
             {quotedStatus ? (
               <View
-                className="mb-2 rounded-2xl bg-surface-secondary px-4 py-3"
+                className="mb-2 rounded-3xl bg-surface-secondary px-4 py-3"
                 style={[styles.quotedStatus, { borderLeftColor: border }]}
                 accessibilityLabel={t('composerQuotedStatusA11y', { name: quotedStatus.screenName })}
                 accessibilityRole="summary"
@@ -204,7 +204,7 @@ const ComposerModal = ({
                     {quotedStatus.photoUrl && !quotedPhotoFailed ? (
                       <Image
                         source={{ uri: quotedStatus.photoUrl }}
-                        className={`h-14 w-14 rounded-xl bg-surface-secondary${quotedStatus.plainText ? ' ml-3' : ''}`}
+                        className={`size-14 rounded-2xl bg-surface-secondary${quotedStatus.plainText ? ' ml-3' : ''}`}
                         resizeMode="cover"
                         onError={() => setQuotedPhotoFailed(true)}
                       />
@@ -228,7 +228,7 @@ const ComposerModal = ({
             />
             {photoUri ? (
               <View className="mb-4">
-                <View className="overflow-hidden rounded-2xl">
+                <View className="overflow-hidden rounded-3xl">
                   <Image
                     source={{ uri: photoUri }}
                     className="h-[260px] w-full bg-surface-secondary"
@@ -260,7 +260,7 @@ const ComposerModal = ({
             >
               <Pressable
                 onPress={canDismiss && !isPhotoPicking ? handlePickPhoto : undefined}
-                className={`h-10 w-10 items-center justify-center rounded-full bg-surface-secondary ${isPhotoPicking ? 'opacity-60' : ''}`}
+                className={`size-10 items-center justify-center rounded-full bg-surface-secondary ${isPhotoPicking ? 'opacity-60' : ''}`}
                 accessibilityRole="button"
                 accessibilityLabel={photoUri ? t('composerChangePhoto') : t('composerAttachPhoto')}
               >

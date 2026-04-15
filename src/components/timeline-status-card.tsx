@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { FanfouStatus } from '@/types/fanfou';
 import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import { Text } from '@/components/app-text';
-import { CARD_BG_LIGHT, CARD_BG_DARK, type DropShadowBoxType } from '@/components/drop-shadow-box';
+import { CARD_BG_LIGHT, CARD_BG_DARK, CARD_SHADOW_COLOR, type DropShadowBoxType } from '@/components/drop-shadow-box';
 import FavoriteHeartIcon from '@/components/favorite-heart-icon';
 import { useAppFontFamily } from '@/settings/app-font-preference';
 import { APP_THEME_OPTION, useAppThemePreference } from '@/settings/app-theme-preference';
@@ -213,7 +213,7 @@ const TimelineStatusCard = ({
                 event.stopPropagation();
                 onPressProfile(userId);
               }}
-              className="h-10 w-10"
+              className="size-10"
               accessibilityRole="button"
               accessibilityLabel={`Open profile ${screenName || userId}`}
             >
@@ -221,7 +221,7 @@ const TimelineStatusCard = ({
                 source={{
                   uri: avatarUrl,
                 }}
-                className="h-10 w-10 rounded-full bg-surface-secondary"
+                className="size-10 rounded-full bg-surface-secondary"
               />
             </Pressable>
           ) : null}
@@ -323,7 +323,7 @@ const TimelineStatusCard = ({
                     onOpenPhoto(photoUrl, null);
                   }
                 }}
-                className="mt-3 overflow-hidden rounded-2xl"
+                className="mt-3 overflow-hidden rounded-3xl"
                 accessibilityRole="button"
                 accessibilityLabel="Open photo"
               >
@@ -469,7 +469,7 @@ const TimelineStatusCard = ({
       >
         <Dialog.Portal>
           <Dialog.Overlay className="bg-foreground/55 dark:bg-background/85" />
-          <Dialog.Content className="w-[92%] max-w-[360px] self-center rounded-3xl bg-surface px-4 py-4">
+          <Dialog.Content className="w-[92%] max-w-[360px] self-center rounded-3xl bg-surface p-4">
             <View className="gap-1">
               <Dialog.Title
                 className="text-[20px] leading-[24px] font-bold text-foreground"
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     ...Platform.select({
       ios: {
-        shadowColor: '#1A1208',
+        shadowColor: CARD_SHADOW_COLOR,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 6,

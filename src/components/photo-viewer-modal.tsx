@@ -662,8 +662,8 @@ const PhotoViewerModal = ({
         {!isImageLoading ? (
           <GestureDetector gesture={shareTapGesture}>
             <View
-              className="items-center justify-center rounded-full border border-border/50 bg-background/70"
-              style={styles.actionButton}
+              className="size-9 items-center justify-center rounded-full border border-border/50 bg-background/70"
+              style={styles.continuousCurve}
               accessibilityRole="button"
               accessibilityLabel={t('photoViewerShareA11y')}
             >
@@ -673,7 +673,7 @@ const PhotoViewerModal = ({
         ) : null}
         <GestureDetector gesture={closeTapGesture}>
           <View
-            className="rounded-3xl border border-border/50 bg-background/70 px-3 py-2"
+            className="rounded-full border border-border/50 bg-background/70 px-3 py-2"
             style={styles.closeButton}
             accessibilityRole="button"
             accessibilityLabel={t('photoViewerCloseA11y')}
@@ -696,37 +696,24 @@ const PhotoViewerModal = ({
         statusBarTranslucent
         onRequestClose={() => scheduleOnUI(startCloseTransition)}
       >
-        <GestureHandlerRootView style={styles.gestureRoot}>
+        <GestureHandlerRootView className="flex-1">
           {content}
         </GestureHandlerRootView>
       </Modal>
     );
   }
   return (
-    <View style={styles.overlay} pointerEvents="box-none">
+    <View className="absolute inset-0 z-[200]" pointerEvents="box-none">
       {content}
     </View>
   );
 };
 const styles = StyleSheet.create({
-  actionButton: {
-    width: 36,
-    height: 36,
+  continuousCurve: {
     borderCurve: 'continuous',
   },
   closeButton: {
     borderCurve: 'continuous',
-  },
-  gestureRoot: {
-    flex: 1,
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 200,
   },
 });
 export default PhotoViewerModal;

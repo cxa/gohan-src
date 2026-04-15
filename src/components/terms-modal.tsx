@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { Dialog } from 'heroui-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/app-text';
@@ -51,7 +51,7 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
     <Dialog isOpen={isOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="bg-foreground/55 dark:bg-background/85" isCloseOnPress={false} />
-        <Dialog.Content className="w-[92%] max-w-[400px] self-center rounded-3xl bg-surface px-5 py-5" isSwipeable={false}>
+        <Dialog.Content className="w-[92%] max-w-[400px] self-center rounded-3xl bg-surface p-5" isSwipeable={false}>
           <Dialog.Title
             className="text-[20px] leading-[26px] font-bold text-foreground mb-3"
             style={fontFamily ? { fontFamily } : undefined}
@@ -62,7 +62,7 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
           <View className="h-[340px]">
             <ScrollView
               showsVerticalScrollIndicator
-              contentContainerStyle={styles.scrollContent}
+              contentContainerClassName="pb-2"
             >
               {TERMS_SECTIONS.map((section, index) => (
                 <View key={index} className={index > 0 ? 'mt-4' : undefined}>
@@ -88,7 +88,7 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
           <View className="mt-4 flex-row gap-2">
             <Pressable
               onPress={onDecline}
-              className="flex-1 items-center justify-center rounded-full bg-danger-soft px-3 py-3 active:opacity-75"
+              className="flex-1 items-center justify-center rounded-full bg-danger-soft p-3 active:opacity-75"
               accessibilityRole="button"
               accessibilityLabel={t('termsDecline')}
             >
@@ -101,7 +101,7 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
             </Pressable>
             <Pressable
               onPress={onAgree}
-              className="flex-[2] items-center justify-center rounded-full bg-accent px-3 py-3 active:opacity-80"
+              className="flex-[2] items-center justify-center rounded-full bg-accent p-3 active:opacity-80"
               accessibilityRole="button"
               accessibilityLabel={t('termsAgree')}
             >
@@ -118,11 +118,5 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
     </Dialog>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: 8,
-  },
-});
 
 export default TermsModal;

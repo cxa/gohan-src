@@ -745,7 +745,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
           <DropShadowBox containerClassName="mb-4">
             <ProfileSummaryCard
               avatar={
-                <View className="h-20 w-20 rounded-full bg-surface-secondary" />
+                <View className="size-20 rounded-full bg-surface-secondary" />
               }
               displayName=""
               skeleton
@@ -777,7 +777,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       accessibilityRole="button"
       accessibilityLabel="Open avatar"
     >
-      <View className="h-20 w-20">
+      <View className="size-20">
         <Image
           source={{
             uri: avatarUrl,
@@ -787,7 +787,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       </View>
     </Pressable>
   ) : (
-    <View className="h-20 w-20 items-center justify-center rounded-full bg-surface-secondary">
+    <View className="size-20 items-center justify-center rounded-full bg-surface-secondary">
       <Text className="text-[24px] text-muted">
         {displayName.slice(0, 1).toUpperCase()}
       </Text>
@@ -976,7 +976,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                 shadowStyle={profilePanelShadowStyle}
               >
                 <Surface
-                  className="bg-surface-secondary px-4 py-4"
+                  className="bg-surface-secondary p-4"
                   style={profileThemeStyles.panelStyle}
                 >
                   <View className="flex-row gap-3">
@@ -1049,7 +1049,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             ) : null}
 
             {isBlocked ? (
-              <View className="px-4 py-4">
+              <View className="p-4">
                 <Text className="text-[14px] leading-6 text-foreground">
                   {t('blockedAccountNotice')}
                 </Text>

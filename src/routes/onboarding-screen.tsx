@@ -73,11 +73,11 @@ const MiniSkeletonCard = ({ cardBg, barColor, lineWidths, isLast, isSharp }: Min
   const barRadius  = isSharp ? 0 : 9999;
   return (
     <View
-      className="px-4 py-4"
+      className="p-4"
       style={[{ backgroundColor: cardBg, marginBottom: mb, borderRadius: cardRadius }]}
     >
       <View className="flex-row gap-2">
-        <View className="h-8 w-8 rounded-full" style={[{ backgroundColor: barColor }]} />
+        <View className="size-8 rounded-full" style={[{ backgroundColor: barColor }]} />
         <View className="flex-1 gap-[5px]">
           <View className="h-[7px] w-14" style={[{ borderRadius: barRadius, backgroundColor: barColor }]} />
           {lineWidths.map((w, i) => {
@@ -226,7 +226,7 @@ const SystemSplitPreview = () => {
             </ClipPath>
           </Defs>
           <Polygon points={`0,0 ${topX},0 ${botX},${h} 0,${h}`} fill={LIST_BG_LIGHT} />
-          <Polygon points={`${topX},0 ${w},0 ${w},${h} ${botX},${h}`} fill="#1C1810" />
+          <Polygon points={`${topX},0 ${w},0 ${w},${h} ${botX},${h}`} fill="#1A1208" />
           <G clipPath="url(#ob-light)">
             {renderCards(CARD_BG_LIGHT, BAR_BG_LIGHT)}
           </G>

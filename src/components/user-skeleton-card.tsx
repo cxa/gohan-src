@@ -23,7 +23,7 @@ const UserSkeletonCard = ({ colorIndex = 0 }: { colorIndex?: number }) => {
   // Randomly pick which bar shimmers: 0 = name bar, 1 = description bar
   const shimmerIndex = Math.floor(Math.random() * 2);
   return (
-    <View style={[{ backgroundColor: cardBg }, styles.card]} className="flex-row gap-3 rounded-3xl px-4 py-4">
+    <View style={[{ backgroundColor: cardBg }, styles.card]} className="flex-row gap-3 rounded-3xl p-4">
       <View
         className="rounded-full"
         style={[styles.avatar, { backgroundColor: barColor ?? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') }]}
@@ -35,9 +35,8 @@ const UserSkeletonCard = ({ colorIndex = 0 }: { colorIndex?: number }) => {
           isActive={shimmerIndex === 0}
         />
         <ShimmerBar
-          className="h-3 w-full"
+          className="h-3 w-full opacity-70"
           barColor={barColor}
-          style={styles.descriptionBar}
           isActive={shimmerIndex === 1}
         />
       </View>
@@ -51,9 +50,6 @@ const styles = StyleSheet.create({
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
-  },
-  descriptionBar: {
-    opacity: 0.7,
   },
 });
 export default UserSkeletonCard;

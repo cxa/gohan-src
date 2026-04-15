@@ -38,7 +38,7 @@ const ErrorBanner = ({ message, technicalDetail }: ErrorBannerProps) => {
 
   return (
     <Animated.View layout={LinearTransition.duration(220).easing(Easing.out(Easing.cubic))}>
-      <Surface className="rounded-2xl bg-danger-soft px-4 py-3">
+      <Surface className="rounded-3xl bg-danger-soft px-4 py-3">
         <View className="flex-row items-start gap-2">
           <Text className="flex-1 text-[13px] text-danger">{message}</Text>
           {technicalDetail ? (
