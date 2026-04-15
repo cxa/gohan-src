@@ -759,7 +759,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   }
   if (!user) {
     return (
-      <View className="flex-1 bg-background px-4 pt-8">
+      <View className="flex-1 bg-background px-6 pt-8">
         <ErrorBanner message={profileErrorMessage ?? t('profileLoadFailed')} technicalDetail={profileTechnicalError} />
       </View>
     );
@@ -983,7 +983,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                     <Pressable
                       onPress={handleFollowToggle}
                       disabled={isFollowSubmitting}
-                      className="flex-1 rounded-2xl border bg-accent px-3 py-2"
+                      className="flex-1 rounded-full border bg-accent px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={
                         isFollowing
@@ -1003,7 +1003,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                     <Pressable
                       onPress={handleBlockToggle}
                       disabled={isBlockSubmitting || isBlockChecking}
-                      className="flex-1 rounded-2xl border bg-danger px-3 py-2"
+                      className="flex-1 rounded-full border bg-danger px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionBlock')}
                     >
@@ -1020,7 +1020,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   <View className="mt-3 flex-row gap-3">
                     <Pressable
                       onPress={handleOpenMentionComposer}
-                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
+                      className="flex-1 rounded-full border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionMention')}
                     >
@@ -1031,7 +1031,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
 
                     <Pressable
                       onPress={handleOpenDmComposer}
-                      className="flex-1 rounded-2xl border bg-surface-secondary px-3 py-2"
+                      className="flex-1 rounded-full border bg-surface-secondary px-3 py-2"
                       accessibilityRole="button"
                       accessibilityLabel={t('profileActionMessage')}
                     >
@@ -1056,7 +1056,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                 <Pressable
                   onPress={handleBlockToggle}
                   disabled={isBlockSubmitting}
-                  className="mt-3 items-center rounded-2xl border bg-success px-4 py-2"
+                  className="mt-3 items-center rounded-full border bg-success px-4 py-2"
                   accessibilityRole="button"
                   accessibilityLabel={t('profileActionUnblock')}
                 >
@@ -1208,7 +1208,7 @@ const ProfileRoute = () => {
   const routeUserId = normalizeUserId(route.params?.userId);
   if (!routeUserId) {
     return (
-      <View className="flex-1 bg-background px-4 pt-8">
+      <View className="flex-1 bg-background px-6 pt-8">
         <ErrorBanner message="Missing profile user id." />
       </View>
     );

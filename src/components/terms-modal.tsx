@@ -88,7 +88,7 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
           <View className="mt-4 flex-row gap-2">
             <Pressable
               onPress={onDecline}
-              className="flex-1 items-center justify-center rounded-2xl bg-danger-soft px-3 py-3 active:opacity-75"
+              className="flex-1 items-center justify-center rounded-full bg-danger-soft px-3 py-3 active:opacity-75"
               accessibilityRole="button"
               accessibilityLabel={t('termsDecline')}
             >
@@ -101,7 +101,7 @@ const TermsModal = ({ isOpen, onAgree, onDecline }: TermsModalProps) => {
             </Pressable>
             <Pressable
               onPress={onAgree}
-              className="flex-[2] items-center justify-center rounded-2xl bg-accent px-3 py-3 active:opacity-80"
+              className="flex-[2] items-center justify-center rounded-full bg-accent px-3 py-3 active:opacity-80"
               accessibilityRole="button"
               accessibilityLabel={t('termsAgree')}
             >

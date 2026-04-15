@@ -310,7 +310,7 @@ const TagTimelineRoute = () => {
   });
   if (!routeTag) {
     return (
-      <View className="flex-1 bg-background px-4 pt-8">
+      <View className="flex-1 bg-background px-6 pt-8">
         <View>
           <ErrorBanner message={t('tagMissing')} />
         </View>

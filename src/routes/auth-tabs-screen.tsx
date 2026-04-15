@@ -62,13 +62,13 @@ const isTabRouteName = (
 const iconForRoute = (routeName: keyof AuthTabParamList, color: string) => {
   switch (routeName) {
     case AUTH_TAB_ROUTE.HOME:
-      return <Home color={color} size={24} />;
+      return <Home color={color} size={22} />;
     case AUTH_TAB_ROUTE.MENTIONS:
-      return <AtSign color={color} size={24} />;
+      return <AtSign color={color} size={22} />;
     case AUTH_TAB_ROUTE.MORE:
-      return <MoreHorizontal color={color} size={24} />;
+      return <MoreHorizontal color={color} size={22} />;
     case AUTH_TAB_ROUTE.COMPOSE:
-      return <SquarePen color={color} size={24} />;
+      return <SquarePen color={color} size={22} />;
     default:
       return null;
   }
