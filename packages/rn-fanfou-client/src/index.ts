@@ -40,6 +40,8 @@ type NativeOAuthModule = {
     tokenSecret: string,
     photoBase64: string,
     status: string | null,
+    mimeType: string,
+    fileName: string,
     params: Record<string, string>,
   ) => Promise<NativeRequestResponse>;
   uploadProfileImage: (
@@ -164,6 +166,38 @@ const extractApiErrorMessage = (data: unknown): string | null => {
   }
   const normalized = apiError.trim();
   return normalized.length > 0 ? normalized : null;
+};
+
+const estimateBase64Bytes = (base64: string): number => {
+  const normalized = base64.replace(/\s/g, '');
+  if (!normalized) return 0;
+  const padding = normalized.endsWith('==') ? 2 : normalized.endsWith('=') ? 1 : 0;
+  return Math.floor((normalized.length * 3) / 4) - padding;
+};
+
+const base64MagicHex = (base64: string, limit = 12): string => {
+  const normalized = base64.replace(/\s/g, '');
+  if (!normalized) return '';
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const bytes: number[] = [];
+  for (let index = 0; index < normalized.length && bytes.length < limit; index += 4) {
+    const chunk = normalized.slice(index, index + 4);
+    if (chunk.length < 2) break;
+    const values = chunk.split('').map(char => (char === '=' ? 0 : alphabet.indexOf(char)));
+    if (values.some(value => value < 0)) return 'unreadable';
+    const combined =
+      (values[0] ?? 0) * 262144 +
+      (values[1] ?? 0) * 4096 +
+      (values[2] ?? 0) * 64 +
+      (values[3] ?? 0);
+    bytes.push(Math.floor(combined / 65536) % 256);
+    if (chunk[2] !== '=') bytes.push(Math.floor(combined / 256) % 256);
+    if (chunk[3] !== '=') bytes.push(combined % 256);
+  }
+  return bytes
+    .slice(0, limit)
+    .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
+    .join(' ');
 };
 
 const requireAccessToken = (accessToken: OAuthAccessToken) => {
@@ -342,24 +376,47 @@ export class FanfouClient {
   public uploadPhoto = async ({
     photoBase64,
     status,
+    mimeType = 'image/jpeg',
+    fileName = 'image.jpg',
     params,
   }: {
     photoBase64: string;
     status?: string;
+    mimeType?: string;
+    fileName?: string;
     params?: Record<string, string | number | boolean | undefined>;
   }): Promise<unknown> => {
     const token = requireAccessToken(this.accessToken);
     const normalized = normalizeParams(params);
+    const uploadDebug = {
+      mimeType,
+      fileName,
+      estimatedBytes: estimateBase64Bytes(photoBase64),
+      magic: base64MagicHex(photoBase64),
+      statusLength: status?.length ?? 0,
+      params: Object.keys(normalized),
+    };
+    console.info(
+      `[FanfouUpload] JS request ${JSON.stringify(uploadDebug)}`,
+    );
     const response = await getNativeModule().uploadPhoto(
       token.key,
       token.secret,
       photoBase64,
-      status ?? null,
+      status ?? '',
+      mimeType,
+      fileName,
       normalized,
+    );
+    console.info(
+      `[FanfouUpload] JS response status=${response.status} body=${response.body.slice(0, 1000)}`,
     );
     const data = parseBody(response.body);
 
     if (response.status < 200 || response.status >= 300) {
+      console.info(
+        `[FanfouUpload] JS failed request diagnostics ${JSON.stringify(uploadDebug)}`,
+      );
       throw new FanfouApiError(
         extractApiErrorMessage(data) ?? 'API upload photo failed',
         {

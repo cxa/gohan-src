@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
 import { executeComposerSend } from '@/utils/composer-send';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -39,8 +39,6 @@ import MoreRoute from '@/routes/auth-more-screen';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import { closePhotoViewer, usePhotoViewerStore } from '@/components/photo-viewer-store';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
-import { clearShareIntent, useShareIntentStore } from '@/stores/share-intent-store';
-import type { PickedImage } from '@/utils/pick-image-from-library';
 const Tab = createBottomTabNavigator<AuthTabParamList>();
 const TabScaleWrapper = ({ children, backgroundColor }: { children: React.ReactNode; backgroundColor: string }) => {
   return (
@@ -316,30 +314,16 @@ const AuthIndexRoute = () => {
   const auth = useAuthSession();
   const [backgroundColor] = useThemeColor(['background']);
   const [composeVisible, setComposeVisible] = useState(false);
-  const [composerInitialPhoto, setComposerInitialPhoto] = useState<PickedImage | null>(null);
-  const [composerInitialText, setComposerInitialText] = useState('');
-  const shareIntent = useShareIntentStore();
   const statusUpdateMutation = useStatusUpdateMutation();
 
-  useEffect(() => {
-    if (auth.status !== 'authenticated') return;
-    if (shareIntent.photo) {
-      setComposerInitialPhoto(shareIntent.photo);
-      setComposeVisible(true);
-      clearShareIntent();
-    } else if (shareIntent.text) {
-      setComposerInitialText(shareIntent.text);
-      setComposeVisible(true);
-      clearShareIntent();
-    }
-  }, [shareIntent.photo, shareIntent.text, auth.status]);
+  // Share intent is now consumed at the AuthStack level (app-navigator.tsx)
+  // so it works even when a pushed screen is on top. The tab-level composer
+  // only opens from the compose tab button.
   const handleOpenComposer = () => {
     setComposeVisible(true);
   };
   const handleCloseComposer = () => {
     setComposeVisible(false);
-    setComposerInitialPhoto(null);
-    setComposerInitialText('');
   };
   const handleSubmitComposer = ({
     text,
@@ -356,6 +340,8 @@ const AuthIndexRoute = () => {
       () => statusUpdateMutation.mutateAsync({
         status: photo?.base64 ? trimmedText || undefined : trimmedText,
         photoBase64: photo?.base64,
+        photoMimeType: photo?.mimeType,
+        photoFileName: photo?.fileName,
       }),
       t('postFailedTitle'),
       () => showVariantToast('success', t('sentTitle'), t('postPendingReviewMessage')),
@@ -408,8 +394,6 @@ const AuthIndexRoute = () => {
         submitLabel={t('composerSubmitPost')}
         enablePhoto
         resetKey="root-compose"
-        initialText={composerInitialText}
-        initialPhoto={composerInitialPhoto}
         isSubmitting={false}
         onCancel={handleCloseComposer}
         onSubmit={handleSubmitComposer}

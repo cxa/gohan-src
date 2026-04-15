@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-yifan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-yifan.a */; };
 		0CABF40211831DF1F9871DFE /* SharedImageModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 5080FB480965F660C48256DD /* SharedImageModule.m */; };
+		B4C5D6E7F8A90718293B4C5D /* LivePhotoModule.m in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F80718293A4B5C /* LivePhotoModule.m */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		220E9887B3681CC851FBA84F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A3598DFB9E9827C88B83589 /* Foundation.framework */; };
 		455C6C7150B1FF2B2795EF3A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
@@ -58,6 +59,7 @@
 		3A3598DFB9E9827C88B83589 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		3B4392A12AC88292D35C810B /* Pods-yifan.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-yifan.debug.xcconfig"; path = "Target Support Files/Pods-yifan/Pods-yifan.debug.xcconfig"; sourceTree = "<group>"; };
 		5080FB480965F660C48256DD /* SharedImageModule.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SharedImageModule.m; path = yifan/SharedImageModule.m; sourceTree = "<group>"; };
+		A3B4C5D6E7F80718293A4B5C /* LivePhotoModule.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = LivePhotoModule.m; path = yifan/LivePhotoModule.m; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-yifan.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-yifan.release.xcconfig"; path = "Target Support Files/Pods-yifan/Pods-yifan.release.xcconfig"; sourceTree = "<group>"; };
 		582CBB19512F4B8858A6EA8A /* YifanShareExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = YifanShareExtension.entitlements; path = YifanShareExtension.entitlements; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-yifan.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-yifan.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -116,6 +118,7 @@
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 				5080FB480965F660C48256DD /* SharedImageModule.m */,
+				A3B4C5D6E7F80718293A4B5C /* LivePhotoModule.m */,
 			);
 			name = yifan;
 			sourceTree = "<group>";
@@ -390,6 +393,7 @@
 				D4E5F6A7B8C90718293D4E5F /* AppStoreProductModule.m in Sources */,
 				F1A2B3C4D5E60718293A4B5C /* FanfouSecretsLoader.m in Sources */,
 				0CABF40211831DF1F9871DFE /* SharedImageModule.m in Sources */,
+				B4C5D6E7F8A90718293B4C5D /* LivePhotoModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

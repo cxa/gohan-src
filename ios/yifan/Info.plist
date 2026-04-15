@@ -66,6 +66,8 @@
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>发布照片</string>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>NativeVersion</key>
 	<string>2604.11</string>
 	<key>RCTNewArchEnabled</key>

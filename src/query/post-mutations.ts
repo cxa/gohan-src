@@ -12,18 +12,24 @@ export const postMutationKeys = {
 export type StatusUpdateMutationVariables = {
   status?: string;
   photoBase64?: string;
+  photoMimeType?: string;
+  photoFileName?: string;
   params?: FanfouPostParams;
 };
 
 const sendStatusUpdate = async ({
   status,
   photoBase64,
+  photoMimeType,
+  photoFileName,
   params,
 }: StatusUpdateMutationVariables): Promise<unknown> => {
   if (photoBase64) {
     return uploadPhoto({
       photoBase64,
       status,
+      mimeType: photoMimeType,
+      fileName: photoFileName,
       params,
     });
   }

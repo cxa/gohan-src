@@ -69,6 +69,7 @@ type BaseTranslations = {
   composerRemovePhotoA11y: string;
   composerQuotedStatusA11y: string;
   composerPhotoError: string;
+  composerLivePhotoStaticHint: string;
 
   // Post/send results
   sentTitle: string;
@@ -379,6 +380,7 @@ const enUS: BaseTranslations = {
   composerRemovePhotoA11y: 'Remove photo',
   composerQuotedStatusA11y: 'Quoted post by {{name}}',
   composerPhotoError: 'Cannot attach photo',
+  composerLivePhotoStaticHint: 'This Live Photo is still. Pick it again to send a GIF.',
 
   // Post/send results
   sentTitle: 'Sent',
@@ -689,6 +691,7 @@ const zhCN: BaseTranslations = {
   composerRemovePhotoA11y: '移除图片',
   composerQuotedStatusA11y: '引用 {{name}} 的消息',
   composerPhotoError: '无法附上图片',
+  composerLivePhotoStaticHint: '这张实况照片是静态图，重选可发 GIF。',
 
   // Post/send results
   sentTitle: '已发送',

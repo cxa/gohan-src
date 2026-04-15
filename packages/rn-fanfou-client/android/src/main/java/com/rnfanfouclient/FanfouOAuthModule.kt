@@ -182,6 +182,8 @@ class FanfouOAuthModule(
     tokenSecret: String,
     photoBase64: String,
     status: String?,
+    mimeType: String,
+    fileName: String,
     params: ReadableMap,
     promise: Promise,
   ) {
@@ -205,15 +207,16 @@ class FanfouOAuthModule(
           }
         }
 
+        val resolvedMimeType = mimeType.ifBlank { "image/jpeg" }
+        val resolvedFileName = fileName.ifBlank { "image.jpg" }
         val body = ByteArrayOutputStream()
-        body.write(("--$multipartBoundary\r\n").toByteArray(Charset.forName("UTF-8")))
         extraParams.forEach { (key, value) ->
           val part =
-            "\r\n--$multipartBoundary\r\nContent-Disposition:form-data; name=\"$key\"\r\n\r\n$value"
+            "--$multipartBoundary\r\nContent-Disposition: form-data; name=\"$key\"\r\n\r\n$value\r\n"
           body.write(part.toByteArray(Charset.forName("UTF-8")))
         }
         val header =
-          "\r\n--$multipartBoundary\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"image.jpg\"\r\nContent-Length: ${imageBytes.size}\r\nContent-Type: image/jpeg\r\n\r\n"
+          "--$multipartBoundary\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"$resolvedFileName\"\r\nContent-Length: ${imageBytes.size}\r\nContent-Type: $resolvedMimeType\r\n\r\n"
         body.write(header.toByteArray(Charset.forName("UTF-8")))
         body.write(imageBytes)
         body.write(("\r\n--$multipartBoundary--\r\n").toByteArray(Charset.forName("UTF-8")))
@@ -265,14 +268,13 @@ class FanfouOAuthModule(
         }
 
         val body = ByteArrayOutputStream()
-        body.write(("--$multipartBoundary\r\n").toByteArray(Charset.forName("UTF-8")))
         extraParams.forEach { (key, value) ->
           val part =
-            "\r\n--$multipartBoundary\r\nContent-Disposition:form-data; name=\"$key\"\r\n\r\n$value"
+            "--$multipartBoundary\r\nContent-Disposition: form-data; name=\"$key\"\r\n\r\n$value\r\n"
           body.write(part.toByteArray(Charset.forName("UTF-8")))
         }
         val header =
-          "\r\n--$multipartBoundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"avatar.jpg\"\r\nContent-Length: ${imageBytes.size}\r\nContent-Type: image/jpeg\r\n\r\n"
+          "--$multipartBoundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"avatar.jpg\"\r\nContent-Length: ${imageBytes.size}\r\nContent-Type: image/jpeg\r\n\r\n"
         body.write(header.toByteArray(Charset.forName("UTF-8")))
         body.write(imageBytes)
         body.write(("\r\n--$multipartBoundary--\r\n").toByteArray(Charset.forName("UTF-8")))

@@ -184,6 +184,8 @@ describe('FanfouClient', () => {
       'as',
       'base64',
       'hello',
+      'image/jpeg',
+      'image.jpg',
       { foo: 'bar' },
     );
   });

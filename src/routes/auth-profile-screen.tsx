@@ -567,6 +567,8 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       sendFn = () => statusUpdateMutation.mutateAsync({
         status: photo?.base64 ? trimmedText || undefined : trimmedText,
         photoBase64: photo?.base64,
+        photoMimeType: photo?.mimeType,
+        photoFileName: photo?.fileName,
         params: { in_reply_to_user_id: userId },
       });
       failedTitle = t('profileSendFailed');
@@ -575,6 +577,8 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       sendFn = () => statusUpdateMutation.mutateAsync({
         status: photo?.base64 ? trimmedText || undefined : trimmedText,
         photoBase64: photo?.base64,
+        photoMimeType: photo?.mimeType,
+        photoFileName: photo?.fileName,
         params: {
           in_reply_to_status_id: replyTarget.statusId,
           in_reply_to_user_id: replyTarget.userId,

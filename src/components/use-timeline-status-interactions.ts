@@ -115,6 +115,8 @@ const useTimelineStatusInteractions = ({
       const payload: StatusUpdateMutationVariables = {
         status: photo?.base64 ? trimmedText || undefined : trimmedText,
         photoBase64: photo?.base64,
+        photoMimeType: photo?.mimeType,
+        photoFileName: photo?.fileName,
         params: {
           in_reply_to_status_id: composeReplyTarget.statusId,
           in_reply_to_user_id: composeReplyTarget.userId,

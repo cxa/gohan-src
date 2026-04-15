@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { useThemeColor } from 'heroui-native';
 import {
@@ -26,6 +26,14 @@ import type {
   LoginStackParamList,
   RootStackParamList,
 } from '@/navigation/types';
+import { useAuthSession } from '@/auth/auth-session';
+import { showVariantToast } from '@/utils/toast-alert';
+import { executeComposerSend } from '@/utils/composer-send';
+import { useStatusUpdateMutation } from '@/query/post-mutations';
+import ComposerModal, {
+  type ComposerModalSubmitPayload,
+} from '@/components/composer-modal';
+import { clearShareIntent, useShareIntentStore } from '@/stores/share-intent-store';
 import AuthFavoritesRoute from '@/routes/auth-favorites-screen';
 import AuthEditProfileRoute from '@/routes/auth-edit-profile-screen';
 import AuthHomeTabsRoute from '@/routes/auth-tabs-screen';
@@ -42,6 +50,8 @@ import AuthUserListRoute from '@/routes/auth-user-list-screen';
 import LoginRoute from '@/routes/login-screen';
 import OnboardingRoute from '@/routes/onboarding-screen';
 import { useShareIntent } from '@/hooks/use-share-intent';
+import { useTranslation } from 'react-i18next';
+import type { PickedImage } from '@/utils/pick-image-from-library';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -154,6 +164,73 @@ const TagStackNavigator = () => {
   );
 };
 
+const ShareIntentComposer = () => {
+  const { t } = useTranslation();
+  const auth = useAuthSession();
+  const shareIntent = useShareIntentStore();
+  const statusUpdateMutation = useStatusUpdateMutation();
+  const [visible, setVisible] = useState(false);
+  const [initialPhoto, setInitialPhoto] = useState<PickedImage | null>(null);
+  const [initialText, setInitialText] = useState('');
+
+  useEffect(() => {
+    if (auth.status !== 'authenticated') return;
+    if (shareIntent.photo) {
+      setInitialPhoto(shareIntent.photo);
+      setVisible(true);
+      clearShareIntent();
+    } else if (shareIntent.text) {
+      setInitialText(shareIntent.text);
+      setVisible(true);
+      clearShareIntent();
+    }
+  }, [shareIntent.photo, shareIntent.text, auth.status]);
+
+  const handleClose = () => {
+    setVisible(false);
+    setInitialPhoto(null);
+    setInitialText('');
+  };
+  const handleSubmit = ({ text, photo }: ComposerModalSubmitPayload) => {
+    const trimmedText = text.trim();
+    const hasPhoto = Boolean(photo?.base64);
+    if (!trimmedText && !hasPhoto) {
+      showVariantToast('danger', t('postFailedTitle'), t('replyNeedsContent'));
+      return;
+    }
+    setVisible(false);
+    setInitialPhoto(null);
+    setInitialText('');
+    executeComposerSend(
+      () =>
+        statusUpdateMutation.mutateAsync({
+          status: photo?.base64 ? trimmedText || undefined : trimmedText,
+          photoBase64: photo?.base64,
+          photoMimeType: photo?.mimeType,
+          photoFileName: photo?.fileName,
+        }),
+      t('postFailedTitle'),
+      () => showVariantToast('success', t('sentTitle'), t('postPendingReviewMessage')),
+    );
+  };
+
+  return (
+    <ComposerModal
+      visible={visible}
+      title={t('composerWritePost')}
+      placeholder={t('composerWhatsNew')}
+      submitLabel={t('composerSubmitPost')}
+      enablePhoto
+      resetKey={`share-intent-${initialPhoto ? 'photo' : initialText ? 'text' : 'idle'}`}
+      initialText={initialText}
+      initialPhoto={initialPhoto}
+      isSubmitting={false}
+      onCancel={handleClose}
+      onSubmit={handleSubmit}
+    />
+  );
+};
+
 const AuthStackNavigator = () => {
   const headerFontFamily = useAppFontFamily();
   const [foreground, background] = useThemeColor(['foreground', 'background']);
@@ -230,6 +307,7 @@ const AuthStackNavigator = () => {
           options={{ headerShown: false, presentation: 'fullScreenModal' }}
         />
       </AuthStack.Navigator>
+      <ShareIntentComposer />
     </AuthLayout>
   );
 };

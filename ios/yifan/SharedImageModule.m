@@ -4,6 +4,19 @@
 @interface SharedImageModule : NSObject <RCTBridgeModule>
 @end
 
+static NSString *YFSharedDataPrefixHex(NSData *data, NSUInteger maxLength) {
+  if (data.length == 0) {
+    return @"";
+  }
+  const unsigned char *bytes = data.bytes;
+  NSUInteger length = MIN(data.length, maxLength);
+  NSMutableArray<NSString *> *parts = [NSMutableArray arrayWithCapacity:length];
+  for (NSUInteger i = 0; i < length; i++) {
+    [parts addObject:[NSString stringWithFormat:@"%02X", bytes[i]]];
+  }
+  return [parts componentsJoinedByString:@" "];
+}
+
 @implementation SharedImageModule
 
 RCT_EXPORT_MODULE()
@@ -31,8 +44,9 @@ RCT_EXPORT_METHOD(readAndClear:(NSString *)fileName
   resolve([data base64EncodedStringWithOptions:0]);
 }
 
-// Find the oldest pending share-image-*.jpg in the App Group container,
-// read it as base64, delete it, and return the base64 string.
+// Find the newest pending share-image-*.{jpg,gif} in the App Group container,
+// read it as base64, delete ALL pending files (including stale ones), and return
+// { base64, mimeType, fileName, fileUrl }.
 // Returns nil (resolves with NSNull) if no pending image exists.
 RCT_EXPORT_METHOD(readAndClearPending:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -46,38 +60,82 @@ RCT_EXPORT_METHOD(readAndClearPending:(RCTPromiseResolveBlock)resolve
 
   NSArray *contents = [[NSFileManager defaultManager]
     contentsOfDirectoryAtURL:containerURL
-    includingPropertiesForKeys:@[NSURLCreationDateKey]
+    includingPropertiesForKeys:nil
     options:NSDirectoryEnumerationSkipsHiddenFiles
     error:nil];
 
-  // Find all share-image-*.jpg files sorted by creation date (oldest first)
-  NSArray *shareFiles = [contents filteredArrayUsingPredicate:
-    [NSPredicate predicateWithBlock:^BOOL(NSURL *url, NSDictionary *bindings) {
-      return [url.lastPathComponent hasPrefix:@"share-image-"] &&
-             [url.pathExtension isEqualToString:@"jpg"];
-    }]];
+  // Find all share-image-*.{jpg,gif} files
+  NSMutableArray *shareFiles = [NSMutableArray array];
+  for (NSURL *url in contents) {
+    NSString *name = url.lastPathComponent;
+    if (![name hasPrefix:@"share-image-"]) continue;
+    NSString *ext = url.pathExtension.lowercaseString;
+    if ([ext isEqualToString:@"jpg"] || [ext isEqualToString:@"gif"]) {
+      [shareFiles addObject:url];
+    }
+  }
 
   if (shareFiles.count == 0) {
     resolve([NSNull null]);
     return;
   }
 
-  // Sort by name (timestamp-based, so oldest = lowest number = first alphabetically)
-  NSArray *sorted = [shareFiles sortedArrayUsingComparator:^NSComparisonResult(NSURL *a, NSURL *b) {
-    return [a.lastPathComponent compare:b.lastPathComponent];
+  // Sort by name descending; pick the NEWEST file (highest timestamp).
+  [shareFiles sortUsingComparator:^NSComparisonResult(NSURL *a, NSURL *b) {
+    return [b.lastPathComponent compare:a.lastPathComponent];
   }];
 
-  NSURL *fileURL = sorted.firstObject;
+  NSURL *fileURL = shareFiles.firstObject;
   NSData *data = [NSData dataWithContentsOfURL:fileURL];
+  NSString *markerName = [NSString stringWithFormat:@"%@.livephoto-fallback",
+    [fileURL.lastPathComponent stringByDeletingPathExtension]];
+  NSURL *markerURL = [containerURL URLByAppendingPathComponent:markerName];
+  BOOL livePhotoStaticFallback =
+    [[NSFileManager defaultManager] fileExistsAtPath:markerURL.path];
+
+  // Delete ALL share-image files (the one we read + any stale ones)
+  for (NSURL *url in shareFiles) {
+    [[NSFileManager defaultManager] removeItemAtURL:url error:nil];
+  }
+  for (NSURL *url in contents) {
+    if ([url.pathExtension isEqualToString:@"livephoto-fallback"]) {
+      [[NSFileManager defaultManager] removeItemAtURL:url error:nil];
+    }
+  }
+
   if (!data) {
-    // File exists but can't be read — delete and return null
-    [[NSFileManager defaultManager] removeItemAtURL:fileURL error:nil];
     resolve([NSNull null]);
     return;
   }
 
-  [[NSFileManager defaultManager] removeItemAtURL:fileURL error:nil];
-  resolve([data base64EncodedStringWithOptions:0]);
+  NSString *ext = fileURL.pathExtension.lowercaseString;
+  NSString *mimeType = [ext isEqualToString:@"gif"] ? @"image/gif" : @"image/jpeg";
+  NSString *fileName = [ext isEqualToString:@"gif"] ? @"shared.gif" : @"shared.jpg";
+
+  NSLog(@"[SharedImage] file=%@ ext=%@ mime=%@ bytes=%lu fallback=%@ magic=%@",
+        fileURL.lastPathComponent,
+        ext,
+        mimeType,
+        (unsigned long)data.length,
+        livePhotoStaticFallback ? @"true" : @"false",
+        YFSharedDataPrefixHex(data, 12));
+
+  // Write to a temp file for stable file:// URI display in Image component.
+  NSString *tempName = [NSString stringWithFormat:@"shared-latest.%@", ext];
+  NSURL *tempURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:tempName]];
+  [[NSFileManager defaultManager] removeItemAtURL:tempURL error:nil];
+  [data writeToURL:tempURL atomically:YES];
+
+  NSMutableDictionary *result = [@{
+    @"base64": [data base64EncodedStringWithOptions:0],
+    @"mimeType": mimeType,
+    @"fileName": fileName,
+    @"fileUrl": tempURL.absoluteString,
+  } mutableCopy];
+  if (livePhotoStaticFallback) {
+    result[@"livePhotoStaticFallback"] = @YES;
+  }
+  resolve(result);
 }
 
 // Find the oldest pending share-text-*.txt in the App Group container,
@@ -124,6 +182,22 @@ RCT_EXPORT_METHOD(readAndClearPendingText:(RCTPromiseResolveBlock)resolve
   }
 
   resolve(text);
+}
+
+RCT_EXPORT_METHOD(readDebugLog:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSURL *containerURL = [[NSFileManager defaultManager]
+    containerURLForSecurityApplicationGroupIdentifier:@"group.im.cxa.fanatter"];
+  if (!containerURL) {
+    resolve([NSNull null]);
+    return;
+  }
+
+  NSURL *fileURL = [containerURL URLByAppendingPathComponent:@"share-debug.txt"];
+  NSString *text = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:nil];
+  [[NSFileManager defaultManager] removeItemAtURL:fileURL error:nil];
+  resolve(text.length > 0 ? text : [NSNull null]);
 }
 
 @end

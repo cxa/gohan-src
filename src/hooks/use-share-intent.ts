@@ -6,10 +6,19 @@ import { setShareIntentPhoto, setShareIntentText } from '@/stores/share-intent-s
 const SHARE_IMAGE_SCHEME = 'yifan://share-image';
 const SHARE_TEXT_SCHEME = 'yifan://share-text';
 
+type SharedImageResult = {
+  base64: string;
+  mimeType: string;
+  fileName: string;
+  fileUrl?: string;
+  livePhotoStaticFallback?: boolean;
+};
+
 type SharedImageModule = {
   readAndClear: (fileName: string) => Promise<string>;
-  readAndClearPending: () => Promise<string | null>;
+  readAndClearPending: () => Promise<SharedImageResult | null>;
   readAndClearPendingText: () => Promise<string | null>;
+  readDebugLog?: () => Promise<string | null>;
 };
 
 const getSharedImageModule = (): SharedImageModule | undefined =>
@@ -20,17 +29,36 @@ async function checkIOSPending(): Promise<void> {
   const mod = getSharedImageModule();
   if (!mod) return;
 
+  if (mod.readDebugLog) {
+    try {
+      const debugLog = await mod.readDebugLog();
+      if (debugLog) {
+        console.info(`[ShareExtension]\n${debugLog}`);
+      }
+    } catch {
+      // Debug log is optional.
+    }
+  }
+
   // Check for pending image
   if (mod.readAndClearPending) {
     try {
-      const base64 = await mod.readAndClearPending();
-      if (base64) {
-        const uri = `data:image/jpeg;base64,${base64}`;
-        setShareIntentPhoto({ uri, base64 });
+      const result = await mod.readAndClearPending();
+      if (result) {
+        // The share extension converts Live Photos to GIF directly,
+        // so we just use whatever file it saved (gif or jpg).
+        const uri = result.fileUrl ?? `data:${result.mimeType};base64,${result.base64}`;
+        setShareIntentPhoto({
+          uri,
+          base64: result.base64,
+          mimeType: result.mimeType,
+          fileName: result.fileName,
+          livePhotoStaticFallback: result.livePhotoStaticFallback,
+        });
         return;
       }
     } catch {
-      // No pending image or read failed — ignore silently
+      // No pending image or read failed; ignore silently.
     }
   }
 
@@ -42,7 +70,7 @@ async function checkIOSPending(): Promise<void> {
         setShareIntentText(text);
       }
     } catch {
-      // No pending text or read failed — ignore silently
+      // No pending text or read failed; ignore silently.
     }
   }
 }
@@ -58,9 +86,9 @@ async function resolveAndroidShareURL(url: string): Promise<void> {
       const uri = `data:image/jpeg;base64,${base64}`;
       // Clean up cache file after reading
       RNBlobUtil.fs.unlink(filePath).catch(() => {});
-      setShareIntentPhoto({ uri, base64 });
+      setShareIntentPhoto({ uri, base64, mimeType: 'image/jpeg', fileName: 'shared.jpg' });
     } catch {
-      // Silently ignore — user can pick photo manually
+      // Silently ignore; user can pick photo manually.
     }
     return;
   }

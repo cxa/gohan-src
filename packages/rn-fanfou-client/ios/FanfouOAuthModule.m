@@ -212,36 +212,42 @@ static NSString *FFTimestamp(void) {
                                                  timeIntervalSince1970])];
 }
 
+static NSString *FFDataPrefixHex(NSData *data, NSUInteger maxLength) {
+  if (data.length == 0) {
+    return @"";
+  }
+  const unsigned char *bytes = data.bytes;
+  NSUInteger length = MIN(data.length, maxLength);
+  NSMutableArray<NSString *> *parts = [NSMutableArray arrayWithCapacity:length];
+  for (NSUInteger i = 0; i < length; i++) {
+    [parts addObject:[NSString stringWithFormat:@"%02X", bytes[i]]];
+  }
+  return [parts componentsJoinedByString:@" "];
+}
+
 static NSData *FFMultipartBodyData(NSDictionary<NSString *, NSString *> *params,
                                    NSData *imageData, NSString *boundary,
                                    NSString *fileFieldName,
-                                   NSString *fileName) {
+                                   NSString *fileName,
+                                   NSString *contentType) {
+  NSString *resolvedFileName = fileName.length > 0 ? fileName : @"image.jpg";
+  NSString *resolvedContentType = contentType.length > 0 ? contentType : @"image/jpeg";
   NSMutableData *body = [NSMutableData data];
-  [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary]
-                       dataUsingEncoding:NSUTF8StringEncoding]];
   [params enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *obj,
                                               BOOL *stop) {
     NSString *part = [NSString
         stringWithFormat:
-            @"\r\n--%@\r\nContent-Disposition:form-data; name=\"%@\"\r\n\r\n%@",
+            @"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n",
             boundary, key, obj];
     [body appendData:[part dataUsingEncoding:NSUTF8StringEncoding]];
   }];
 
   NSString *header = [NSString
       stringWithFormat:
-          @"\r\n--%@\r\nContent-Disposition: form-data; name=\"%@\"; "
-          @"filename=\"image.jpg\"\r\nContent-Length: %zu\r\nContent-Type: "
-          @"image/jpeg\r\n\r\n",
-          boundary, fileFieldName, imageData.length];
-  if (fileName.length > 0) {
-    header = [NSString
-        stringWithFormat:
-            @"\r\n--%@\r\nContent-Disposition: form-data; name=\"%@\"; "
-            @"filename=\"%@\"\r\nContent-Length: %zu\r\nContent-Type: "
-            @"image/jpeg\r\n\r\n",
-            boundary, fileFieldName, fileName, imageData.length];
-  }
+          @"--%@\r\nContent-Disposition: form-data; name=\"%@\"; "
+          @"filename=\"%@\"\r\nContent-Length: %zu\r\nContent-Type: "
+          @"%@\r\n\r\n",
+          boundary, fileFieldName, resolvedFileName, imageData.length, resolvedContentType];
   [body appendData:[header dataUsingEncoding:NSUTF8StringEncoding]];
   [body appendData:imageData];
   [body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n", boundary]
@@ -468,9 +474,10 @@ RCT_EXPORT_METHOD(
 RCT_EXPORT_METHOD(
     uploadPhoto : (NSString *)token tokenSecret : (NSString *)
         tokenSecret photoBase64 : (NSString *)photoBase64 status : (NSString *)
-            status params : (NSDictionary *)
-                params resolver : (RCTPromiseResolveBlock)
-                    resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
+            status mimeType : (NSString *)mimeType fileName : (NSString *)
+                fileName params : (NSDictionary *)
+                    params resolver : (RCTPromiseResolveBlock)
+                        resolver rejecter : (RCTPromiseRejectBlock)rejecter) {
   NSString *resolvedKey = nil;
   NSString *resolvedSecret = nil;
   if (!FFResolveConsumer(rejecter, &resolvedKey, &resolvedSecret)) {
@@ -482,6 +489,12 @@ RCT_EXPORT_METHOD(
     rejecter(@"photo_invalid", @"Invalid photo data", nil);
     return;
   }
+  NSLog(@"[FanfouUpload] uploadPhoto native input mime=%@ file=%@ bytes=%lu magic=%@ statusLength=%lu",
+        mimeType,
+        fileName,
+        (unsigned long)imageData.length,
+        FFDataPrefixHex(imageData, 12),
+        (unsigned long)status.length);
 
   NSMutableDictionary<NSString *, NSString *> *stringParams =
       [NSMutableDictionary dictionary];
@@ -521,7 +534,10 @@ RCT_EXPORT_METHOD(
   [request setValue:FFAuthorizationHeader(oauthParams)
       forHTTPHeaderField:@"Authorization"];
   request.HTTPBody = FFMultipartBodyData(
-      stringParams, imageData, kMultipartBoundary, @"photo", @"image.jpg");
+      stringParams, imageData, kMultipartBoundary, @"photo", fileName, mimeType);
+  NSLog(@"[FanfouUpload] multipart bytes=%lu params=%@",
+        (unsigned long)request.HTTPBody.length,
+        stringParams.allKeys);
 
   NSURLSessionDataTask *task = [[NSURLSession sharedSession]
       dataTaskWithRequest:request
@@ -536,6 +552,9 @@ RCT_EXPORT_METHOD(
               data != nil ? [[NSString alloc] initWithData:data
                                                   encoding:NSUTF8StringEncoding]
                           : @"";
+          NSLog(@"[FanfouUpload] response status=%ld body=%@",
+                (long)httpResponse.statusCode,
+                body ?: @"");
           resolver(
               @{@"status" : @(httpResponse.statusCode),
                 @"body" : body ?: @""});
@@ -595,7 +614,7 @@ RCT_EXPORT_METHOD(
   [request setValue:FFAuthorizationHeader(oauthParams)
       forHTTPHeaderField:@"Authorization"];
   request.HTTPBody = FFMultipartBodyData(
-      stringParams, imageData, kMultipartBoundary, @"image", @"avatar.jpg");
+      stringParams, imageData, kMultipartBoundary, @"image", @"avatar.jpg", @"image/jpeg");
 
   NSURLSessionDataTask *task = [[NSURLSession sharedSession]
       dataTaskWithRequest:request

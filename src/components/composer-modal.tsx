@@ -76,6 +76,9 @@ const ComposerModal = ({
   const isSubmitting = controlledIsSubmitting ?? internalIsSubmitting;
   const canDismiss = !isSubmitting && !isPhotoPicking;
   const photoUri = photo?.uri ?? null;
+  const isGifPhoto = photo?.mimeType === 'image/gif';
+  const shouldShowLivePhotoStaticHint =
+    photo?.livePhotoStaticFallback === true && !isGifPhoto;
 
   useEffect(() => {
     if (!visible) {
@@ -224,12 +227,24 @@ const ComposerModal = ({
               scrollEnabled={false}
             />
             {photoUri ? (
-              <View className="mb-4 overflow-hidden rounded-2xl">
-                <Image
-                  source={{ uri: photoUri }}
-                  className="h-[260px] w-full bg-surface-secondary"
-                  resizeMode="cover"
-                />
+              <View className="mb-4">
+                <View className="overflow-hidden rounded-2xl">
+                  <Image
+                    source={{ uri: photoUri }}
+                    className="h-[260px] w-full bg-surface-secondary"
+                    resizeMode="cover"
+                  />
+                  {isGifPhoto ? (
+                    <View style={styles.gifBadge}>
+                      <Text style={styles.gifBadgeText}>GIF</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {shouldShowLivePhotoStaticHint ? (
+                  <Text className="mt-2 px-1 text-[13px] leading-snug text-muted">
+                    {t('composerLivePhotoStaticHint')}
+                  </Text>
+                ) : null}
               </View>
             ) : null}
           </ScrollView>
@@ -274,6 +289,21 @@ const ComposerModal = ({
 const styles = StyleSheet.create({
   quotedStatus: {
     borderLeftWidth: 3,
+  },
+  gifBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    borderRadius: 9999,
+    backgroundColor: '#1A1208',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  gifBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0,
   },
   scrollContent: {
     flexGrow: 1,

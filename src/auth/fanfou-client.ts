@@ -58,16 +58,22 @@ export const post = async (
 export const uploadPhoto = async ({
   photoBase64,
   status,
+  mimeType,
+  fileName,
   params,
 }: {
   photoBase64: string;
   status?: string;
+  mimeType?: string;
+  fileName?: string;
   params?: FanfouPostParams;
 }): Promise<unknown> => {
   const client = getFanfouClient();
   return client.uploadPhoto({
     photoBase64,
     status,
+    mimeType,
+    fileName,
     params: {
       ...params,
       format: 'html',
