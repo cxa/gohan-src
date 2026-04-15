@@ -9,7 +9,7 @@ class SystemUiInfoPackage : ReactPackage {
   @Suppress("OVERRIDE_DEPRECATION")
   override fun createNativeModules(
       reactContext: ReactApplicationContext,
-  ): List<NativeModule> = listOf(SystemUiInfoModule(reactContext))
+  ): List<NativeModule> = listOf(SystemUiInfoModule(reactContext), ShareFileModule(reactContext))
 
   @Suppress("OVERRIDE_DEPRECATION")
   override fun createViewManagers(

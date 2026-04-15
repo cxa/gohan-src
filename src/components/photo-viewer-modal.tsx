@@ -3,6 +3,7 @@ import {
   BackHandler,
   Image,
   Modal,
+  NativeModules,
   Platform,
   Share,
   StyleSheet,
@@ -95,6 +96,7 @@ const PhotoViewerModal = ({
   const [imageSize, setImageSize] = useState<ImageSize | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const loadingFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const imageLoaded = useSharedValue(false);
   const baseImageSize = (() => {
     if (!imageSize || imageSize.width <= 0 || imageSize.height <= 0) {
       return { width: viewportWidth, height: viewportHeight };
@@ -141,6 +143,7 @@ const PhotoViewerModal = ({
       loadingFallbackRef.current = null;
     }
     setIsImageLoading(false);
+    imageLoaded.value = true;
   };
   useEffect(() => {
     if (!visible || !photoUrl) {
@@ -152,6 +155,7 @@ const PhotoViewerModal = ({
     }
     setImageSize(null);
     setIsImageLoading(true);
+    imageLoaded.value = false;
     scale.value = 1;
     translateX.value = 0;
     translateY.value = 0;
@@ -540,17 +544,17 @@ const PhotoViewerModal = ({
     }
     try {
       const ext = photoUrl.match(/\.(jpe?g|png|gif|webp)/i)?.[1] ?? 'jpg';
+      const mimeType = ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
       const tempPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/share_photo.${ext}`;
       await ReactNativeBlobUtil.config({ path: tempPath }).fetch('GET', photoUrl);
-      const fileUri = Platform.OS === 'android'
-        ? `file://${tempPath}`
-        : tempPath;
-      await Share.share(
-        Platform.OS === 'android'
-          ? { message: fileUri }
-          : { url: fileUri },
-      );
-      ReactNativeBlobUtil.fs.unlink(tempPath).catch(() => undefined);
+      if (Platform.OS === 'android') {
+        // Don't await — the promise resolves before the target app reads the file.
+        // Don't delete — the file lives in CacheDir and is cleaned up by the OS.
+        NativeModules.ShareFile.share(tempPath, mimeType);
+      } else {
+        await Share.share({ url: tempPath });
+        ReactNativeBlobUtil.fs.unlink(tempPath).catch(() => undefined);
+      }
     } catch {
       // User cancelled or download failed — ignore
     }
@@ -558,7 +562,7 @@ const PhotoViewerModal = ({
   const longPressGesture = Gesture.LongPress()
     .minDuration(500)
     .onEnd((_event, success) => {
-      if (success && !isDismissing.value) {
+      if (success && !isDismissing.value && imageLoaded.value) {
         scheduleOnRN(handleShare);
       }
     });
@@ -655,16 +659,18 @@ const PhotoViewerModal = ({
         className="absolute right-4 flex-row items-center gap-2"
         style={[{ top: Math.max(insets.top + 8, 16) }, closeControlStyle]}
       >
-        <GestureDetector gesture={shareTapGesture}>
-          <View
-            className="items-center justify-center rounded-full border border-border/50 bg-background/70"
-            style={styles.actionButton}
-            accessibilityRole="button"
-            accessibilityLabel={t('photoViewerShareA11y')}
-          >
-            <Ellipsis size={18} color={accentForeground} strokeWidth={2} />
-          </View>
-        </GestureDetector>
+        {!isImageLoading ? (
+          <GestureDetector gesture={shareTapGesture}>
+            <View
+              className="items-center justify-center rounded-full border border-border/50 bg-background/70"
+              style={styles.actionButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('photoViewerShareA11y')}
+            >
+              <Ellipsis size={18} color={accentForeground} strokeWidth={2} />
+            </View>
+          </GestureDetector>
+        ) : null}
         <GestureDetector gesture={closeTapGesture}>
           <View
             className="rounded-3xl border border-border/50 bg-background/70 px-3 py-2"
