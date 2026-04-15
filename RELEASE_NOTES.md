@@ -1,4 +1,3 @@
-• Improved block/unfollow experience: blocked users are hidden from all timelines instantly; unfollowed users are removed from home feed immediately
-• Blocked user profile now hides stats and actions, shows clear unblock button
-• Unified empty state design across all screens with centered icon and message
-• Updated terms text to reflect in-app blocking support
+• 支持实况照片（Live Photo）自动转换为 GIF 动图发送
+• 优化图片压缩质量，限制上传文件不超过 2MB
+• 修复时间线空状态加载显示问题
