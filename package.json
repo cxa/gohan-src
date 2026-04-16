@@ -1,7 +1,7 @@
 {
   "name": "yifan",
-  "version": "2604.16",
-  "nativeVersion": "2604.16",
+  "version": "2604.16.1",
+  "nativeVersion": "2604.16.1",
   "private": true,
   "workspaces": [
     "packages/*"
