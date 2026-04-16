@@ -71,7 +71,7 @@ export const uploadPhoto = async ({
   const client = getFanfouClient();
   return client.uploadPhoto({
     photoBase64,
-    status,
+    status: status ?? '',
     mimeType,
     fileName,
     params: {

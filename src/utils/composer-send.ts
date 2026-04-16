@@ -29,6 +29,25 @@ export const executeComposerSend = (
   run().catch(() => {});
 };
 
+export const MAX_STATUS_LENGTH = 140;
+
+export const validateComposerContent = (
+  text: string,
+  hasPhoto: boolean,
+  failedTitle: string,
+): string | null => {
+  const trimmed = text.trim();
+  if (!trimmed && !hasPhoto) {
+    showVariantToast('danger', failedTitle, i18n.t('replyNeedsContent'));
+    return null;
+  }
+  if (text.length > MAX_STATUS_LENGTH) {
+    showVariantToast('danger', failedTitle, i18n.t('composerTextTooLong'));
+    return null;
+  }
+  return trimmed;
+};
+
 export const toPlainText = (html: string): string =>
   html
     .replace(/<[^>]+>/g, '')

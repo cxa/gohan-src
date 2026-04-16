@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
-import { executeComposerSend } from '@/utils/composer-send';
+import { executeComposerSend, validateComposerContent } from '@/utils/composer-send';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   BottomTabBarProps,
@@ -329,12 +329,9 @@ const AuthIndexRoute = () => {
     text,
     photo,
   }: ComposerModalSubmitPayload) => {
-    const trimmedText = text.trim();
     const hasPhoto = Boolean(photo?.base64);
-    if (!trimmedText && !hasPhoto) {
-      showVariantToast('danger', t('postFailedTitle'), t('replyNeedsContent'));
-      return;
-    }
+    const trimmedText = validateComposerContent(text, hasPhoto, t('postFailedTitle'));
+    if (trimmedText === null) return;
     setComposeVisible(false);
     executeComposerSend(
       () => statusUpdateMutation.mutateAsync({

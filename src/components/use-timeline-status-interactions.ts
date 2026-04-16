@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { showVariantToast } from '@/utils/toast-alert';
-import { buildRepostStatus, executeComposerSend, toPlainText } from '@/utils/composer-send';
+import { buildRepostStatus, executeComposerSend, toPlainText, validateComposerContent } from '@/utils/composer-send';
 import type { StatusUpdateMutationVariables } from '@/query/post-mutations';
 import { Image } from 'react-native';
 import { post } from '@/auth/fanfou-client';
@@ -91,23 +91,19 @@ const useTimelineStatusInteractions = ({
 
   const handleSendComposer = ({ text, photo }: ComposerModalSubmitPayload) => {
     if (!composeMode) return;
-    const trimmedText = text.trim();
     const hasPhoto = Boolean(photo?.base64);
 
-    if (composeMode === 'reply') {
-      if (!composeReplyTarget) {
-        showVariantToast('danger', t('cannotReplyTitle'), t('replyMissingTarget'));
-        return;
-      }
-      if (!trimmedText && !hasPhoto) {
-        showVariantToast('danger', t('cannotReplyTitle'), t('replyNeedsContent'));
-        return;
-      }
+    if (composeMode === 'reply' && !composeReplyTarget) {
+      showVariantToast('danger', t('cannotReplyTitle'), t('replyMissingTarget'));
+      return;
     }
     if (composeMode === 'repost' && !composeRepostTarget) {
       showVariantToast('danger', t('cannotRepostTitle'), t('repostMissingTarget'));
       return;
     }
+    const failTitle = composeMode === 'reply' ? t('cannotReplyTitle') : t('cannotRepostTitle');
+    const trimmedText = validateComposerContent(text, hasPhoto, failTitle);
+    if (trimmedText === null) return;
 
     let sendFn: () => Promise<unknown>;
     let failedTitle: string;

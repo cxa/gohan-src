@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
-import { buildRepostStatus, executeComposerSend, toPlainText } from '@/utils/composer-send';
+import { buildRepostStatus, executeComposerSend, toPlainText, validateComposerContent } from '@/utils/composer-send';
 import {
   Alert,
   Image,
@@ -538,11 +538,10 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     photo,
   }: ComposerModalSubmitPayload) => {
     if (!user || !composeMode) return;
-    const trimmedText = text.trim();
     const hasPhoto = Boolean(photo?.base64);
 
     // Validate — keep composer open on error
-    if (composeMode === 'dm' && !trimmedText) {
+    if (composeMode === 'dm' && !text.trim()) {
       showVariantToast('danger', t('cannotSendTitle'), t('profileNeedsContent'));
       return;
     }
@@ -554,10 +553,8 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
       showVariantToast('danger', t('cannotReplyTitle'), t('replyMissingTarget'));
       return;
     }
-    if ((composeMode === 'mention' || composeMode === 'reply') && !trimmedText && !hasPhoto) {
-      showVariantToast('danger', t('cannotSendTitle'), t('replyNeedsContent'));
-      return;
-    }
+    const trimmedText = validateComposerContent(text, hasPhoto, t('cannotSendTitle'));
+    if (trimmedText === null) return;
 
     // Build send function before closing
     let sendFn: () => Promise<unknown>;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { showVariantToast } from '@/utils/toast-alert';
 import { ImagePlus, X } from 'lucide-react-native';
 import {
@@ -9,16 +9,18 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput as RNTextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeColor } from 'heroui-native';
+import { Switch, useThemeColor } from 'heroui-native';
 import { useTranslation } from 'react-i18next';
 import { Text, TextInput } from '@/components/app-text';
 import {
   pickImageFromLibrary,
   type PickedImage,
 } from '@/utils/pick-image-from-library';
+import { MAX_STATUS_LENGTH } from '@/utils/composer-send';
 
 export type ComposerModalSubmitPayload = {
   text: string;
@@ -68,17 +70,27 @@ const ComposerModal = ({
     'muted',
     'border',
   ]);
+  const inputRef = useRef<RNTextInput>(null);
   const [value, setValue] = useState(initialText);
   const [photo, setPhoto] = useState<PickedImage | null>(null);
   const [isPhotoPicking, setIsPhotoPicking] = useState(false);
   const [internalIsSubmitting, setInternalIsSubmitting] = useState(false);
   const [quotedPhotoFailed, setQuotedPhotoFailed] = useState(false);
+  const [photoAspect, setPhotoAspect] = useState<number | null>(null);
+  const [sendAsGif, setSendAsGif] = useState(true);
   const isSubmitting = controlledIsSubmitting ?? internalIsSubmitting;
   const canDismiss = !isSubmitting && !isPhotoPicking;
-  const photoUri = photo?.uri ?? null;
-  const isGifPhoto = photo?.mimeType === 'image/gif';
+  const isLivePhotoGif = photo?.mimeType === 'image/gif' && Boolean(photo?.stillImage);
+  const effectivePhoto = isLivePhotoGif && !sendAsGif && photo?.stillImage
+    ? { ...photo, ...photo.stillImage }
+    : photo;
+  const photoUri = effectivePhoto?.uri ?? null;
+  const isGifPhoto = effectivePhoto?.mimeType === 'image/gif';
   const shouldShowLivePhotoStaticHint =
-    photo?.livePhotoStaticFallback === true && !isGifPhoto;
+    effectivePhoto?.livePhotoStaticFallback === true && !isGifPhoto;
+  const charCount = value.length;
+  const isOverLimit = charCount > MAX_STATUS_LENGTH;
+  const canSubmit = !isSubmitting && !isPhotoPicking && value.trim().length > 0 && !isOverLimit;
 
   useEffect(() => {
     if (!visible) {
@@ -86,6 +98,8 @@ const ComposerModal = ({
     }
     setValue(initialText);
     setPhoto(initialPhoto ?? null);
+    setPhotoAspect(null);
+    setSendAsGif(true);
     setIsPhotoPicking(false);
     setInternalIsSubmitting(false);
     setQuotedPhotoFailed(false);
@@ -100,6 +114,7 @@ const ComposerModal = ({
       const pickedPhoto = await pickImageFromLibrary();
       if (pickedPhoto) {
         setPhoto(pickedPhoto);
+        inputRef.current?.focus();
       }
     } catch (error) {
       showVariantToast(
@@ -124,12 +139,12 @@ const ComposerModal = ({
       return;
     }
     if (controlledIsSubmitting !== undefined) {
-      await onSubmit({ text: value, photo });
+      await onSubmit({ text: value, photo: effectivePhoto });
       return;
     }
     setInternalIsSubmitting(true);
     try {
-      await onSubmit({ text: value, photo });
+      await onSubmit({ text: value, photo: effectivePhoto });
     } finally {
       setInternalIsSubmitting(false);
     }
@@ -165,10 +180,11 @@ const ComposerModal = ({
               {title}
             </Text>
             <Pressable
-              onPress={!isSubmitting ? handleSubmit : undefined}
-              className={`items-center rounded-full bg-accent px-5 py-2 ${isSubmitting ? 'opacity-70' : ''}`}
+              onPress={canSubmit ? handleSubmit : undefined}
+              className={`items-center rounded-full bg-accent px-5 py-2 ${canSubmit ? '' : 'opacity-40'}`}
               accessibilityRole="button"
               accessibilityLabel={submitLabel}
+              disabled={!canSubmit}
             >
               <Text className="text-[14px] font-semibold text-accent-foreground">
                 {isSubmitting ? t('composerSending') : submitLabel}
@@ -213,26 +229,54 @@ const ComposerModal = ({
                 ) : null}
               </View>
             ) : null}
-            <TextInput
-              value={value}
-              onChangeText={setValue}
-              placeholder={placeholder}
-              placeholderTextColor={placeholderColor}
-              multiline
-              textAlignVertical="top"
-              autoFocus
-              className="min-h-[160px] py-2 text-[17px] leading-relaxed text-foreground"
-              style={Platform.OS === 'android' ? styles.textInputAndroid : undefined}
-              editable={!isSubmitting}
-              scrollEnabled={false}
-            />
+            <View>
+              {/* Background highlight layer: non-editable TextInput for identical line breaking */}
+              {isOverLimit ? (
+                <TextInput
+                  editable={false}
+                  scrollEnabled={false}
+                  multiline
+                  textAlignVertical="top"
+                  pointerEvents="none"
+                  className="absolute inset-0 py-2 text-[17px] leading-relaxed"
+                  style={Platform.OS === 'android' ? styles.textInputAndroid : undefined}
+                >
+                  <Text style={styles.hiddenText}>{value.slice(0, MAX_STATUS_LENGTH)}</Text>
+                  <Text style={styles.overLimitBg}>{value.slice(MAX_STATUS_LENGTH)}</Text>
+                </TextInput>
+              ) : null}
+              <TextInput
+                ref={inputRef}
+                value={value}
+                onChangeText={setValue}
+                placeholder={placeholder}
+                placeholderTextColor={placeholderColor}
+                multiline
+                textAlignVertical="top"
+                autoFocus
+                className="min-h-[160px] py-2 text-[17px] leading-relaxed text-foreground"
+                style={[
+                  styles.textInputTransparentBg,
+                  Platform.OS === 'android' ? styles.textInputAndroid : undefined,
+                ]}
+                editable={!isSubmitting}
+                scrollEnabled={false}
+              />
+            </View>
             {photoUri ? (
               <View className="mb-4">
                 <View className="overflow-hidden rounded-3xl">
                   <Image
                     source={{ uri: photoUri }}
-                    className="h-[260px] w-full bg-surface-secondary"
-                    resizeMode="cover"
+                    className="w-full bg-surface-secondary"
+                    style={photoAspect ? { aspectRatio: photoAspect } : styles.photoFallback}
+                    resizeMode="contain"
+                    onLoad={e => {
+                      const { width, height } = e.nativeEvent.source;
+                      if (width > 0 && height > 0) {
+                        setPhotoAspect(width / height);
+                      }
+                    }}
                   />
                   {isGifPhoto ? (
                     <View className="bg-foreground" style={styles.gifBadge}>
@@ -250,36 +294,54 @@ const ComposerModal = ({
           </ScrollView>
 
           {/* Bottom toolbar */}
-          {enablePhoto ? (
-            <View
-              className="flex-row items-center gap-2 px-4 py-3"
-              style={[
-                styles.toolbar,
-                { borderTopColor: border, paddingBottom: Math.max(insets.bottom, 12) },
-              ]}
-            >
-              <Pressable
-                onPress={canDismiss && !isPhotoPicking ? handlePickPhoto : undefined}
-                className={`size-10 items-center justify-center rounded-full bg-surface-secondary ${isPhotoPicking ? 'opacity-60' : ''}`}
-                accessibilityRole="button"
-                accessibilityLabel={photoUri ? t('composerChangePhoto') : t('composerAttachPhoto')}
-              >
-                <ImagePlus size={20} color={foreground} />
-              </Pressable>
-              {photoUri ? (
+          <View
+            className="flex-row items-center gap-2 px-4 py-3"
+            style={[
+              styles.toolbar,
+              { borderTopColor: border, paddingBottom: Math.max(insets.bottom, 12) },
+            ]}
+          >
+            {enablePhoto ? (
+              <>
                 <Pressable
-                  onPress={canDismiss ? handleRemovePhoto : undefined}
-                  className="rounded-full bg-surface-secondary px-4 py-2"
+                  onPress={canDismiss && !isPhotoPicking ? handlePickPhoto : undefined}
+                  className={`size-10 items-center justify-center rounded-full bg-surface-secondary ${isPhotoPicking ? 'opacity-60' : ''}`}
                   accessibilityRole="button"
-                  accessibilityLabel={t('composerRemovePhotoA11y')}
+                  accessibilityLabel={photoUri ? t('composerChangePhoto') : t('composerAttachPhoto')}
                 >
-                  <Text className="text-[13px] text-foreground">
-                    {t('composerRemovePhoto')}
-                  </Text>
+                  <ImagePlus size={20} color={foreground} />
                 </Pressable>
-              ) : null}
-            </View>
-          ) : null}
+                {photoUri ? (
+                  <Pressable
+                    onPress={canDismiss ? handleRemovePhoto : undefined}
+                    className="rounded-full bg-surface-secondary px-4 py-2"
+                    accessibilityRole="button"
+                    accessibilityLabel={t('composerRemovePhotoA11y')}
+                  >
+                    <Text className="text-[13px] text-foreground">
+                      {t('composerRemovePhoto')}
+                    </Text>
+                  </Pressable>
+                ) : null}
+                {isLivePhotoGif ? (
+                  <View className="flex-row items-center gap-2">
+                    <Switch
+                      isSelected={sendAsGif}
+                      onSelectedChange={setSendAsGif}
+                    />
+                    <Text className="text-[13px] font-semibold text-foreground">GIF</Text>
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+            <Text
+              className={`ml-auto text-[13px] font-semibold ${isOverLimit ? 'text-danger' : 'text-muted'}`}
+              style={styles.charCount}
+              numberOfLines={1}
+            >
+              {charCount}/{MAX_STATUS_LENGTH}
+            </Text>
+          </View>
         </KeyboardAvoidingView>
       </View>
     </Modal>
@@ -312,6 +374,24 @@ const styles = StyleSheet.create({
   },
   toolbar: {
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  charCount: {
+    width: 72,
+    textAlign: 'right',
+  },
+  photoFallback: {
+    aspectRatio: 1,
+  },
+  textInputTransparentBg: {
+    backgroundColor: 'transparent',
+  },
+  hiddenText: {
+    color: 'transparent',
+  },
+  overLimitBg: {
+    color: 'transparent',
+    backgroundColor: '#FF000033',
+    borderRadius: 2,
   },
 });
 

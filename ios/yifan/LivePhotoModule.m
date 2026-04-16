@@ -286,6 +286,16 @@ RCT_EXPORT_METHOD(pickImageFromLibrary:(RCTPromiseResolveBlock)resolve
       if (fileUrl.length > 0) {
         result[@"fileUrl"] = fileUrl;
       }
+      // Also include the still image so the user can choose to send static instead of GIF
+      if (stillURL) {
+        NSData *stillData = [NSData dataWithContentsOfURL:stillURL];
+        NSString *stillMimeType = YFMimeTypeForExtension(stillURL.pathExtension);
+        NSString *stillFileName = stillURL.lastPathComponent.length > 0 ? stillURL.lastPathComponent : YFFileNameForMimeType(stillMimeType);
+        NSMutableDictionary *stillResult = YFUploadableImageResult(stillData, stillMimeType, stillFileName);
+        if (stillResult) {
+          result[@"stillImage"] = stillResult;
+        }
+      }
       if (scoped) {
         [url stopAccessingSecurityScopedResource];
       }

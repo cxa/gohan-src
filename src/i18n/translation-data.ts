@@ -69,6 +69,8 @@ type BaseTranslations = {
   composerRemovePhotoA11y: string;
   composerQuotedStatusA11y: string;
   composerPhotoError: string;
+  composerPhotoNeedsText: string;
+  composerTextTooLong: string;
   composerLivePhotoStaticHint: string;
 
   // Post/send results
@@ -381,7 +383,9 @@ const enUS: BaseTranslations = {
   composerRemovePhotoA11y: 'Remove photo',
   composerQuotedStatusA11y: 'Quoted post by {{name}}',
   composerPhotoError: 'Cannot attach photo',
-  composerLivePhotoStaticHint: 'This Live Photo is still. Pick it again to send a GIF.',
+  composerPhotoNeedsText: 'Please enter some text to go with your photo.',
+  composerTextTooLong: 'Text is too long. Please keep it within 140 characters.',
+  composerLivePhotoStaticHint: 'This Live Photo was added as a still image. To send as a GIF, tap the photo button below to re-pick it.',
 
   // Post/send results
   sentTitle: 'Sent',
@@ -693,7 +697,9 @@ const zhCN: BaseTranslations = {
   composerRemovePhotoA11y: '移除图片',
   composerQuotedStatusA11y: '引用 {{name}} 的消息',
   composerPhotoError: '无法附上图片',
-  composerLivePhotoStaticHint: '这张实况照片是静态图，重选可发 GIF。',
+  composerPhotoNeedsText: '发送图片时请输入文字内容。',
+  composerTextTooLong: '内容过长，请控制在 140 字以内。',
+  composerLivePhotoStaticHint: '此实况照片已作为静态图添加。如需以 GIF 发送，请点击下方图片按钮重新选取。',
 
   // Post/send results
   sentTitle: '已发送',

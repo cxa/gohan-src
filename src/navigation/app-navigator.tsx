@@ -28,7 +28,7 @@ import type {
 } from '@/navigation/types';
 import { useAuthSession } from '@/auth/auth-session';
 import { showVariantToast } from '@/utils/toast-alert';
-import { executeComposerSend } from '@/utils/composer-send';
+import { executeComposerSend, validateComposerContent } from '@/utils/composer-send';
 import { useStatusUpdateMutation } from '@/query/post-mutations';
 import ComposerModal, {
   type ComposerModalSubmitPayload,
@@ -193,12 +193,9 @@ const ShareIntentComposer = () => {
     setInitialText('');
   };
   const handleSubmit = ({ text, photo }: ComposerModalSubmitPayload) => {
-    const trimmedText = text.trim();
     const hasPhoto = Boolean(photo?.base64);
-    if (!trimmedText && !hasPhoto) {
-      showVariantToast('danger', t('postFailedTitle'), t('replyNeedsContent'));
-      return;
-    }
+    const trimmedText = validateComposerContent(text, hasPhoto, t('postFailedTitle'));
+    if (trimmedText === null) return;
     setVisible(false);
     setInitialPhoto(null);
     setInitialText('');

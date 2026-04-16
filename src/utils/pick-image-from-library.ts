@@ -1,12 +1,16 @@
 import { launchImageLibrary } from 'react-native-image-picker';
 import { NativeModules, Platform } from 'react-native';
 
-export type PickedImage = {
+export type PickedImageData = {
   uri: string;
   base64: string;
   mimeType: string;
   fileName: string;
+};
+
+export type PickedImage = PickedImageData & {
   livePhotoStaticFallback?: boolean;
+  stillImage?: PickedImageData;
 };
 
 const IMAGE_PICKER_OPTIONS = {
@@ -21,6 +25,12 @@ type LivePhotoResult = {
   mimeType: string;
   fileName: string;
   fileUrl?: string;
+  stillImage?: {
+    base64: string;
+    mimeType: string;
+    fileName: string;
+    fileUrl?: string;
+  };
 };
 
 type LivePhotoModuleType = {
@@ -59,12 +69,23 @@ const inferFileName = (
 };
 
 const toPickedImage = (image: LivePhotoResult): PickedImage => {
-  return {
+  const result: PickedImage = {
     uri: image.fileUrl ?? `data:${image.mimeType};base64,${image.base64}`,
     base64: image.base64,
     mimeType: image.mimeType,
     fileName: image.fileName,
   };
+  if (image.stillImage) {
+    result.stillImage = {
+      uri:
+        image.stillImage.fileUrl ??
+        `data:${image.stillImage.mimeType};base64,${image.stillImage.base64}`,
+      base64: image.stillImage.base64,
+      mimeType: image.stillImage.mimeType,
+      fileName: image.stillImage.fileName,
+    };
+  }
+  return result;
 };
 
 export const pickImageFromLibrary = async (): Promise<PickedImage | null> => {
