@@ -115,6 +115,7 @@ import {
   resolveReadableTextColor,
   resolveProfileThemePalette,
 } from '@/utils/profile-theme';
+const APP_VERSION: string = (require('../../package.json') as { version: string }).version;
 const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
 const SECTION_GAP = 20;
@@ -1191,6 +1192,9 @@ const MoreRouteContent = ({
                     </View>
                   </>
                 )}
+                <Text className="mt-6 text-[11px] text-muted opacity-30 text-center tracking-widest">
+                  v{APP_VERSION}
+                </Text>
               </View>
             </View>
           </View>
