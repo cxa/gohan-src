@@ -1,2 +1,3 @@
-• Android: 发新消息时，图片和字数工具栏现在紧贴键盘顶部，不再被键盘挡住
-• 「更多」页底部显示 App 版本号
+• enable Android edge-to-edge and smooth composer keyboard bar
+• show app version at bottom of More screen
+• attach composer accessory bar to keyboard on Android
