@@ -30,7 +30,7 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Surface, Switch, useThemeColor } from 'heroui-native';
+import { Popover, Surface, Switch, useThemeColor } from 'heroui-native';
 import ErrorBanner from '@/components/error-banner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthSession } from '@/auth/auth-session';
@@ -46,6 +46,8 @@ import ComposerModal, {
   type ComposerModalSubmitPayload,
 } from '@/components/composer-modal';
 import DropShadowBox, {
+  CARD_BG_DARK,
+  CARD_BG_LIGHT,
   type DropShadowBoxType,
 } from '@/components/drop-shadow-box';
 import NativeEdgeScrollShadow, {
@@ -54,12 +56,9 @@ import NativeEdgeScrollShadow, {
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import ProfilePageBackdrop from '@/components/profile-page-backdrop';
-import ProfileStatRow, {
-  type ProfileStatItem,
-} from '@/components/profile-stat-row';
-import ProfileSummaryCard from '@/components/profile-summary-card';
 import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
-import { Clock } from 'lucide-react-native';
+import { AtSign, Ban, Clock, Mail } from 'lucide-react-native';
+import { ShimmerBar } from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
 import { CARD_PASTEL_CYCLE } from '@/components/drop-shadow-box';
@@ -108,6 +107,19 @@ import {
   setAppProfileThemePreference,
 } from '@/settings/app-profile-theme-preference';
 const PROFILE_CARD_GAP = 16;
+const NO_FONT_PADDING = { includeFontPadding: false } as const;
+const STYLES_V12 = {
+  avatarRotate: { transform: [{ rotate: '-3deg' }] },
+  nameRotate: { transform: [{ rotate: '1deg' }] },
+  journalRotate: { transform: [{ rotate: '0.5deg' }] },
+  followRotate: { transform: [{ rotate: '-0.5deg' }] },
+  moreRotate: { transform: [{ rotate: '0.5deg' }] },
+  stickyA: { transform: [{ rotate: '-2deg' }] },
+  stickyB: { transform: [{ rotate: '1.5deg' }] },
+  stickyC: { transform: [{ rotate: '-1deg' }] },
+  stickyD: { transform: [{ rotate: '2deg' }] },
+  stickyE: { transform: [{ rotate: '-1.5deg' }] },
+};
 type ComposerMode = 'mention' | 'dm' | 'reply' | 'repost' | null;
 type ReplyTarget = {
   statusId: string;
@@ -222,7 +234,6 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     normalizedRouteUserId === normalizedAuthScreenName;
   const {
     data: isBlocked = false,
-    isLoading: isBlockChecking,
     refetch: refetchBlock,
   } = useQuery<boolean>({
     queryKey: blockQueryKey,
@@ -526,6 +537,13 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     setComposeReplyTarget(null);
     setComposeRepostTarget(null);
   };
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const runFromMenu = (fn: () => void) => {
+    setMoreMenuOpen(false);
+    // Let the popover dismiss before opening the composer/alert so the two
+    // overlay layers don't fight for focus.
+    setTimeout(fn, 180);
+  };
   const handleCloseComposer = () => {
     setComposeMode(null);
     setComposeReplyTarget(null);
@@ -748,17 +766,37 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={contentContainerStyle}
         >
-          <DropShadowBox containerClassName="mb-4">
-            <ProfileSummaryCard
-              avatar={
-                <View className="size-20 rounded-full bg-surface-secondary" />
-              }
-              displayName=""
-              skeleton
-            />
-          </DropShadowBox>
-          <ProfileStatRow stats={[]} skeleton itemCount={3} />
-          <ProfileStatRow stats={[]} skeleton itemCount={2} />
+          <View className="flex-row items-end gap-3 pt-1">
+            <View style={STYLES_V12.avatarRotate}>
+              <View className="bg-white dark:bg-surface-secondary rounded-sm p-2 pb-6 border border-foreground/10 shadow-card">
+                <View className="size-24 bg-surface-tertiary" />
+              </View>
+            </View>
+            <View className="flex-1 mb-2" style={STYLES_V12.nameRotate}>
+              <ShimmerBar className="h-7 w-36 bg-surface-tertiary" isActive />
+              <ShimmerBar className="mt-2 h-3 w-28 bg-surface-tertiary" isActive={false} />
+            </View>
+          </View>
+          <View className="flex-row flex-wrap gap-3 pt-2">
+            {[STYLES_V12.stickyA, STYLES_V12.stickyB, STYLES_V12.stickyC, STYLES_V12.stickyD].map(
+              (rotate, index) => (
+                <View key={index} style={rotate}>
+                  <View
+                    className="rounded-sm px-3 py-2 shadow-card"
+                    style={{
+                      backgroundColor:
+                        CARD_BG_LIGHT[
+                          CARD_PASTEL_CYCLE[index % CARD_PASTEL_CYCLE.length]
+                        ],
+                    }}
+                  >
+                    <ShimmerBar className="h-3 w-12 bg-surface-tertiary" isActive={false} />
+                    <ShimmerBar className="mt-1 h-5 w-12 bg-surface-tertiary" isActive />
+                  </View>
+                </View>
+              ),
+            )}
+          </View>
         </Animated.ScrollView>
       </View>
     );
@@ -777,62 +815,61 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const profileUrl = parseHtmlToText(user.url);
   const avatarUrl = user.profile_image_url_large;
   const hasAvatar = avatarUrl.trim().length > 0;
+  const profileThemeStyles = createProfileThemeStyles(profileThemePalette);
+  const polaroidCaption = (
+    <Text
+      className="mt-1 w-24 text-[10px] leading-[12px] text-center text-foreground/70"
+      style={[NO_FONT_PADDING, profileThemeStyles.mutedTextStyle]}
+      numberOfLines={1}
+      ellipsizeMode="tail"
+      adjustsFontSizeToFit
+      minimumFontScale={0.75}
+    >
+      {handleName}
+    </Text>
+  );
   const profileAvatar = hasAvatar ? (
     <Pressable
       onPress={() => handlePhotoPress(avatarUrl)}
       accessibilityRole="button"
-      accessibilityLabel="Open avatar"
+      accessibilityLabel={t('profileOpenAvatar')}
     >
-      <View className="size-20">
-        <Image
-          source={{
-            uri: avatarUrl,
-          }}
-          className="h-full w-full rounded-full bg-surface-secondary"
-        />
+      <View className="bg-white dark:bg-surface-secondary rounded-sm p-2 border border-foreground/10 shadow-card">
+        <View className="size-24 overflow-hidden bg-surface-tertiary">
+          <Image
+            source={{
+              uri: avatarUrl,
+            }}
+            className="h-full w-full"
+          />
+        </View>
+        {polaroidCaption}
       </View>
     </Pressable>
   ) : (
-    <View className="size-20 items-center justify-center rounded-full bg-surface-secondary">
-      <Text className="text-[24px] text-muted">
-        {displayName.slice(0, 1).toUpperCase()}
-      </Text>
+    <View className="bg-white dark:bg-surface-secondary rounded-sm p-2 border border-foreground/10 shadow-card">
+      <View className="size-24 items-center justify-center bg-surface-tertiary">
+        <Text className="text-[40px] font-black text-foreground">
+          {displayName.slice(0, 1).toUpperCase()}
+        </Text>
+      </View>
+      {polaroidCaption}
     </View>
   );
-  const profileThemeStyles = createProfileThemeStyles(profileThemePalette);
   const pageBackgroundColor =
     profileThemePalette.pageBackgroundColor ?? background;
   const timelineAccentColor = profileThemePalette.linkColor ?? accent;
   const timelineMutedColor = profileThemePalette.mutedTextColor ?? muted;
-  const statsPrimary: ProfileStatItem[] = [
-    {
-      label: t('profileStatPosts'),
-      value: user.statuses_count,
-      onPress: handleOpenTimeline,
-    },
-    {
-      label: t(isSelf ? 'profileStatFollowing' : 'profileStatFollowingOther'),
-      value: user.friends_count,
-      onPress: handleOpenFollowing,
-    },
-    {
-      label: t(isSelf ? 'profileStatFollowers' : 'profileStatFollowersOther'),
-      value: user.followers_count,
-      onPress: handleOpenFollowers,
-    },
-  ];
-  const statsSecondary: ProfileStatItem[] = [
-    {
-      label: t('profileStatFavorites'),
-      value: user.favourites_count,
-      onPress: handleOpenFavorites,
-    },
-    {
-      label: t('profileStatPhotos'),
-      value: user.photo_count,
-      onPress: handleOpenPhotos,
-    },
-  ];
+  const formatStatValue = (value: string | number | null | undefined) =>
+    value ?? '--';
+  const heroFollowersLabel = t(
+    isSelf ? 'profileStatFollowers' : 'profileStatFollowersOther',
+  );
+  const followingLabel = t(
+    isSelf ? 'profileStatFollowing' : 'profileStatFollowingOther',
+  );
+  const normalizedLocation = user.location?.trim();
+  const joinedLine = joinedAt ? t('profileJoinedAt', { date: joinedAt }) : '';
   const composerTitle =
     composeMode === 'dm'
       ? t('profileMessageComposerTitle', {
@@ -925,120 +962,254 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
               />
             }
           >
-            <DropShadowBox containerClassName="mb-4">
-              <ProfileSummaryCard
-                avatar={profileAvatar}
-                displayName={displayName}
-                handleName={handleName}
-                location={user.location}
-                joinedAt={joinedAt}
-                profileUrl={profileUrl}
-                description={description}
-                panelStyle={profileThemeStyles.panelStyle}
-                primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                mutedTextStyle={profileThemeStyles.mutedTextStyle}
-                linkTextStyle={profileThemeStyles.linkTextStyle}
-              />
-            </DropShadowBox>
-
-            <DropShadowBox>
-              <Surface className="bg-surface-secondary px-4 py-3" style={profileThemeStyles.panelStyle}>
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-[14px] font-semibold text-foreground" style={profileThemeStyles.primaryTextStyle}>
-                    {t('moreFollowProfile')}
+            <View className="flex-row items-end gap-3 pt-1">
+              <View style={STYLES_V12.avatarRotate}>{profileAvatar}</View>
+              <View className="flex-1 mb-2 pl-1" style={STYLES_V12.nameRotate}>
+                <Text
+                  className="text-[28px] leading-[34px] font-black text-foreground"
+                  style={profileThemeStyles.primaryTextStyle}
+                  dynamicTypeRamp="title1"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {displayName}
+                </Text>
+                {normalizedLocation ? (
+                  <Text
+                    className="text-[12px] text-muted mt-1"
+                    style={profileThemeStyles.mutedTextStyle}
+                    numberOfLines={1}
+                  >
+                    {normalizedLocation}
                   </Text>
-                  <Switch isSelected={followProfileTheme} onSelectedChange={handleToggleFollowProfile} />
-                </View>
-              </Surface>
-            </DropShadowBox>
+                ) : null}
+                {joinedLine ? (
+                  <Text
+                    className="text-[11px] text-muted mt-0.5"
+                    style={profileThemeStyles.mutedTextStyle}
+                    numberOfLines={1}
+                  >
+                    {joinedLine}
+                  </Text>
+                ) : null}
+                {profileUrl ? (
+                  <Text
+                    className="text-[12px] font-semibold text-accent mt-1"
+                    style={profileThemeStyles.linkTextStyle}
+                    numberOfLines={1}
+                  >
+                    {profileUrl}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
 
             {!isBlocked ? (
-              <>
-                <ProfileStatRow
-                  stats={statsPrimary}
-                  panelStyle={profileThemeStyles.panelStyle}
-                  valueTextStyle={profileThemeStyles.primaryTextStyle}
-                  labelTextStyle={profileThemeStyles.mutedTextStyle}
-                />
-                <ProfileStatRow
-                  stats={statsSecondary}
-                  panelStyle={profileThemeStyles.panelStyle}
-                  valueTextStyle={profileThemeStyles.primaryTextStyle}
-                  labelTextStyle={profileThemeStyles.mutedTextStyle}
-                />
-              </>
+              <View className="flex-row flex-wrap gap-3 pt-2">
+                {[
+                  {
+                    label: t('profileStatPosts'),
+                    value: user.statuses_count,
+                    onPress: handleOpenTimeline,
+                    type: 'warning' as DropShadowBoxType,
+                    rotate: STYLES_V12.stickyA,
+                  },
+                  {
+                    label: followingLabel,
+                    value: user.friends_count,
+                    onPress: handleOpenFollowing,
+                    type: 'sky' as DropShadowBoxType,
+                    rotate: STYLES_V12.stickyB,
+                  },
+                  {
+                    label: heroFollowersLabel,
+                    value: user.followers_count,
+                    onPress: handleOpenFollowers,
+                    type: 'accent' as DropShadowBoxType,
+                    rotate: STYLES_V12.stickyC,
+                  },
+                  {
+                    label: t('profileStatFavorites'),
+                    value: user.favourites_count,
+                    onPress: handleOpenFavorites,
+                    type: 'success' as DropShadowBoxType,
+                    rotate: STYLES_V12.stickyD,
+                  },
+                  {
+                    label: t('profileStatPhotos'),
+                    value: user.photo_count,
+                    onPress: handleOpenPhotos,
+                    type: 'danger' as DropShadowBoxType,
+                    rotate: STYLES_V12.stickyE,
+                  },
+                ].map(stat => (
+                  <View key={stat.label} style={stat.rotate}>
+                    <Pressable
+                      onPress={stat.onPress}
+                      className="rounded-sm px-3 py-2 shadow-card active:opacity-75"
+                      style={[
+                        {
+                          backgroundColor: (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[
+                            stat.type
+                          ],
+                        },
+                        profileThemeStyles.panelStyle,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={stat.label}
+                    >
+                      <Text
+                        className="text-[10px] uppercase tracking-wider font-bold text-foreground/70"
+                        style={profileThemeStyles.mutedTextStyle}
+                        numberOfLines={1}
+                      >
+                        {stat.label}
+                      </Text>
+                      <Text
+                        className="mt-0.5 text-[18px] font-extrabold tabular-nums text-foreground"
+                        style={profileThemeStyles.primaryTextStyle}
+                        numberOfLines={1}
+                      >
+                        {formatStatValue(stat.value)}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {description ? (
+              <View
+                className="self-start rounded-sm px-4 py-3 shadow-card"
+                style={[
+                  {
+                    backgroundColor: (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)
+                      .default,
+                  },
+                  STYLES_V12.journalRotate,
+                  profileThemeStyles.panelStyle,
+                ]}
+              >
+                <Text
+                  className="text-[15px] leading-[24px] text-foreground"
+                  style={profileThemeStyles.primaryTextStyle}
+                >
+                  {description}
+                </Text>
+              </View>
             ) : null}
 
             {!isSelf && !isBlocked ? (
-              <DropShadowBox>
-                <Surface
-                  className="bg-surface-secondary p-4"
-                  style={profileThemeStyles.panelStyle}
-                >
-                  <View className="flex-row gap-3">
-                    <Pressable
-                      onPress={handleFollowToggle}
-                      disabled={isFollowSubmitting}
-                      className="flex-1 rounded-full border bg-accent px-3 py-2"
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        isFollowing
+              <View className="flex-row items-center gap-3 pt-1">
+                <View className="flex-1" style={STYLES_V12.followRotate}>
+                  <Pressable
+                    onPress={handleFollowToggle}
+                    disabled={isFollowSubmitting}
+                    className="rounded-full bg-accent py-3 shadow-pop"
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      isFollowing
+                        ? t('profileActionUnfollow')
+                        : t('profileActionFollow')
+                    }
+                  >
+                    <Text
+                      className="text-sm font-extrabold text-center text-accent-foreground tracking-wide"
+                      numberOfLines={1}
+                    >
+                      {isFollowSubmitting
+                        ? t('profileActionUpdating')
+                        : isFollowing
                           ? t('profileActionUnfollow')
-                          : t('profileActionFollow')
-                      }
+                          : t('profileActionFollow')}
+                    </Text>
+                  </Pressable>
+                </View>
+                <Popover
+                  isOpen={moreMenuOpen}
+                  onOpenChange={setMoreMenuOpen}
+                >
+                  <Popover.Trigger
+                    asChild={false}
+                    className="size-12 rounded-full bg-white dark:bg-surface-secondary border border-foreground/15 items-center justify-center shadow-card"
+                    style={[STYLES_V12.moreRotate, profileThemeStyles.panelStyle]}
+                    accessibilityLabel={t('profileActionMore')}
+                  >
+                    <Text
+                      className="text-lg font-black text-center text-foreground tracking-widest leading-none"
+                      style={profileThemeStyles.primaryTextStyle}
+                      numberOfLines={1}
                     >
-                      <Text className="text-[13px] text-center text-accent-foreground">
-                        {isFollowSubmitting
-                          ? t('profileActionUpdating')
-                          : isFollowing
-                            ? t('profileActionUnfollow')
-                            : t('profileActionFollow')}
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={handleBlockToggle}
-                      disabled={isBlockSubmitting || isBlockChecking}
-                      className="flex-1 rounded-full border bg-danger px-3 py-2"
-                      accessibilityRole="button"
-                      accessibilityLabel={t('profileActionBlock')}
+                      ⋯
+                    </Text>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Overlay />
+                    <Popover.Content
+                      presentation="popover"
+                      placement="top"
+                      align="end"
+                      width={200}
+                      className="rounded-2xl p-1"
                     >
-                      <Text className="text-[13px] text-center text-white">
-                        {isBlockChecking
-                          ? t('profileActionChecking')
-                          : isBlockSubmitting
-                            ? t('profileActionUpdating')
-                            : t('profileActionBlock')}
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  <View className="mt-3 flex-row gap-3">
-                    <Pressable
-                      onPress={handleOpenMentionComposer}
-                      className="flex-1 rounded-full border bg-surface-secondary px-3 py-2"
-                      accessibilityRole="button"
-                      accessibilityLabel={t('profileActionMention')}
-                    >
-                      <Text className="text-[13px] text-center text-foreground">
-                        {t('profileActionMention')}
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={handleOpenDmComposer}
-                      className="flex-1 rounded-full border bg-surface-secondary px-3 py-2"
-                      accessibilityRole="button"
-                      accessibilityLabel={t('profileActionMessage')}
-                    >
-                      <Text className="text-[13px] text-center text-foreground">
-                        {t('profileActionMessage')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </Surface>
-              </DropShadowBox>
+                      <Pressable
+                        onPress={() => runFromMenu(handleOpenMentionComposer)}
+                        className="flex-row items-center gap-3 px-3 py-2.5 rounded-xl active:bg-surface-secondary"
+                        accessibilityRole="button"
+                        accessibilityLabel={t('profileActionMention')}
+                      >
+                        <AtSign size={18} color={timelineAccentColor} strokeWidth={2.2} />
+                        <Text className="text-[15px] font-semibold text-foreground">
+                          {t('profileActionMention')}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => runFromMenu(handleOpenDmComposer)}
+                        className="flex-row items-center gap-3 px-3 py-2.5 rounded-xl active:bg-surface-secondary"
+                        accessibilityRole="button"
+                        accessibilityLabel={t('profileActionMessage')}
+                      >
+                        <Mail size={18} color={timelineAccentColor} strokeWidth={2.2} />
+                        <Text className="text-[15px] font-semibold text-foreground">
+                          {t('profileActionMessage')}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => runFromMenu(handleBlockToggle)}
+                        className="flex-row items-center gap-3 px-3 py-2.5 rounded-xl active:bg-surface-secondary"
+                        accessibilityRole="button"
+                        accessibilityLabel={t('profileActionBlock')}
+                      >
+                        <Ban size={18} color="#E5484D" strokeWidth={2.2} />
+                        <Text className="text-[15px] font-semibold text-danger">
+                          {t('profileActionBlock')}
+                        </Text>
+                      </Pressable>
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover>
+              </View>
             ) : null}
+
+            <DropShadowBox>
+              <Surface
+                className="bg-surface-secondary px-4 py-3"
+                style={profileThemeStyles.panelStyle}
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className="text-[14px] font-semibold text-foreground"
+                    style={profileThemeStyles.primaryTextStyle}
+                  >
+                    {t('moreFollowProfile')}
+                  </Text>
+                  <Switch
+                    isSelected={followProfileTheme}
+                    onSelectedChange={handleToggleFollowProfile}
+                  />
+                </View>
+              </Surface>
+            </DropShadowBox>
 
             {profileErrorMessage ? (
               <ErrorBanner message={profileErrorMessage} technicalDetail={profileTechnicalError} />
@@ -1082,7 +1253,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             ) : (
               <>
                 <Text
-                  className="mt-4 text-[24px] font-semibold text-foreground"
+                  className="mt-4 ml-1 text-[24px] font-extrabold text-foreground"
                   dynamicTypeRamp="title1"
                   style={
                     profileThemeStyles.linkTextStyle ??
@@ -1198,6 +1369,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
         onCancel={handleCloseComposer}
         onSubmit={handleSendComposer}
       />
+
     </>
   );
 };

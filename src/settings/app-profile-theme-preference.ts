@@ -5,7 +5,7 @@ const SERVICE = 'app.profile-theme-preference';
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
-let followProfileTheme = true;
+let followProfileTheme = false;
 let hydrationPromise: Promise<void> | null = null;
 
 const emitChange = () => {
@@ -21,8 +21,8 @@ const setSnapshot = (next: boolean) => {
 const hydrate = async () => {
   try {
     const creds = await Keychain.getGenericPassword({ service: SERVICE });
-    if (creds && creds.password === 'false') {
-      setSnapshot(false);
+    if (creds && creds.password === 'true') {
+      setSnapshot(true);
     }
   } catch {
     // keep default

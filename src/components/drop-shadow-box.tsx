@@ -28,7 +28,7 @@ export const CARD_PASTEL_CYCLE: DropShadowBoxType[] = [
 // distinct flavors. Slight lightness variance adds rhythm when scrolling.
 export const CARD_BG_LIGHT: Record<DropShadowBoxType, string> = {
   default: '#F7EFE0',
-  accent:  '#FFD6CA', // coral — softer than pure salmon to stop it burning on white
+  accent:  '#F6D6CB', // coral — desaturated from #FFD6CA so large cards don't glare on white
   warning: '#FFECBA', // apricot — warm but dialed back from the full orange push
   danger:  '#E3CAEF', // lilac — clearer purple than the old gray-lavender
   sky:     '#BCDDEC', // crisper sky, quieter than the saturated blue

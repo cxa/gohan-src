@@ -175,8 +175,11 @@ type BaseTranslations = {
   protectedAccountNotice: string;
   blockedAccountNotice: string;
   profileLoadFailed: string;
+  profileOpenAvatar: string;
+  profileJoinedAt: string;
   profileActionMention: string;
   profileActionMessage: string;
+  profileActionMore: string;
   profileActionFollow: string;
   profileActionUnfollow: string;
   profileActionBlock: string;
@@ -492,8 +495,11 @@ const enUS: BaseTranslations = {
   blockedAccountNotice:
     'You have blocked this user.',
   profileLoadFailed: 'Failed to load profile.',
+  profileOpenAvatar: 'Open avatar',
+  profileJoinedAt: 'Joined {{date}}',
   profileActionMention: 'Mention',
   profileActionMessage: 'Message',
+  profileActionMore: 'More…',
   profileActionFollow: 'Follow',
   profileActionUnfollow: 'Unfollow',
   profileActionBlock: 'Block',
@@ -804,8 +810,11 @@ const zhCN: BaseTranslations = {
   protectedAccountNotice: '该账号已设置为保护，关注后可查看最近动态。',
   blockedAccountNotice: '你已屏蔽该用户。',
   profileLoadFailed: '加载用户资料失败。',
+  profileOpenAvatar: '查看头像',
+  profileJoinedAt: '{{date}} 加入',
   profileActionMention: '提及',
   profileActionMessage: '私信',
+  profileActionMore: '更多…',
   profileActionFollow: '关注',
   profileActionUnfollow: '取消关注',
   profileActionBlock: '屏蔽',

@@ -4,8 +4,10 @@ import {
   StyleSheet,
   Text as RNText,
   TextInput as RNTextInput,
+  type StyleProp,
   type TextInputProps,
   type TextProps,
+  type TextStyle,
 } from 'react-native';
 import Animated, { type SharedValue } from 'react-native-reanimated';
 import { $ } from '@cxa/twx';
@@ -81,6 +83,32 @@ const withFontAnimated = (
       : className
     : className;
 
+// The shipped custom fonts (Xiaolai, HuiwenHKHei-Regular, Huiwen-MinchoGBK-Regular)
+// only have a Regular weight. On Android, setting a non-400 fontWeight alongside a
+// custom fontFamily causes the system to look up e.g. "Xiaolai-Bold", fail, and
+// silently fall back to the device default font — producing mixed fonts on the
+// same screen. iOS synthesises bold from Regular so it doesn't hit this.
+//
+// When a custom font is active on Android, strip weight-bearing Tailwind classes
+// and any inline `fontWeight` so every text stays in the single-weight custom font.
+// This means Android loses some weight hierarchy, but keeps the font consistent.
+const FONT_WEIGHT_CLASSNAME_RE =
+  /\bfont-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/g;
+const stripWeightClasses = (className?: string): string | undefined => {
+  if (!className) return className;
+  const stripped = className.replace(FONT_WEIGHT_CLASSNAME_RE, ' ').replace(/\s+/g, ' ').trim();
+  return stripped.length > 0 ? stripped : undefined;
+};
+const stripInlineFontWeight = (
+  style: StyleProp<TextStyle>,
+): StyleProp<TextStyle> => {
+  const flat = StyleSheet.flatten(style) as TextStyle | null;
+  if (!flat || flat.fontWeight === undefined) return style;
+  const rest: TextStyle = { ...flat };
+  delete rest.fontWeight;
+  return rest;
+};
+
 const Text = React.forwardRef<
   React.ComponentRef<typeof RNText>,
   TextProps & ClassNameProp
@@ -110,12 +138,20 @@ const Text = React.forwardRef<
       baseFontSize !== undefined && fontSizeScale !== 1.0
         ? { fontSize: Math.round(baseFontSize * fontSizeScale) }
         : undefined;
+    const shouldStripAndroidWeight =
+      Platform.OS === 'android' && Boolean(fontClassName);
+    const finalClassName = shouldStripAndroidWeight
+      ? stripWeightClasses(mergedClassName)
+      : mergedClassName;
+    const weightSafeStyle = shouldStripAndroidWeight
+      ? stripInlineFontWeight(style)
+      : style;
 
     return (
       <RNText
         ref={ref}
         {...props}
-        style={sizeOverride ? [style, sizeOverride] : style}
+        style={sizeOverride ? [weightSafeStyle, sizeOverride] : weightSafeStyle}
         allowFontScaling={allowFontScaling}
         dynamicTypeRamp={
           Platform.OS === 'ios'
@@ -123,7 +159,7 @@ const Text = React.forwardRef<
             : dynamicTypeRamp
         }
         maxFontSizeMultiplier={maxFontSizeMultiplier}
-        className={mergedClassName}
+        className={finalClassName}
       >
         {fontClassName ? processEmojiChildren(children) : children}
       </RNText>
@@ -178,12 +214,22 @@ const AnimatedText = React.forwardRef<
       baseFontSize !== undefined && fontSizeScale !== 1.0
         ? { fontSize: Math.round(baseFontSize * fontSizeScale) }
         : undefined;
+    const shouldStripAndroidWeight =
+      Platform.OS === 'android' && Boolean(fontClassName);
+    const finalClassName =
+      shouldStripAndroidWeight && typeof mergedClassName === 'string'
+        ? stripWeightClasses(mergedClassName)
+        : mergedClassName;
+    const weightSafeStyle =
+      shouldStripAndroidWeight && style
+        ? stripInlineFontWeight(style as StyleProp<TextStyle>)
+        : style;
 
     return (
       <Animated.Text
         ref={ref}
         {...props}
-        style={sizeOverride ? [style, sizeOverride] : style}
+        style={sizeOverride ? [weightSafeStyle, sizeOverride] : weightSafeStyle}
         allowFontScaling={allowFontScaling}
         dynamicTypeRamp={
           Platform.OS === 'ios'
@@ -191,7 +237,7 @@ const AnimatedText = React.forwardRef<
             : dynamicTypeRamp
         }
         maxFontSizeMultiplier={maxFontSizeMultiplier}
-        className={mergedClassName}
+        className={finalClassName}
       >
         {fontClassName ? processEmojiChildren(children as React.ReactNode) : children}
       </Animated.Text>

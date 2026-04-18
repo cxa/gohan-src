@@ -9,10 +9,7 @@ import {
   View,
 } from 'react-native';
 import Animated, {
-  Extrapolation,
-  interpolate,
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -36,11 +33,13 @@ import { setAuthAccessToken, useAuthSession } from '@/auth/auth-session';
 import { saveAuthAccessToken } from '@/auth/secure-token-storage';
 import AuthActionButton from '@/components/auth-action-button';
 import { Text } from '@/components/app-text';
-import { CARD_BG_DARK, CARD_BG_LIGHT, CARD_PASTEL_CYCLE } from '@/components/drop-shadow-box';
+import {
+  CARD_BG_DARK,
+  CARD_BG_LIGHT,
+  CARD_PASTEL_CYCLE,
+  type DropShadowBoxType,
+} from '@/components/drop-shadow-box';
 import ProfilePageBackdrop from '@/components/profile-page-backdrop';
-import ProfileStatRow from '@/components/profile-stat-row';
-import ProfileSummaryCard from '@/components/profile-summary-card';
-import TimelineTitleHeader from '@/components/timeline-title-header';
 import {
   AUTH_MESSAGES_ROUTE,
   AUTH_PROFILE_ROUTE,
@@ -120,6 +119,20 @@ const PAGE_HORIZONTAL_PADDING = 20;
 const PAGE_BOTTOM_PADDING = 24;
 const SECTION_GAP = 20;
 const AVATAR_SIZE = 96;
+const POLAROID_CAPTION_STYLE = {
+  width: AVATAR_SIZE,
+  includeFontPadding: false,
+} as const;
+const STYLES_V12 = {
+  avatarRotate: { transform: [{ rotate: '-3deg' }] },
+  nameRotate: { transform: [{ rotate: '1deg' }] },
+  journalRotate: { transform: [{ rotate: '0.5deg' }] },
+  stickyA: { transform: [{ rotate: '-2deg' }] },
+  stickyB: { transform: [{ rotate: '1.5deg' }] },
+  stickyC: { transform: [{ rotate: '-1deg' }] },
+  stickyD: { transform: [{ rotate: '2deg' }] },
+  stickyE: { transform: [{ rotate: '-1.5deg' }] },
+};
 const IOS_TOP_CONTENT_OFFSET = 0.1;
 const IOS_TOP_CONTENT_EQUAL_STATUS_BAR_PADDING = 4;
 const IOS_TOP_CONTENT_LARGER_SAFE_AREA_PADDING = 0;
@@ -356,18 +369,6 @@ const MoreRouteContent = ({
       }
     },
   });
-  const titleContainerStyle = useAnimatedStyle(() => ({
-    height: interpolate(scrollY.value, [0, 88], [44, 0], Extrapolation.CLAMP),
-    opacity: interpolate(scrollY.value, [0, 70], [1, 0], Extrapolation.CLAMP),
-  }));
-  const titleTextStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: interpolate(scrollY.value, [0, 88], [1, 0.6], Extrapolation.CLAMP),
-      },
-    ],
-    transformOrigin: 'top left',
-  }));
   const {
     data: user,
     isLoading,
@@ -468,29 +469,51 @@ const MoreRouteContent = ({
   const avatarInitial = displayName
     ? displayName.slice(0, 1).toUpperCase()
     : '?';
-  const accountAvatar =
+  const polaroidCaption = (
+    <Text
+      className="mt-1 text-[10px] leading-[12px] text-center text-foreground/70"
+      style={[POLAROID_CAPTION_STYLE, profileThemeStyles.mutedTextStyle]}
+      numberOfLines={1}
+      ellipsizeMode="tail"
+      adjustsFontSizeToFit
+      minimumFontScale={0.75}
+    >
+      {handleName}
+    </Text>
+  );
+  const polaroidAvatar =
     hasAvatar && avatarUrl ? (
-      <Image
-        source={{
-          uri: avatarUrl,
-        }}
-        className="rounded-full bg-surface-secondary"
-        style={{
-          width: AVATAR_SIZE,
-          height: AVATAR_SIZE,
-        }}
-      />
+      <View className="bg-white dark:bg-surface-secondary rounded-sm p-2 border border-foreground/10 shadow-card">
+        <Image
+          source={{ uri: avatarUrl }}
+          className="bg-surface-tertiary"
+          style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+        />
+        {polaroidCaption}
+      </View>
     ) : (
-      <View
-        className="items-center justify-center rounded-full bg-surface-secondary"
-        style={{
-          width: AVATAR_SIZE,
-          height: AVATAR_SIZE,
-        }}
-      >
-        <Text className="text-[24px] text-muted">{avatarInitial}</Text>
+      <View className="bg-white dark:bg-surface-secondary rounded-sm p-2 border border-foreground/10 shadow-card">
+        <View
+          className="items-center justify-center bg-surface-tertiary"
+          style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+        >
+          <Text className="text-[40px] font-black text-foreground">
+            {avatarInitial}
+          </Text>
+        </View>
+        {polaroidCaption}
       </View>
     );
+  const polaroidLoading = (
+    <View className="bg-white dark:bg-surface-secondary rounded-sm p-2 pb-6 border border-foreground/10 shadow-card">
+      <View
+        className="items-center justify-center bg-surface-tertiary"
+        style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+      >
+        <NeobrutalActivityIndicator size="small" />
+      </View>
+    </View>
+  );
   const showLoadingState = !user && (isLoading || isFetching);
   const readableInsets = useReadableContentInsets();
   const contentContainerStyle = {
@@ -569,33 +592,47 @@ const MoreRouteContent = ({
       backCount: user?.photo_count,
     });
   };
-  const profileStatsPrimary = [
+  const profileStats: {
+    label: string;
+    value: string;
+    onPress: () => void;
+    type: DropShadowBoxType;
+    rotate: typeof STYLES_V12.stickyA;
+  }[] = [
     {
       label: t('profileStatPosts'),
       value: user ? formatCount(user.statuses_count) : '--',
       onPress: handleOpenMyTimeline,
+      type: 'warning',
+      rotate: STYLES_V12.stickyA,
     },
     {
       label: t('profileStatFollowing'),
       value: user ? formatCount(user.friends_count) : '--',
       onPress: handleOpenFollowing,
+      type: 'sky',
+      rotate: STYLES_V12.stickyB,
     },
     {
       label: t('profileStatFollowers'),
       value: user ? formatCount(user.followers_count) : '--',
       onPress: handleOpenFollowers,
+      type: 'accent',
+      rotate: STYLES_V12.stickyC,
     },
-  ];
-  const profileStatsSecondary = [
     {
       label: t('profileStatFavorites'),
       value: user ? formatCount(user.favourites_count) : '--',
       onPress: handleOpenFavorites,
+      type: 'success',
+      rotate: STYLES_V12.stickyD,
     },
     {
       label: t('profileStatPhotos'),
       value: user ? formatCount(user.photo_count) : '--',
       onPress: handleOpenPhotos,
+      type: 'danger',
+      rotate: STYLES_V12.stickyE,
     },
   ];
   const handleCheckUpdate = async () => {
@@ -789,103 +826,115 @@ const MoreRouteContent = ({
         >
           <View className="flex-1">
             <View style={{ gap: SECTION_GAP }}>
-              <TimelineTitleHeader
-                title={user?.screen_name || displayNameFallback}
-                titleContainerStyle={titleContainerStyle}
-                titleTextStyle={titleTextStyle}
-              />
-              {/* Profile block: summary card + stat rows */}
+              {/* Profile block: V12 polaroid + journal + sticky notes */}
               <View style={{ gap: PROFILE_GROUP_GAP }}>
-                {showLoadingState ? (
-                    <Surface
-                      className="bg-surface-secondary px-4 py-6"
-                      style={panelStyle.profile}
+                <View className="flex-row items-end gap-3 pt-1">
+                  <View style={STYLES_V12.avatarRotate}>
+                    {showLoadingState ? polaroidLoading : polaroidAvatar}
+                  </View>
+                  <View className="flex-1 mb-2 pl-1" style={STYLES_V12.nameRotate}>
+                    <Text
+                      className="text-[26px] leading-[32px] font-black text-foreground"
+                      style={profileThemeStyles.primaryTextStyle}
+                      dynamicTypeRamp="title1"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
-                      <View className="flex-row items-center gap-4">
-                        <View
-                          className="items-center justify-center rounded-full bg-surface-tertiary"
-                          style={{
-                            width: AVATAR_SIZE,
-                            height: AVATAR_SIZE,
-                          }}
-                        >
-                          <NeobrutalActivityIndicator size="small" />
-                        </View>
-                        <View className="flex-1">
-                          <Text
-                            className="text-[16px] font-semibold text-foreground"
-                            style={profileThemeStyles.primaryTextStyle}
-                          >
-                            {t('moreAccountLoading')}
-                          </Text>
-                          <Text
-                            className="mt-1 text-[12px] text-muted"
-                            style={profileThemeStyles.mutedTextStyle}
-                          >
-                            {handleName}
-                          </Text>
-                        </View>
-                      </View>
-                      {errorMessage ? (
-                        <View className="mt-4">
-                          <ErrorBanner message={errorMessage} technicalDetail={technicalError} />
-                        </View>
-                      ) : null}
-                    </Surface>
-                  ) : (
-                    <ProfileSummaryCard
-                      containerClassName="bg-accent/10 px-4 py-6"
-                      avatar={accountAvatar}
-                      handleName={handleName}
-                      location={location}
-                      joinedAt={joinedAt}
-                      profileUrl={profileUrl}
-                      description={description}
-                      panelStyle={panelStyle.profile}
-                      primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                      mutedTextStyle={profileThemeStyles.mutedTextStyle}
-                      linkTextStyle={profileThemeStyles.linkTextStyle}
-                      footer={
-                        errorMessage ? (
-                          <View className="mt-4">
-                            <ErrorBanner message={errorMessage} technicalDetail={technicalError} />
-                          </View>
-                        ) : null
-                      }
-                    />
-                  )}
+                      {displayName}
+                    </Text>
+                    {location ? (
+                      <Text
+                        className="text-[12px] text-muted mt-1"
+                        style={profileThemeStyles.mutedTextStyle}
+                        numberOfLines={1}
+                      >
+                        {location}
+                      </Text>
+                    ) : null}
+                    {joinedAt ? (
+                      <Text
+                        className="text-[11px] text-muted mt-0.5"
+                        style={profileThemeStyles.mutedTextStyle}
+                        numberOfLines={1}
+                      >
+                        {t('profileJoinedAt', { date: joinedAt })}
+                      </Text>
+                    ) : null}
+                    {profileUrl ? (
+                      <Text
+                        className="text-[12px] font-semibold text-accent mt-1"
+                        style={profileThemeStyles.linkTextStyle}
+                        numberOfLines={1}
+                      >
+                        {profileUrl}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
 
-                {user ? (
-                  <>
-                    <ProfileStatRow
-                      stats={profileStatsPrimary}
-                      panelStyle={panelStyle.stats}
-                      valueTextStyle={profileThemeStyles.primaryTextStyle}
-                      labelTextStyle={profileThemeStyles.primaryTextStyle}
-                    />
-                    <ProfileStatRow
-                      stats={profileStatsSecondary}
-                      panelStyle={panelStyle.stats}
-                      valueTextStyle={profileThemeStyles.primaryTextStyle}
-                      labelTextStyle={profileThemeStyles.primaryTextStyle}
-                    />
-                  </>
-                ) : showLoadingState ? (
-                  <>
-                    <ProfileStatRow
-                      stats={[]}
-                      skeleton
-                      itemCount={3}
-                      panelStyle={panelStyle.stats}
-                    />
-                    <ProfileStatRow
-                      stats={[]}
-                      skeleton
-                      itemCount={2}
-                      panelStyle={panelStyle.stats}
-                    />
-                  </>
+                {errorMessage ? (
+                  <ErrorBanner
+                    message={errorMessage}
+                    technicalDetail={technicalError}
+                  />
                 ) : null}
+
+                {description ? (
+                  <View
+                    className="self-start rounded-sm px-4 py-3 shadow-card"
+                    style={[
+                      {
+                        backgroundColor: (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)
+                          .default,
+                      },
+                      STYLES_V12.journalRotate,
+                      panelStyle.profile,
+                    ]}
+                  >
+                    <Text
+                      className="text-[15px] leading-[24px] text-foreground"
+                      style={profileThemeStyles.primaryTextStyle}
+                    >
+                      {description}
+                    </Text>
+                  </View>
+                ) : null}
+
+                <View className="flex-row flex-wrap gap-3 pt-1">
+                  {profileStats.map(stat => (
+                    <View key={stat.label} style={stat.rotate}>
+                      <PressableFeedback
+                        onPress={stat.onPress}
+                        accessibilityRole="button"
+                        accessibilityLabel={stat.label}
+                        className="rounded-sm px-3 py-2 shadow-card"
+                        style={[
+                          {
+                            backgroundColor: (isDark
+                              ? CARD_BG_DARK
+                              : CARD_BG_LIGHT)[stat.type],
+                          },
+                          profileThemeStyles.panelStyle,
+                        ]}
+                      >
+                        <Text
+                          className="text-[10px] uppercase tracking-wider font-bold text-foreground/70"
+                          style={profileThemeStyles.mutedTextStyle}
+                          numberOfLines={1}
+                        >
+                          {stat.label}
+                        </Text>
+                        <Text
+                          className="mt-0.5 text-[18px] font-extrabold tabular-nums text-foreground"
+                          style={profileThemeStyles.primaryTextStyle}
+                          numberOfLines={1}
+                        >
+                          {stat.value}
+                        </Text>
+                      </PressableFeedback>
+                    </View>
+                  ))}
+                </View>
               </View>
 
               {/* Messages */}
