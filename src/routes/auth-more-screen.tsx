@@ -46,9 +46,9 @@ import {
   CARD_BG_DARK,
   CARD_BG_LIGHT,
   CARD_PASTEL_CYCLE,
-  type DropShadowBoxType,
 } from '@/components/drop-shadow-box';
 import ProfilePageBackdrop from '@/components/profile-page-backdrop';
+import ProfileStatsRow from '@/components/profile-stats-row';
 import {
   AUTH_MESSAGES_ROUTE,
   AUTH_PROFILE_ROUTE,
@@ -118,7 +118,6 @@ import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
 import {
   adaptProfilePaletteForDarkMode,
-  blendHexColors,
   createProfileThemeStyles,
   isColorDark,
   resolveReadableTextColor,
@@ -137,11 +136,6 @@ const STYLES_V12 = {
   avatarRotate: { transform: [{ rotate: '-3deg' }] },
   nameRotate: { transform: [{ rotate: '1deg' }] },
   journalRotate: { transform: [{ rotate: '0.5deg' }] },
-  stickyA: { transform: [{ rotate: '-2deg' }] },
-  stickyB: { transform: [{ rotate: '1.5deg' }] },
-  stickyC: { transform: [{ rotate: '-1deg' }] },
-  stickyD: { transform: [{ rotate: '2deg' }] },
-  stickyE: { transform: [{ rotate: '-1.5deg' }] },
 };
 const IOS_TOP_CONTENT_OFFSET = 0.1;
 const IOS_TOP_CONTENT_EQUAL_STATUS_BAR_PADDING = 4;
@@ -205,16 +199,6 @@ const getFontPreviewFamily = (option: AppFontOption) => {
   return SYSTEM_FONT_FAMILY;
 };
 
-const formatCount = (value?: number) => {
-  if (typeof value !== 'number') {
-    return '--';
-  }
-  try {
-    return new Intl.NumberFormat().format(value);
-  } catch {
-    return String(value);
-  }
-};
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 type MoreRouteContentProps = {
@@ -451,9 +435,10 @@ const MoreRouteContent = ({
       </View>
     );
   const readableInsets = useReadableContentInsets();
+  const statsEdgePadding = Math.max(PAGE_HORIZONTAL_PADDING, readableInsets.left);
   const contentContainerStyle = {
     flexGrow: 1,
-    paddingHorizontal: Math.max(PAGE_HORIZONTAL_PADDING, readableInsets.left),
+    paddingHorizontal: statsEdgePadding,
     paddingTop: resolveTopContentPadding({
       safeAreaTop: insets.top,
       statusBarHeight,
@@ -527,47 +512,31 @@ const MoreRouteContent = ({
       backCount: user?.photo_count,
     });
   };
-  const profileStats: {
-    label: string;
-    value: string;
-    onPress: () => void;
-    type: DropShadowBoxType;
-    rotate: typeof STYLES_V12.stickyA;
-  }[] = [
+  const profileStats = [
     {
       label: t('profileStatPosts'),
-      value: user ? formatCount(user.statuses_count) : '--',
+      value: user?.statuses_count,
       onPress: handleOpenMyTimeline,
-      type: 'warning',
-      rotate: STYLES_V12.stickyA,
     },
     {
       label: t('profileStatFollowing'),
-      value: user ? formatCount(user.friends_count) : '--',
+      value: user?.friends_count,
       onPress: handleOpenFollowing,
-      type: 'sky',
-      rotate: STYLES_V12.stickyB,
     },
     {
       label: t('profileStatFollowers'),
-      value: user ? formatCount(user.followers_count) : '--',
+      value: user?.followers_count,
       onPress: handleOpenFollowers,
-      type: 'accent',
-      rotate: STYLES_V12.stickyC,
     },
     {
       label: t('profileStatFavorites'),
-      value: user ? formatCount(user.favourites_count) : '--',
+      value: user?.favourites_count,
       onPress: handleOpenFavorites,
-      type: 'success',
-      rotate: STYLES_V12.stickyD,
     },
     {
       label: t('profileStatPhotos'),
-      value: user ? formatCount(user.photo_count) : '--',
+      value: user?.photo_count,
       onPress: handleOpenPhotos,
-      type: 'danger',
-      rotate: STYLES_V12.stickyE,
     },
   ];
   const handleCheckUpdate = async () => {
@@ -835,49 +804,14 @@ const MoreRouteContent = ({
                   </View>
                 ) : null}
 
-                <View className="flex-row gap-2 pt-1">
-                  {profileStats.map(stat => (
-                    <View key={stat.label} className="flex-1" style={stat.rotate}>
-                      <PressableFeedback
-                        onPress={stat.onPress}
-                        accessibilityRole="button"
-                        accessibilityLabel={stat.label}
-                        className="rounded-sm px-2.5 py-2 shadow-card"
-                        style={{
-                          backgroundColor: (() => {
-                            const pastel = (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[
-                              stat.type
-                            ];
-                            const tint =
-                              profileThemePalette.panelBackgroundColor;
-                            return tint
-                              ? blendHexColors(pastel, tint, 0.5)
-                              : pastel;
-                          })(),
-                        }}
-                      >
-                        <Text
-                          className="text-[9px] uppercase tracking-normal font-bold text-foreground/70"
-                          style={profileThemeStyles.mutedTextStyle}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.6}
-                        >
-                          {stat.label}
-                        </Text>
-                        <Text
-                          className="mt-0.5 text-[18px] font-extrabold tabular-nums text-foreground"
-                          style={profileThemeStyles.primaryTextStyle}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.6}
-                        >
-                          {stat.value}
-                        </Text>
-                      </PressableFeedback>
-                    </View>
-                  ))}
-                </View>
+                <ProfileStatsRow
+                  stats={profileStats}
+                  isDark={isDark}
+                  edgePadding={statsEdgePadding}
+                  panelBackgroundColor={profileThemePalette.panelBackgroundColor}
+                  primaryTextStyle={profileThemeStyles.primaryTextStyle}
+                  mutedTextStyle={profileThemeStyles.mutedTextStyle}
+                />
               </View>
 
               {/* Messages */}

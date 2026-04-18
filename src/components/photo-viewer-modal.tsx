@@ -662,23 +662,23 @@ const PhotoViewerModal = ({
         {!isImageLoading ? (
           <GestureDetector gesture={shareTapGesture}>
             <View
-              className="size-9 items-center justify-center rounded-full border border-border/50 bg-background/70"
+              className="size-9 items-center justify-center rounded-full border border-white/20 bg-white/20"
               style={styles.continuousCurve}
               accessibilityRole="button"
               accessibilityLabel={t('photoViewerShareA11y')}
             >
-              <Ellipsis size={18} color={accentForeground} strokeWidth={2} />
+              <Ellipsis size={18} color="#FFFFFF" strokeWidth={2} />
             </View>
           </GestureDetector>
         ) : null}
         <GestureDetector gesture={closeTapGesture}>
           <View
-            className="rounded-full border border-border/50 bg-background/70 px-3 py-2"
+            className="rounded-full border border-white/20 bg-white/20 px-3 py-2"
             style={styles.closeButton}
             accessibilityRole="button"
             accessibilityLabel={t('photoViewerCloseA11y')}
           >
-            <Text allowFontScaling className="text-foreground">
+            <Text allowFontScaling className="text-white">
               {t('photoViewerClose')}
             </Text>
           </View>

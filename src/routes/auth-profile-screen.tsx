@@ -56,8 +56,9 @@ import NativeEdgeScrollShadow, {
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import ProfilePageBackdrop from '@/components/profile-page-backdrop';
+import ProfileStatsRow from '@/components/profile-stats-row';
 import TimelineEmptyPlaceholder from '@/components/timeline-empty-placeholder';
-import { AtSign, Ban, Check, Clock, Mail, Palette } from 'lucide-react-native';
+import { AtSign, Ban, Check, Clock, Mail, MoreHorizontal, Palette } from 'lucide-react-native';
 import { ShimmerBar } from '@/components/timeline-skeleton-card';
 import TimelineSkeletonList from '@/components/timeline-skeleton-list';
 import TimelineStatusCard from '@/components/timeline-status-card';
@@ -94,7 +95,6 @@ import { formatJoinedAt } from '@/utils/fanfou-date';
 import { parseHtmlToText } from '@/utils/parse-html';
 import {
   adaptProfilePaletteForDarkMode,
-  blendHexColors,
   createProfileThemeStyles,
   isColorDark,
   resolveReadableTextColor,
@@ -170,10 +170,11 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
   const queryClient = useQueryClient();
   const auth = useAuthSession();
   const accessToken = auth.accessToken;
-  const [accent, background, muted] = useThemeColor([
+  const [accent, background, muted, foregroundIconColor] = useThemeColor([
     'accent',
     'background',
     'muted',
+    'foreground',
   ]);
   const headerTitleVisible = useSharedValue(false);
   const [showHeaderTitle, setShowHeaderTitle] = useState(false);
@@ -765,8 +766,9 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     showHeaderTitle,
   });
   const readableInsets = useReadableContentInsets();
+  const statsEdgePadding = Math.max(16, readableInsets.left);
   const contentContainerStyle = {
-    paddingHorizontal: Math.max(16, readableInsets.left),
+    paddingHorizontal: statsEdgePadding,
     paddingTop: Platform.OS === 'android' ? headerHeight : 0,
     paddingBottom: insets.bottom + TIMELINE_SPACING,
     gap: PROFILE_CARD_GAP,
@@ -873,8 +875,6 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
     profileThemePalette.pageBackgroundColor ?? background;
   const timelineAccentColor = profileThemePalette.linkColor ?? accent;
   const timelineMutedColor = profileThemePalette.mutedTextColor ?? muted;
-  const formatStatValue = (value: string | number | null | undefined) =>
-    value ?? '--';
   const heroFollowersLabel = t(
     isSelf ? 'profileStatFollowers' : 'profileStatFollowersOther',
   );
@@ -979,11 +979,14 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
               <View style={STYLES_V12.avatarRotate}>{profileAvatar}</View>
               <View className="flex-1 mb-2 pl-1" style={STYLES_V12.nameRotate}>
                 <Text
-                  className="text-[28px] leading-[34px] font-black text-foreground"
+                  className="text-[28px] font-black text-foreground"
                   style={[profileThemeStyles.primaryTextStyle, onImageTextStyle]}
                   dynamicTypeRamp="title1"
                   numberOfLines={1}
                   ellipsizeMode="tail"
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
+                  allowFontScaling={false}
                 >
                   {displayName}
                 </Text>
@@ -1018,82 +1021,40 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             </View>
 
             {!isBlocked ? (
-              <View className="flex-row gap-2 pt-2">
-                {[
+              <ProfileStatsRow
+                stats={[
                   {
                     label: t('profileStatPosts'),
                     value: user.statuses_count,
                     onPress: handleOpenTimeline,
-                    type: 'warning' as DropShadowBoxType,
-                    rotate: STYLES_V12.stickyA,
                   },
                   {
                     label: followingLabel,
                     value: user.friends_count,
                     onPress: handleOpenFollowing,
-                    type: 'sky' as DropShadowBoxType,
-                    rotate: STYLES_V12.stickyB,
                   },
                   {
                     label: heroFollowersLabel,
                     value: user.followers_count,
                     onPress: handleOpenFollowers,
-                    type: 'accent' as DropShadowBoxType,
-                    rotate: STYLES_V12.stickyC,
                   },
                   {
                     label: t('profileStatFavorites'),
                     value: user.favourites_count,
                     onPress: handleOpenFavorites,
-                    type: 'success' as DropShadowBoxType,
-                    rotate: STYLES_V12.stickyD,
                   },
                   {
                     label: t('profileStatPhotos'),
                     value: user.photo_count,
                     onPress: handleOpenPhotos,
-                    type: 'danger' as DropShadowBoxType,
-                    rotate: STYLES_V12.stickyE,
                   },
-                ].map(stat => (
-                  <View key={stat.label} className="flex-1" style={stat.rotate}>
-                    <Pressable
-                      onPress={stat.onPress}
-                      className="rounded-sm px-2.5 py-2 shadow-card active:opacity-75"
-                      style={{
-                        backgroundColor: (() => {
-                          const pastel = (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[
-                            stat.type
-                          ];
-                          const tint = profileThemePalette.panelBackgroundColor;
-                          return tint ? blendHexColors(pastel, tint, 0.5) : pastel;
-                        })(),
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={stat.label}
-                    >
-                      <Text
-                        className="text-[9px] uppercase tracking-normal font-bold text-foreground/70"
-                        style={profileThemeStyles.mutedTextStyle}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.6}
-                      >
-                        {stat.label}
-                      </Text>
-                      <Text
-                        className="mt-0.5 text-[18px] font-extrabold tabular-nums text-foreground"
-                        style={profileThemeStyles.primaryTextStyle}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.6}
-                      >
-                        {formatStatValue(stat.value)}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
+                ]}
+                isDark={isDark}
+                edgePadding={statsEdgePadding}
+                panelBackgroundColor={profileThemePalette.panelBackgroundColor}
+                primaryTextStyle={profileThemeStyles.primaryTextStyle}
+                mutedTextStyle={profileThemeStyles.mutedTextStyle}
+              />
             ) : null}
 
             {description ? (
@@ -1123,7 +1084,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                   <Pressable
                     onPress={handleFollowToggle}
                     disabled={isFollowSubmitting}
-                    className={`rounded-full py-3 shadow-pop ${
+                    className={`rounded-full py-3 ${
                       isFollowing ? 'bg-danger' : 'bg-accent'
                     }`}
                     accessibilityRole="button"
@@ -1153,17 +1114,17 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
                 >
                   <Popover.Trigger
                     asChild={false}
-                    className="size-12 rounded-full bg-white dark:bg-surface-secondary border border-foreground/15 items-center justify-center shadow-card"
+                    className="size-12 rounded-full bg-white dark:bg-surface-secondary border border-foreground/15 items-center justify-center"
                     style={[STYLES_V12.moreRotate, profileThemeStyles.panelStyle]}
                     accessibilityLabel={t('profileActionMore')}
                   >
-                    <Text
-                      className="text-lg font-black text-center text-foreground tracking-widest leading-none"
-                      style={profileThemeStyles.primaryTextStyle}
-                      numberOfLines={1}
-                    >
-                      ⋯
-                    </Text>
+                    <MoreHorizontal
+                      size={20}
+                      color={
+                        profileThemeStyles.primaryTextStyle?.color ?? foregroundIconColor
+                      }
+                      strokeWidth={2.4}
+                    />
                   </Popover.Trigger>
                   <Popover.Portal>
                     <Popover.Overlay />
