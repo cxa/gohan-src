@@ -29,7 +29,7 @@ const ProfileDescriptionPaper = ({
 
   return (
     <View
-      className="mt-3 overflow-hidden rounded-sm bg-[#FDFBF5] dark:bg-surface-secondary border border-foreground/10 px-5 pt-6 pb-6 shadow-card"
+      className="overflow-hidden rounded-sm bg-[#FDFBF5] dark:bg-surface-secondary border border-foreground/10 px-5 pt-6 pb-6 shadow-card"
       style={TILT}
     >
       {Array.from({ length: lineCount }).map((_, i) => (

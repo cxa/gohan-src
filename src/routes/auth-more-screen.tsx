@@ -170,7 +170,7 @@ const resolveTopContentPadding = ({
   }
   return safeAreaTop + extraPadding + IOS_TOP_CONTENT_OFFSET;
 };
-const PROFILE_GROUP_GAP = SECTION_GAP;
+const PROFILE_GROUP_GAP = 16;
 const HEADER_TITLE_REVEAL_RATIO = 0.25;
 const SYSTEM_FONT_FAMILY = Platform.select({
   ios: 'ui-rounded',

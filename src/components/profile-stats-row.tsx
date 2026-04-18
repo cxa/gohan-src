@@ -45,7 +45,10 @@ const STICKY_TYPES: DropShadowBoxType[] = [
 ];
 
 const BASE_HORIZONTAL_PADDING = 2;
-const CONTENT_VERTICAL_PADDING = 8;
+// Enough vertical padding for the rotated stickies' corners to clear the
+// scroll viewport without being clipped. Caller should still provide the gap
+// between this row and neighbouring content via its parent layout.
+const CONTENT_VERTICAL_PADDING = 4;
 
 const formatValue = (value: string | number | null | undefined) => {
   if (value === null || value === undefined) return '--';
@@ -70,7 +73,7 @@ const ProfileStatsRow = ({
   const scrollStyle = { marginHorizontal: -edgePadding };
   const contentStyle = {
     gap: 8,
-    paddingTop: CONTENT_VERTICAL_PADDING,
+    paddingVertical: CONTENT_VERTICAL_PADDING,
     paddingHorizontal: edgePadding + BASE_HORIZONTAL_PADDING,
   };
   return (
