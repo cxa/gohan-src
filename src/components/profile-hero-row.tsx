@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, type TextStyle } from 'react-native';
+import { Pressable, View, type TextStyle } from 'react-native';
 import { Text } from '@/components/app-text';
+import { isLikelyUrl, openLink } from '@/utils/open-link';
 
 type ProfileHeroRowProps = {
   avatar: React.ReactNode;
@@ -62,13 +63,31 @@ const ProfileHeroRow = ({
         </Text>
       ) : null}
       {profileUrl ? (
-        <Text
-          className="text-[12px] font-semibold text-accent mt-1"
-          style={[linkTextStyle, textHaloStyle]}
-          numberOfLines={1}
-        >
-          {profileUrl}
-        </Text>
+        isLikelyUrl(profileUrl) ? (
+          <Pressable
+            onPress={() => openLink(profileUrl)}
+            className="mt-1 self-start active:opacity-70"
+            accessibilityRole="link"
+            accessibilityLabel={profileUrl}
+            hitSlop={6}
+          >
+            <Text
+              className="text-[12px] font-semibold text-accent underline"
+              style={[linkTextStyle, textHaloStyle]}
+              numberOfLines={1}
+            >
+              {profileUrl}
+            </Text>
+          </Pressable>
+        ) : (
+          <Text
+            className="text-[12px] font-semibold text-accent mt-1"
+            style={[linkTextStyle, textHaloStyle]}
+            numberOfLines={1}
+          >
+            {profileUrl}
+          </Text>
+        )
       ) : null}
     </View>
   </View>

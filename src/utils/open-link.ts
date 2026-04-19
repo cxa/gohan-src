@@ -2,6 +2,18 @@ import { Linking } from 'react-native';
 import { showVariantToast } from '@/utils/toast-alert';
 
 const URL_SCHEME_REGEX = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
+const LIKELY_DOMAIN_REGEX = /^[^\s]+\.[^\s.]+$/;
+
+export const isLikelyUrl = (value: string | null | undefined) => {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return false;
+  }
+  if (URL_SCHEME_REGEX.test(trimmed)) {
+    return true;
+  }
+  return LIKELY_DOMAIN_REGEX.test(trimmed);
+};
 
 export const normalizeLinkUrl = (value: string) => {
   const trimmed = value.trim();
