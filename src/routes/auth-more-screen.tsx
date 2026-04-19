@@ -715,10 +715,7 @@ const MoreRouteContent = ({
                 />
 
                 {description ? (
-                  <ProfileDescriptionPaper
-                    description={description}
-                    primaryTextStyle={profileThemeStyles.primaryTextStyle}
-                  />
+                  <ProfileDescriptionPaper description={description} />
                 ) : null}
               </View>
 

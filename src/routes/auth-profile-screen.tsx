@@ -1014,10 +1014,7 @@ const ProfileRouteContent = ({ routeUserId }: ProfileRouteContentProps) => {
             ) : null}
 
             {description ? (
-              <ProfileDescriptionPaper
-                description={description}
-                primaryTextStyle={profileThemeStyles.primaryTextStyle}
-              />
+              <ProfileDescriptionPaper description={description} />
             ) : null}
 
             {!isSelf && !isBlocked ? (
