@@ -230,14 +230,21 @@ export const parseHtmlToSegments = (value: unknown): HtmlTextSegment[] => {
           }
         }
       }
-      const displayName = linkText || screenName;
+      // The display text shows what the author wrote (e.g. "@qinyf"); the
+      // actionable identifier must come from the URL (e.g. "/micy"). Fanfou
+      // repost strings frequently reference a user by their display name in
+      // text while the href points at the real user id — using the text for
+      // navigation lands on a bogus profile.
+      const displayText = linkText || `@${screenName}`;
       const mentionText = sanitizedText.startsWith('@')
         ? sanitizedText
-        : `@${displayName}`;
+        : displayText.startsWith('@')
+          ? displayText
+          : `@${displayText}`;
       segments.push({
         type: 'mention',
         text: mentionText,
-        screenName: displayName,
+        screenName,
         url: normalizedHref ?? href,
       });
     } else if (tag) {
