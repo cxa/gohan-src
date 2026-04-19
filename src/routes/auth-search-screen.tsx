@@ -23,6 +23,7 @@ import ComposerModal from '@/components/composer-modal';
 import { deleteStatus, isStatusOwnedByUser } from '@/utils/delete-status';
 import useTimelineStatusInteractions from '@/components/use-timeline-status-interactions';
 import NativeEdgeScrollShadow from '@/components/native-edge-scroll-shadow';
+import { isNativeScrollEdgeEffectAvailable } from '@/navigation/native-scroll-edge';
 import PhotoViewerModal from '@/components/photo-viewer-modal';
 import type { PhotoViewerOriginRect } from '@/components/photo-viewer-shared-transition';
 import TimelineStatusCard from '@/components/timeline-status-card';
@@ -79,11 +80,14 @@ const SearchRoute = () => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTransparent: false,
-      headerStyle: { backgroundColor: background },
+      headerTransparent: true,
+      headerStyle: { backgroundColor: 'transparent' },
       headerTintColor: foreground,
       headerBackButtonDisplayMode: 'minimal',
       headerShadowVisible: false,
+      scrollEdgeEffects: isNativeScrollEdgeEffectAvailable
+        ? { top: 'automatic' }
+        : undefined,
       // eslint-disable-next-line react/no-unstable-nested-components
       headerTitle: () => (
         <View style={[styles.inputContainer, { backgroundColor: inputBackground }]}>
@@ -103,7 +107,7 @@ const SearchRoute = () => {
         </View>
       ),
     });
-  }, [background, foreground, inputBackground, isDark, muted, navigation, t]);
+  }, [foreground, inputBackground, isDark, muted, navigation, t]);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FanfouStatus[]>([]);
@@ -252,7 +256,7 @@ const SearchRoute = () => {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-      <NativeEdgeScrollShadow style={styles.flex} color={background} size={100}>
+      <NativeEdgeScrollShadow style={styles.flex} color={background}>
         <Animated.FlatList
           style={styles.flex}
           data={results}
