@@ -47,7 +47,7 @@ const TimelineEmptyPlaceholder = ({
 
   return (
     <View
-      className="items-center justify-center px-6"
+      className="flex-1 items-center justify-center px-6"
       style={{ minHeight: height * 0.55 }}
     >
       <Icon size={48} color={iconColor} strokeWidth={1.5} />

@@ -1,10 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Animated, StyleSheet, View } from 'react-native';
+import { useThemeColor } from 'heroui-native';
 import { useEffectiveIsDark } from '@/settings/app-appearance-preference';
 import LinearGradient from 'react-native-linear-gradient';
 import { Text } from '@/components/app-text';
 import { APP_THEME_OPTION, useAppThemePreference } from '@/settings/app-theme-preference';
+import {
+  CARD_BAR_DARK,
+  CARD_BAR_LIGHT,
+  CARD_BG_DARK,
+  CARD_BG_LIGHT,
+  CARD_PASTEL_CYCLE,
+  SKELETON_BAR_FALLBACK_DARK,
+  SKELETON_BAR_FALLBACK_LIGHT,
+} from '@/components/drop-shadow-box';
 
 type TimelineSkeletonCardProps = {
   index?: number;
@@ -15,14 +25,6 @@ type TimelineSkeletonCardProps = {
 const SHIMMER_DURATION = 1800;
 const SHIMMER_MIN_WIDTH = 80;
 const SHIMMER_RATIO = 0.4;
-
-// Pastel card backgrounds — same cycle as TimelineStatusCard
-const CARD_BG_LIGHT = ['#FDDBD5', '#FDF3C8', '#E8D5F5', '#D0E8F5', '#C8EDE8'] as const;
-const CARD_BG_DARK  = ['#3D2820', '#352E18', '#2D1E38', '#1A2E3D', '#1A3530'] as const;
-
-// Slightly deeper tint for shimmer bars on each pastel background
-const BAR_BG_LIGHT  = ['#F5C4B8', '#F5E298', '#CCBAEC', '#A8D0EC', '#9ED6CC'] as const;
-const BAR_BG_DARK   = ['#5A3830', '#4A4020', '#402850', '#203A50', '#1E4840'] as const;
 
 type ShimmerBarProps = {
   className?: string;
@@ -69,7 +71,7 @@ export const ShimmerBar = ({ className, style, barColor, isActive }: ShimmerBarP
   ];
 
   const resolvedBarColor =
-    barColor ?? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)');
+    barColor ?? (isDark ? SKELETON_BAR_FALLBACK_DARK : SKELETON_BAR_FALLBACK_LIGHT);
 
   return (
     <View
@@ -99,13 +101,14 @@ const TimelineSkeletonCard = ({
   const isDark = useEffectiveIsDark();
   const themePreference = useAppThemePreference();
   const isPlain = themePreference === APP_THEME_OPTION.PLAIN;
-  const paletteIndex = index % CARD_BG_LIGHT.length;
+  const [themeBackground] = useThemeColor(['background']);
+  const shadowType = CARD_PASTEL_CYCLE[index % CARD_PASTEL_CYCLE.length];
   const cardBg = isPlain
-    ? (isDark ? '#1E1E1E' : '#FFFFFF')
-    : (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[paletteIndex];
+    ? themeBackground
+    : (isDark ? CARD_BG_DARK : CARD_BG_LIGHT)[shadowType];
   const barColor = isPlain
     ? undefined
-    : (isDark ? BAR_BG_DARK : BAR_BG_LIGHT)[paletteIndex];
+    : (isDark ? CARD_BAR_DARK : CARD_BAR_LIGHT)[shadowType];
   const shimmerIndex = Math.floor(Math.random() * (lineCount + 1));
 
   return (
@@ -119,7 +122,7 @@ const TimelineSkeletonCard = ({
         <View className="flex-row gap-3">
           <View
             className="size-10 rounded-full"
-            style={{ backgroundColor: barColor ?? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') }}
+            style={{ backgroundColor: barColor ?? (isDark ? SKELETON_BAR_FALLBACK_DARK : SKELETON_BAR_FALLBACK_LIGHT) }}
           />
           <View className="flex-1 gap-2">
             <ShimmerBar

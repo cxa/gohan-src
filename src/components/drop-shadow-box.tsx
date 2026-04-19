@@ -46,6 +46,33 @@ export const CARD_BG_DARK: Record<DropShadowBoxType, string> = {
   success: '#1A4538',
 };
 
+/** Slightly deeper tint of each card bg — used for skeleton shimmer bars,
+ * chips, and any decorative surface that should sit one step darker than
+ * the card background while staying in the same hue family. */
+export const CARD_BAR_LIGHT: Record<DropShadowBoxType, string> = {
+  default: '#EAD9C0',
+  accent:  '#F5C4B8',
+  warning: '#F5E298',
+  danger:  '#CCBAEC',
+  sky:     '#A8D0EC',
+  success: '#9ED6CC',
+};
+
+/** Dark-mode variant of CARD_BAR_LIGHT. */
+export const CARD_BAR_DARK: Record<DropShadowBoxType, string> = {
+  default: '#3A3028',
+  accent:  '#5A3830',
+  warning: '#4A4020',
+  danger:  '#402850',
+  sky:     '#203A50',
+  success: '#1E4840',
+};
+
+/** Neutral fallback bar tint used when a card has no pastel bg to derive
+ * from (e.g. plain-theme skeletons). Translucent so it reads on any surface. */
+export const SKELETON_BAR_FALLBACK_LIGHT = 'rgba(0,0,0,0.08)';
+export const SKELETON_BAR_FALLBACK_DARK = 'rgba(255,255,255,0.12)';
+
 type DropShadowBoxProps = {
   children: React.ReactNode;
   containerClassName?: string;
